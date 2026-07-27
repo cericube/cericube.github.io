@@ -1,0 +1,7 @@
+<article class="post-card" data-category="{{ post.category_id }}" data-date="{{ post.date | date: '%Y%m%d' }}">
+  <a href="{{ post.url | relative_url }}" class="post-card-link">
+    <h2>{{ post.title }}</h2>
+    <p>{{ post.description | default: post.excerpt | strip_html | truncate: 155 }}</p>
+    <div class="post-card-meta">▣ {{ post.date | date: "%Y.%m.%d" }}</div>
+  </a>
+</article>

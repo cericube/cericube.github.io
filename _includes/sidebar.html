@@ -1,0 +1,44 @@
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-profile">
+    {% include logo.html %}
+    <div class="brand-name">cericube</div>
+    <div class="brand-subtitle">IT 잡학 아카이브</div>
+    <p class="brand-description">{{ site.description }}</p>
+    <a class="email-link" href="mailto:{{ site.email }}">✉ {{ site.email }}</a>
+  </div>
+
+  <nav class="category-tree" aria-label="카테고리">
+    <a href="{{ '/' | relative_url }}" class="all-posts-link" data-filter="all">
+      <span>▣</span> 분류 전체보기 <strong>(316)</strong>
+    </a>
+
+    {% for parent in site.data.categories %}
+      <section class="tree-group" data-tree-group="{{ parent.id }}">
+        <button class="tree-parent" type="button" aria-expanded="false">
+          <span class="tree-arrow">›</span>
+          <span>{{ parent.name }} <strong>({{ parent.count }})</strong></span>
+        </button>
+        <div class="tree-children">
+          {% for child in parent.children %}
+            {% assign child_posts = site.posts | where: "category_id", child.id %}
+            <div class="tree-child {% if page.category_id == child.id %}is-active{% endif %}" data-category-id="{{ child.id }}">
+              <a href="{{ '/' | relative_url }}?category={{ child.id }}" class="category-link" data-filter="{{ child.id }}">
+                <span class="folder-icon">□</span>
+                <span>{{ child.name }} <strong>({{ child.count }})</strong></span>
+              </a>
+              {% if child_posts.size > 0 %}
+                <div class="tree-posts">
+                  {% for post in child_posts %}
+                    <a href="{{ post.url | relative_url }}" class="tree-post-link {% if page.url == post.url %}is-current{% endif %}">
+                      {{ post.title }}
+                    </a>
+                  {% endfor %}
+                </div>
+              {% endif %}
+            </div>
+          {% endfor %}
+        </div>
+      </section>
+    {% endfor %}
+  </nav>
+</aside>

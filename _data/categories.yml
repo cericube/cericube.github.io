@@ -1,0 +1,78 @@
+- id: system-infra
+  name: "1.시스템&인프라"
+  count: 111
+  children:
+    - id: dev-environment
+      name: "개발환경"
+      count: 17
+    - id: virtualization
+      name: "가상화(WSL,VirtualBox,Docker)"
+      count: 12
+    - id: kafka
+      name: "Apache Kafka"
+      count: 21
+    - id: ubuntu
+      name: "Ubuntu"
+      count: 18
+    - id: stream
+      name: "스트리밍"
+      count: 14
+    - id: os-basic
+      name: "운영 환경과 배포 운영체계"
+      count: 21
+    - id: redis
+      name: "redis"
+      count: 8
+
+- id: ai
+  name: "2.언어&프레임"
+  count: 9
+  children:
+    - id: mediapipe
+      name: "MediaPipe"
+      count: 9
+
+- id: software
+  name: "3.SW개발"
+  count: 80
+  children:
+    - id: python
+      name: "Python"
+      count: 18
+    - id: ai-coding
+      name: "스크립팅&자동화"
+      count: 11
+    - id: graphql
+      name: "GraphQL 배우기"
+      count: 31
+
+- id: nodejs
+  name: "4.Node.js"
+  count: 52
+  children:
+    - id: js-ts
+      name: "JavaScript&TypeScript"
+      count: 20
+    - id: prisma
+      name: "Prisma(ORM)"
+      count: 10
+    - id: vitest
+      name: "Vitest&TypeBox"
+      count: 12
+    - id: practice
+      name: "실무익히기"
+      count: 10
+
+- id: frontend
+  name: "5.프론트엔드"
+  count: 84
+  children:
+    - id: infra-dev
+      name: "인프라&개발"
+      count: 26
+    - id: artificial-intelligence
+      name: "인공지능"
+      count: 24
+    - id: etc
+      name: "기타"
+      count: 34

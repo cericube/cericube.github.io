@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="{{ site.lang }}">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% if page.title %}{{ page.title }} · {% endif %}{{ site.title }}</title>
+  <meta name="description" content="{{ page.description | default: site.description }}">
+  <link rel="stylesheet" href="{{ '/assets/css/main.css' | relative_url }}">
+</head>
+<body class="{% if page.layout == 'home' %}list-view{% elsif page.layout == 'post' %}post-view{% endif %}">
+  <div class="app-shell">
+    {% include sidebar.html %}
+    <div class="main-shell">
+      {% include header.html %}
+      <main class="content-area">
+        {{ content }}
+      </main>
+    </div>
+  </div>
+  <script src="{{ '/assets/js/main.js' | relative_url }}"></script>
+</body>
+</html>
