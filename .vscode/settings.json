@@ -6,6 +6,6 @@
 
 
   "terminal.integrated.env.linux": {
-    "PATH": "/home/ubuntu/runtimes/node-v24.18.0-linux-x64/bin:$PATH"
+    "PATH": "/home/ubuntu/runtimes/node-v24.18.0-linux-x64/bin:${env:PATH}"
   }
 }

@@ -1,7 +1,6 @@
 {
   "recommendations": [
     "yzhang.markdown-all-in-one",
-    "davidanson.vscode-markdownlint",
-    "shopify.ruby-lsp"
+    "davidanson.vscode-markdownlint"
   ]
 }
