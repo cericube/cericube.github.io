@@ -10,6 +10,15 @@
 <body class="{% if page.layout == 'home' %}list-view{% elsif page.layout == 'post' %}post-view{% endif %}">
   <div class="app-shell">
     {% include sidebar.html %}
+    <div
+      class="sidebar-resizer"
+      id="sidebarResizer"
+      role="separator"
+      aria-label="사이드바 너비 조절"
+      aria-orientation="vertical"
+      aria-valuemin="280"
+      tabindex="0"
+    ></div>
     <div class="main-shell">
       {% include header.html %}
       <main class="content-area">

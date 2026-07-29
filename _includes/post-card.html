@@ -1,7 +1,15 @@
+{%- assign preview_source = post.excerpt -%}
+{%- if preview_source contains '<h2' -%}
+  {%- assign content_sections = post.content | split: '</h2>' -%}
+  {%- assign first_section = content_sections[1] | default: post.content -%}
+  {%- assign paragraph_parts = first_section | split: '</p>' -%}
+  {%- assign preview_source = paragraph_parts[0] -%}
+{%- endif -%}
+{%- assign preview_text = preview_source | strip_html | normalize_whitespace | truncate: 140 -%}
 <article class="post-card" data-category="{{ post.category_id }}" data-date="{{ post.date | date: '%Y%m%d' }}">
   <a href="{{ post.url | relative_url }}" class="post-card-link">
     <h2>{{ post.title }}</h2>
-    <p>{{ post.description | default: post.excerpt | strip_html | truncate: 155 }}</p>
+    <p>{{ preview_text }}</p>
     <div class="post-card-meta">▣ {{ post.date | date: "%Y.%m.%d" }}</div>
   </a>
 </article>

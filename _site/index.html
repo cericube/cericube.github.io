@@ -11,7 +11,8 @@
   <div class="app-shell">
     <aside class="sidebar" id="sidebar">
   <div class="sidebar-profile">
-    <div class="brand-mark" aria-hidden="true">
+    <div class="brand-row">
+      <div class="brand-mark" aria-hidden="true">
   <svg viewBox="0 0 80 80" role="img">
     <defs>
       <linearGradient id="topGradient" x1="0" y1="0" x2="1" y2="1">
@@ -25,166 +26,62 @@
   </svg>
 </div>
 
-    <div class="brand-name">cericube</div>
-    <div class="brand-subtitle">IT 잡학 아카이브</div>
-    <p class="brand-description">다양한 IT 지식과 학습 내용을 기록하고 정리하는 블로그입니다.</p>
-    <a class="email-link" href="mailto:cericube@naver.com">✉ cericube@naver.com</a>
+      <div class="brand-copy">
+        <div class="brand-name">cericube</div>
+        <div class="brand-subtitle">IT 잡학 아카이브</div>
+      </div>
+    </div>
+    <div class="profile-details">
+      <p class="brand-description">다양한 IT 지식과 학습 내용을 기록하고 정리하는 블로그입니다.</p>
+      <a class="email-link" href="mailto:cericube@naver.com">
+        <span class="email-icon" aria-hidden="true">✉</span>
+        <span>cericube@naver.com</span>
+      </a>
+    </div>
   </div>
 
   <nav class="category-tree" aria-label="카테고리">
     <a href="/" class="all-posts-link" data-filter="all">
-      <span>▣</span> 분류 전체보기 <strong>(316)</strong>
+      <span>▣</span> 분류 전체보기 <strong>(5)</strong>
     </a>
 
+    
+      <section class="tree-group" data-tree-group="tech-notes">
+        <button class="tree-parent" type="button" aria-expanded="false">
+          <span class="tree-arrow">›</span>
+          <span>1.기술노트 <strong>(0)</strong></span>
+        </button>
+        <div class="tree-children">
+          
+            <div class="tree-child " data-category-id="tech-notes-concepts">
+              <a href="/?category=tech-notes-concepts" class="category-link" data-filter="tech-notes-concepts">
+                <span class="folder-icon">□</span>
+                <span>이론/개념 <strong>(0)</strong></span>
+              </a>
+            </div>
+          
+        </div>
+      </section>
     
       <section class="tree-group" data-tree-group="system-infra">
         <button class="tree-parent" type="button" aria-expanded="false">
           <span class="tree-arrow">›</span>
-          <span>1.시스템&인프라 <strong>(111)</strong></span>
+          <span>2.시스템&인프라 <strong>(0)</strong></span>
         </button>
         <div class="tree-children">
           
-            
-            <div class="tree-child " data-category-id="dev-environment">
-              <a href="/?category=dev-environment" class="category-link" data-filter="dev-environment">
+            <div class="tree-child " data-category-id="system-infra-virtualization">
+              <a href="/?category=system-infra-virtualization" class="category-link" data-filter="system-infra-virtualization">
                 <span class="folder-icon">□</span>
-                <span>개발환경 <strong>(17)</strong></span>
+                <span>가상화(WSL, VirtualBox, Docker) <strong>(0)</strong></span>
               </a>
-              
             </div>
           
-            
-            <div class="tree-child " data-category-id="virtualization">
-              <a href="/?category=virtualization" class="category-link" data-filter="virtualization">
+            <div class="tree-child " data-category-id="system-infra-ubuntu">
+              <a href="/?category=system-infra-ubuntu" class="category-link" data-filter="system-infra-ubuntu">
                 <span class="folder-icon">□</span>
-                <span>가상화(WSL,VirtualBox,Docker) <strong>(12)</strong></span>
+                <span>Ubuntu <strong>(0)</strong></span>
               </a>
-              
-            </div>
-          
-            
-            <div class="tree-child " data-category-id="kafka">
-              <a href="/?category=kafka" class="category-link" data-filter="kafka">
-                <span class="folder-icon">□</span>
-                <span>Apache Kafka <strong>(21)</strong></span>
-              </a>
-              
-            </div>
-          
-            
-            <div class="tree-child " data-category-id="ubuntu">
-              <a href="/?category=ubuntu" class="category-link" data-filter="ubuntu">
-                <span class="folder-icon">□</span>
-                <span>Ubuntu <strong>(18)</strong></span>
-              </a>
-              
-            </div>
-          
-            
-            <div class="tree-child " data-category-id="stream">
-              <a href="/?category=stream" class="category-link" data-filter="stream">
-                <span class="folder-icon">□</span>
-                <span>스트리밍 <strong>(14)</strong></span>
-              </a>
-              
-            </div>
-          
-            
-            <div class="tree-child " data-category-id="os-basic">
-              <a href="/?category=os-basic" class="category-link" data-filter="os-basic">
-                <span class="folder-icon">□</span>
-                <span>운영 환경과 배포 운영체계 <strong>(21)</strong></span>
-              </a>
-              
-            </div>
-          
-            
-            <div class="tree-child " data-category-id="redis">
-              <a href="/?category=redis" class="category-link" data-filter="redis">
-                <span class="folder-icon">□</span>
-                <span>redis <strong>(8)</strong></span>
-              </a>
-              
-                <div class="tree-posts">
-                  
-                    <a href="/archives/system-infra/redis/redis-stream-practice/" class="tree-post-link ">
-                      8편. Redis Stream 실습: 이벤트 로그와 비동기 작업 큐
-                    </a>
-                  
-                    <a href="/archives/system-infra/redis/redis-sorted-set-practice/" class="tree-post-link ">
-                      7편. Redis Sorted Set 실습: 랭킹과 우선순위 처리
-                    </a>
-                  
-                    <a href="/archives/system-infra/redis/redis-set-practice/" class="tree-post-link ">
-                      6편. Redis Set 실습: 중복 제거와 상태 관리
-                    </a>
-                  
-                    <a href="/archives/system-infra/redis/redis-list-practice/" class="tree-post-link ">
-                      5편. Redis List 실습: 최근 기록과 간단한 버퍼 처리
-                    </a>
-                  
-                    <a href="/archives/system-infra/redis/redis-hash-practice/" class="tree-post-link ">
-                      4편. Redis Hash 실습: 프로필, 세션, 재고, 사용자 설정
-                    </a>
-                  
-                </div>
-              
-            </div>
-          
-        </div>
-      </section>
-    
-      <section class="tree-group" data-tree-group="ai">
-        <button class="tree-parent" type="button" aria-expanded="false">
-          <span class="tree-arrow">›</span>
-          <span>2.언어&프레임 <strong>(9)</strong></span>
-        </button>
-        <div class="tree-children">
-          
-            
-            <div class="tree-child " data-category-id="mediapipe">
-              <a href="/?category=mediapipe" class="category-link" data-filter="mediapipe">
-                <span class="folder-icon">□</span>
-                <span>MediaPipe <strong>(9)</strong></span>
-              </a>
-              
-            </div>
-          
-        </div>
-      </section>
-    
-      <section class="tree-group" data-tree-group="software">
-        <button class="tree-parent" type="button" aria-expanded="false">
-          <span class="tree-arrow">›</span>
-          <span>3.SW개발 <strong>(80)</strong></span>
-        </button>
-        <div class="tree-children">
-          
-            
-            <div class="tree-child " data-category-id="python">
-              <a href="/?category=python" class="category-link" data-filter="python">
-                <span class="folder-icon">□</span>
-                <span>Python <strong>(18)</strong></span>
-              </a>
-              
-            </div>
-          
-            
-            <div class="tree-child " data-category-id="ai-coding">
-              <a href="/?category=ai-coding" class="category-link" data-filter="ai-coding">
-                <span class="folder-icon">□</span>
-                <span>스크립팅&자동화 <strong>(11)</strong></span>
-              </a>
-              
-            </div>
-          
-            
-            <div class="tree-child " data-category-id="graphql">
-              <a href="/?category=graphql" class="category-link" data-filter="graphql">
-                <span class="folder-icon">□</span>
-                <span>GraphQL 배우기 <strong>(31)</strong></span>
-              </a>
-              
             </div>
           
         </div>
@@ -193,81 +90,67 @@
       <section class="tree-group" data-tree-group="nodejs">
         <button class="tree-parent" type="button" aria-expanded="false">
           <span class="tree-arrow">›</span>
-          <span>4.Node.js <strong>(52)</strong></span>
+          <span>3.Node.js <strong>(5)</strong></span>
         </button>
         <div class="tree-children">
           
-            
-            <div class="tree-child " data-category-id="js-ts">
-              <a href="/?category=js-ts" class="category-link" data-filter="js-ts">
+            <div class="tree-child " data-category-id="nodejs-environment">
+              <a href="/?category=nodejs-environment" class="category-link" data-filter="nodejs-environment">
                 <span class="folder-icon">□</span>
-                <span>JavaScript&TypeScript <strong>(20)</strong></span>
+                <span>개발환경 <strong>(0)</strong></span>
               </a>
-              
             </div>
           
-            
-            <div class="tree-child " data-category-id="prisma">
-              <a href="/?category=prisma" class="category-link" data-filter="prisma">
+            <div class="tree-child " data-category-id="nodejs-typescript">
+              <a href="/?category=nodejs-typescript" class="category-link" data-filter="nodejs-typescript">
                 <span class="folder-icon">□</span>
-                <span>Prisma(ORM) <strong>(10)</strong></span>
+                <span>TypeScript <strong>(0)</strong></span>
               </a>
-              
             </div>
           
-            
-            <div class="tree-child " data-category-id="vitest">
-              <a href="/?category=vitest" class="category-link" data-filter="vitest">
+            <div class="tree-child " data-category-id="nodejs-prisma">
+              <a href="/?category=nodejs-prisma" class="category-link" data-filter="nodejs-prisma">
                 <span class="folder-icon">□</span>
-                <span>Vitest&TypeBox <strong>(12)</strong></span>
+                <span>Prisma(ORM) <strong>(0)</strong></span>
               </a>
-              
             </div>
           
-            
-            <div class="tree-child " data-category-id="practice">
-              <a href="/?category=practice" class="category-link" data-filter="practice">
+            <div class="tree-child " data-category-id="nodejs-vitest">
+              <a href="/?category=nodejs-vitest" class="category-link" data-filter="nodejs-vitest">
                 <span class="folder-icon">□</span>
-                <span>실무익히기 <strong>(10)</strong></span>
+                <span>Vitest <strong>(0)</strong></span>
               </a>
-              
             </div>
           
-        </div>
-      </section>
-    
-      <section class="tree-group" data-tree-group="frontend">
-        <button class="tree-parent" type="button" aria-expanded="false">
-          <span class="tree-arrow">›</span>
-          <span>5.프론트엔드 <strong>(84)</strong></span>
-        </button>
-        <div class="tree-children">
-          
-            
-            <div class="tree-child " data-category-id="infra-dev">
-              <a href="/?category=infra-dev" class="category-link" data-filter="infra-dev">
+            <div class="tree-child " data-category-id="nodejs-typebox">
+              <a href="/?category=nodejs-typebox" class="category-link" data-filter="nodejs-typebox">
                 <span class="folder-icon">□</span>
-                <span>인프라&개발 <strong>(26)</strong></span>
+                <span>TypeBox <strong>(0)</strong></span>
               </a>
-              
             </div>
           
-            
-            <div class="tree-child " data-category-id="artificial-intelligence">
-              <a href="/?category=artificial-intelligence" class="category-link" data-filter="artificial-intelligence">
+            <div class="tree-child " data-category-id="nodejs-redis">
+              <a href="/?category=nodejs-redis" class="category-link" data-filter="nodejs-redis">
                 <span class="folder-icon">□</span>
-                <span>인공지능 <strong>(24)</strong></span>
+                <span>Redis <strong>(5)</strong></span>
               </a>
-              
-            </div>
-          
-            
-            <div class="tree-child " data-category-id="etc">
-              <a href="/?category=etc" class="category-link" data-filter="etc">
-                <span class="folder-icon">□</span>
-                <span>기타 <strong>(34)</strong></span>
-              </a>
-              
+                <div class="tree-posts">
+                    <a href="/archives/nodejs/nodejs-redis/redis-stream-practice/" class="tree-post-link ">
+                      8편. Redis Stream 실습: 이벤트 로그와 비동기 작업 큐
+                    </a>
+                    <a href="/archives/nodejs/nodejs-redis/redis-sorted-set-practice/" class="tree-post-link ">
+                      7편. Redis Sorted Set 실습: 랭킹과 우선순위 처리
+                    </a>
+                    <a href="/archives/nodejs/nodejs-redis/redis-set-practice/" class="tree-post-link ">
+                      6편. Redis Set 실습: 중복 제거와 상태 관리
+                    </a>
+                    <a href="/archives/nodejs/nodejs-redis/redis-list-practice/" class="tree-post-link ">
+                      5편. Redis List 실습: 최근 기록과 간단한 버퍼 처리
+                    </a>
+                    <a href="/archives/nodejs/nodejs-redis/redis-hash-practice/" class="tree-post-link ">
+                      4편. Redis Hash 실습: 프로필, 세션, 재고, 사용자 설정
+                    </a>
+                </div>
             </div>
           
         </div>
@@ -276,6 +159,15 @@
   </nav>
 </aside>
 
+    <div
+      class="sidebar-resizer"
+      id="sidebarResizer"
+      role="separator"
+      aria-label="사이드바 너비 조절"
+      aria-orientation="vertical"
+      aria-valuemin="280"
+      tabindex="0"
+    ></div>
     <div class="main-shell">
       <header class="site-header">
   <div>
@@ -295,46 +187,46 @@
   </div>
   <div id="postList" class="post-list">
     
-      <article class="post-card" data-category="redis" data-date="20260724">
-  <a href="/archives/system-infra/redis/redis-stream-practice/" class="post-card-link">
+      <article class="post-card" data-category="nodejs-redis" data-date="20260724">
+  <a href="/archives/nodejs/nodejs-redis/redis-stream-practice/" class="post-card-link">
     <h2>8편. Redis Stream 실습: 이벤트 로그와 비동기 작업 큐</h2>
-    <p>Redis Stream을 실습 예제로 이벤트 로그 저장과 비동기 작업 큐를 구현합니다.</p>
+    <p>Redis Stream은ㄹㅇㄴㅁㅁㄴㅇ 이벤트를 순차적으로 저장하는 로그 구조입니다. 주문이 발생할 때마다 주문 정보를 Stream에 추가할 수 있습니다. Redis Stream은 이벤트를 순차적으로 저장하는 로그 구조입니다. 주문이 발생할 때마다...</p>
     <div class="post-card-meta">▣ 2026.07.24</div>
   </a>
 </article>
 
     
-      <article class="post-card" data-category="redis" data-date="20260722">
-  <a href="/archives/system-infra/redis/redis-sorted-set-practice/" class="post-card-link">
+      <article class="post-card" data-category="nodejs-redis" data-date="20260722">
+  <a href="/archives/nodejs/nodejs-redis/redis-sorted-set-practice/" class="post-card-link">
     <h2>7편. Redis Sorted Set 실습: 랭킹과 우선순위 처리</h2>
-    <p>Redis Sorted Set으로 점수 기반 랭킹과 우선순위 처리 방법을 구현합니다.</p>
+    <p>Sorted Set은 score를 기준으로 멤버를 자동 정렬합니다.</p>
     <div class="post-card-meta">▣ 2026.07.22</div>
   </a>
 </article>
 
     
-      <article class="post-card" data-category="redis" data-date="20260708">
-  <a href="/archives/system-infra/redis/redis-set-practice/" class="post-card-link">
+      <article class="post-card" data-category="nodejs-redis" data-date="20260708">
+  <a href="/archives/nodejs/nodejs-redis/redis-set-practice/" class="post-card-link">
     <h2>6편. Redis Set 실습: 중복 제거와 상태 관리</h2>
-    <p>Redis Set을 활용한 중복 제거, 멤버십 관리, 교집합과 합집합 처리 방법을 정리합니다.</p>
+    <p>Set은 동일한 값을 한 번만 저장하므로 방문자나 좋아요 사용자 관리에 적합합니다.</p>
     <div class="post-card-meta">▣ 2026.07.08</div>
   </a>
 </article>
 
     
-      <article class="post-card" data-category="redis" data-date="20260702">
-  <a href="/archives/system-infra/redis/redis-list-practice/" class="post-card-link">
+      <article class="post-card" data-category="nodejs-redis" data-date="20260702">
+  <a href="/archives/nodejs/nodejs-redis/redis-list-practice/" class="post-card-link">
     <h2>5편. Redis List 실습: 최근 기록과 간단한 버퍼 처리</h2>
-    <p>Redis List로 최근 기록 저장과 간단한 버퍼 처리 전략을 실습합니다.</p>
+    <p>List의 LPUSH와 LTRIM을 조합하면 최근 항목만 유지할 수 있습니다.</p>
     <div class="post-card-meta">▣ 2026.07.02</div>
   </a>
 </article>
 
     
-      <article class="post-card" data-category="redis" data-date="20260626">
-  <a href="/archives/system-infra/redis/redis-hash-practice/" class="post-card-link">
+      <article class="post-card" data-category="nodejs-redis" data-date="20260626">
+  <a href="/archives/nodejs/nodejs-redis/redis-hash-practice/" class="post-card-link">
     <h2>4편. Redis Hash 실습: 프로필, 세션, 재고, 사용자 설정</h2>
-    <p>Redis Hash로 프로필, 세션, 재고 상태와 사용자 설정을 관리하는 방법을 실습합니다.</p>
+    <p>Hash는 하나의 키 아래 여러 필드를 저장할 때 적합합니다.</p>
     <div class="post-card-meta">▣ 2026.06.26</div>
   </a>
 </article>

@@ -2,9 +2,8 @@
 layout: post
 title: "8편. Redis Stream 실습: 이벤트 로그와 비동기 작업 큐"
 description: "Redis Stream을 실습 예제로 이벤트 로그 저장과 비동기 작업 큐를 구현합니다."
-category_id: redis
-categories: [system-infra, redis]
-category_path: "1.시스템&인프라/redis"
+category_id: nodejs-redis
+categories: [nodejs, nodejs-redis]
 new: true
 toc:
   - id: order-event
@@ -18,8 +17,14 @@ toc:
 ---
 <h2 id="order-event">1. 주문 이벤트 저장하기</h2>
 
+Redis Stream은ㄹㅇㄴㅁㅁㄴㅇ  이벤트를 순차적으로 저장하는 로그 구조입니다. 주문이 발생할 때마다 주문 정보를 Stream에 추가할 수 있습니다.  
 Redis Stream은 이벤트를 순차적으로 저장하는 로그 구조입니다. 주문이 발생할 때마다 주문 정보를 Stream에 추가할 수 있습니다.
 
+Redis Stream은 이벤트를 순차적으로 저장하는 로그 구조입니다. 주문이 발생할 때마다 주문 정보를 Stream에 추가할 수 있습니다.
+
+Redis Stream은 이벤트를 순차적으로 저장하는 로그 구조입니다. 주문이 발생할 때마다 주문 정보를 Stream에 추가할 수 있습니다.
+
+Redis Stream은 이벤트를 순차적으로 저장하는 로그 구조입니다. 주문이 발생할 때마다 주문 정보를 Stream에 추가할 수 있습니다.
 ```bash
 XADD orders * orderId "1001" userId "u001" product "노트북" amount "1200000"
 ```
@@ -29,6 +34,8 @@ XADD orders * orderId "1001" userId "u001" product "노트북" amount "1200000"
 <h2 id="notification-queue">2. 알림 이벤트 큐 만들기</h2>
 
 고객에게 발송할 알림 이벤트를 별도의 Stream에 적재합니다.
+
+![alt text](/assets/images/nodejs/nodejs-redis/image.png)
 
 ```bash
 XADD notifications * type "order_placed" userId "u001" channel "email" message "주문이 접수되었습니다."

@@ -2,9 +2,8 @@
 layout: post
 title: "7편. Redis Sorted Set 실습: 랭킹과 우선순위 처리"
 description: "Redis Sorted Set으로 점수 기반 랭킹과 우선순위 처리 방법을 구현합니다."
-category_id: redis
-categories: [system-infra, redis]
-category_path: "1.시스템&인프라/redis"
+category_id: nodejs-redis
+categories: [nodejs, nodejs-redis]
 ---
 ## 랭킹 만들기
 

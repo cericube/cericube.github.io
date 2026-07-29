@@ -168,6 +168,8 @@ cericube.github.io/
 ├── _includes/
 ├── _data/
 ├── _posts/
+│   └── nodejs/
+│       └── nodejs-redis/
 ├── assets/
 └── README.md
 ```
@@ -444,10 +446,12 @@ vendor/
 
 ## 17. 새 글 작성
 
-글은 `_posts` 디렉터리에 작성합니다.
+글은 `_posts` 아래에 카테고리 ID와 같은 디렉터리 구조로 작성합니다.
 
 ```text
 _posts/
+└── nodejs/
+    └── nodejs-redis/
 ```
 
 파일명은 다음 형식을 사용합니다.
@@ -459,7 +463,7 @@ YYYY-MM-DD-title.md
 예시:
 
 ```text
-2026-07-27-redis-basic.md
+_posts/nodejs/nodejs-redis/2026-07-27-redis-basic.md
 ```
 
 기본 Front Matter 예시:
@@ -469,11 +473,10 @@ YYYY-MM-DD-title.md
 layout: post
 title: "Redis 기본 명령어 정리"
 description: "Redis에서 자주 사용하는 기본 명령어를 정리합니다."
-category_id: redis
+category_id: nodejs-redis
 categories:
-  - system-infra
-  - redis
-category_path: "1.시스템&인프라/redis"
+  - nodejs
+  - nodejs-redis
 ---
 ```
 
