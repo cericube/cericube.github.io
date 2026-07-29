@@ -1,9 +1,12 @@
 ---
 layout: post
-title: "5편. Redis List 실습: 최근 기록과 간단한 버퍼 처리"
+title: "5편. fffmpeg Redis List 실습: 최근 기록과 간단한 버퍼 처리"
 description: "Redis List로 최근 기록 저장과 간단한 버퍼 처리 전략을 실습합니다."
 category_id: nodejs-redis
 categories: [nodejs, nodejs-redis]
+series: redis
+series_order: 5
+ai_assisted: true
 ---
 ## 최근 기록 저장하기
 

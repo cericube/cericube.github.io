@@ -160,6 +160,8 @@ ls
 
 ```text
 cericube.github.io/
+├── .vscode/
+│   └── settings.json
 ├── Gemfile
 ├── Gemfile.lock
 ├── _config.yml
@@ -167,12 +169,28 @@ cericube.github.io/
 ├── _layouts/
 ├── _includes/
 ├── _data/
+│   └── categories.yml
 ├── _posts/
+│   ├── tech-notes/
+│   │   └── tech-notes-concepts/
+│   ├── system-infra/
+│   │   ├── system-infra-virtualization/
+│   │   └── system-infra-ubuntu/
 │   └── nodejs/
+│       ├── nodejs-environment/
+│       ├── nodejs-typescript/
+│       ├── nodejs-prisma/
+│       ├── nodejs-vitest/
+│       ├── nodejs-typebox/
 │       └── nodejs-redis/
 ├── assets/
+│   ├── css/
+│   ├── images/
+│   └── js/
 └── README.md
 ```
+
+`_posts`와 `assets/images`의 하위 디렉터리는 `_data/categories.yml`에 정의한 카테고리 ID 구조를 동일하게 사용합니다.
 
 ---
 
@@ -428,7 +446,7 @@ https://cericube.github.io
 
 ## 16. `.gitignore` 설정
 
-프로젝트 루트의 `.gitignore`에 다음 내용을 추가합니다.
+프로젝트 루트의 `.gitignore`에는 다음 내용이 설정되어 있습니다.
 
 ```gitignore
 _site/
@@ -442,6 +460,8 @@ vendor/
 
 `Gemfile.lock`은 삭제하지 않고 Git에 포함하는 것을 권장합니다.
 
+`_site`는 Jekyll이 빌드할 때 자동으로 생성되므로 Git으로 관리하지 않습니다.
+
 ---
 
 ## 17. 새 글 작성
@@ -454,16 +474,18 @@ _posts/
     └── nodejs-redis/
 ```
 
-파일명은 다음 형식을 사용합니다.
+카테고리는 `_data/categories.yml`에서 관리합니다. 사이드바의 카테고리별 글 개수는 이 파일에 직접 입력하지 않고, 각 글의 `category_id`를 기준으로 자동 계산합니다.
+
+새 글의 파일명은 날짜, 시리즈, 시리즈 순서, 글 이름을 조합하는 다음 형식을 권장합니다.
 
 ```text
-YYYY-MM-DD-title.md
+YYYY-MM-DD-series-series_order-title.md
 ```
 
 예시:
 
 ```text
-_posts/nodejs/nodejs-redis/2026-07-27-redis-basic.md
+_posts/nodejs/nodejs-redis/2026-07-27-redis-1-redis-basic.md
 ```
 
 기본 Front Matter 예시:
@@ -474,9 +496,10 @@ layout: post
 title: "Redis 기본 명령어 정리"
 description: "Redis에서 자주 사용하는 기본 명령어를 정리합니다."
 category_id: nodejs-redis
-categories:
-  - nodejs
-  - nodejs-redis
+categories: [nodejs, nodejs-redis]
+series: redis
+series_order: 1
+ai_assisted: true
 ---
 ```
 
@@ -487,6 +510,43 @@ categories:
 
 Redis의 기본 개념을 정리합니다.
 ```
+
+Front Matter의 주요 항목은 다음과 같이 사용합니다.
+
+- `title`: 브라우저에 표시할 글 제목
+- `description`: 검색엔진과 소셜 공유를 위한 메타 설명
+- `category_id`: 사이드바 분류와 같은 카테고리의 이전·다음 글을 결정하는 하위 카테고리 ID
+- `categories`: Jekyll URL에 사용할 상위·하위 카테고리 ID
+- `series`: 글이 속한 시리즈
+- `series_order`: 시리즈 안에서의 글 순서
+- `ai_assisted`: `true`이면 본문 하단에 `_config.yml`의 `ai_notice` 문구 표시
+- `toc`: 필요한 글에서만 목차 항목을 정의하며, 브라우저에서는 기본적으로 접힌 상태로 표시
+
+글 목록의 본문 미리보기는 `description`을 사용하지 않습니다. 실제 본문의 첫 번째 의미 있는 문단을 읽어 최대 두 줄로 표시합니다.
+
+게시일로부터 7일이 지나지 않은 글에는 제목 옆에 `N` 배지가 자동으로 표시되므로 `new: true`는 작성하지 않습니다.
+
+### 게시글 이미지 관리
+
+게시글 이미지는 `_posts`의 카테고리 경로와 동일한 `assets/images` 하위 경로에 저장합니다.
+
+```text
+_posts/nodejs/nodejs-redis/
+assets/images/nodejs/nodejs-redis/
+```
+
+VS Code에서 Markdown 파일에 이미지를 붙여넣거나 드래그하면 `.vscode/settings.json`의 다음 설정에 따라 대응하는 이미지 디렉터리로 자동 복사됩니다.
+
+```json
+{
+  "markdown.copyFiles.destination": {
+    "/_posts/**/*": "/assets/images/${documentRelativeDirName/^_posts\\/(.*)$/$1/}/"
+  },
+  "markdown.copyFiles.overwriteBehavior": "nameIncrementally"
+}
+```
+
+같은 이름의 이미지가 이미 있으면 기존 파일을 덮어쓰지 않고 파일명에 번호를 붙입니다. 게시글에서 사용하는 이미지 URL은 배포 경로의 영향을 받지 않도록 `/assets/images/...`로 시작하는 루트 상대 경로를 권장합니다.
 
 ---
 

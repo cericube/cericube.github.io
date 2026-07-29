@@ -4,7 +4,9 @@ title: "8편. Redis Stream 실습: 이벤트 로그와 비동기 작업 큐"
 description: "Redis Stream을 실습 예제로 이벤트 로그 저장과 비동기 작업 큐를 구현합니다."
 category_id: nodejs-redis
 categories: [nodejs, nodejs-redis]
-new: true
+series: redis
+series_order: 8
+ai_assisted: true
 toc:
   - id: order-event
     title: "주문 이벤트 저장하기"

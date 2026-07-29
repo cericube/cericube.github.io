@@ -3,7 +3,10 @@ layout: default
 ---
 <article class="post-page">
   <header class="post-header">
-    <h1>{{ page.title }}{% if page.new %}<span class="new-badge">N</span>{% endif %}</h1>
+    {% assign current_timestamp = site.time | date: "%s" | plus: 0 %}
+    {% assign post_timestamp = page.date | date: "%s" | plus: 0 %}
+    {% assign post_age_seconds = current_timestamp | minus: post_timestamp %}
+    <h1>{{ page.title }}{% if post_age_seconds >= 0 and post_age_seconds < 604800 %}<span class="new-badge">N</span>{% endif %}</h1>
   </header>
 
   {% if page.toc %}
@@ -21,6 +24,12 @@ layout: default
     <div class="post-content">
       {{ content }}
     </div>
+
+    {% if page.ai_assisted %}
+      <aside class="ai-notice" aria-label="AI 활용 안내">
+        {{ site.ai_notice }}
+      </aside>
+    {% endif %}
 
     {%- assign category_posts = site.posts | where: "category_id", page.category_id -%}
     {%- assign category_previous = nil -%}

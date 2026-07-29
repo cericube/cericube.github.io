@@ -1,9 +1,12 @@
 ---
 layout: post
-title: "4편. Redis Hash 실습: 프로필, 세션, 재고, 사용자 설정"
+title: "4편. ffmpeg Redis Hash 실습: 프로필, 세션, 재고, 사용자 설정"
 description: "Redis Hash로 프로필, 세션, 재고 상태와 사용자 설정을 관리하는 방법을 실습합니다."
 category_id: nodejs-redis
 categories: [nodejs, nodejs-redis]
+series: redis
+series_order: 4
+ai_assisted: true
 ---
 ## Redis Hash 시작하기
 
