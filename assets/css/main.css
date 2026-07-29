@@ -271,9 +271,16 @@ body.is-resizing {
   outline: 2px solid #5c9ee8;
   outline-offset: 4px;
 }
-.toc-box ol { margin: 0; padding-left: 22px; }
-.toc-box details[open] ol { margin-top: 10px; }
-.toc-box li { margin: 7px 0; }
+.toc-box ul { margin: 0; padding: 0; list-style: none; }
+.toc-box details[open] ul { margin-top: 10px; }
+.toc-box li { position: relative; margin: 7px 0; padding-left: 15px; }
+.toc-box li::before {
+  position: absolute;
+  left: 0;
+  color: #6f8fb8;
+  content: "›";
+  font-weight: 700;
+}
 .toc-box a { color: #005fda; font-weight: 600; }
 .post-content {
   min-width: 0;
@@ -283,6 +290,7 @@ body.is-resizing {
   overflow-wrap: anywhere;
 }
 .post-content h2 { margin: 28px 0 10px; font-size: 23px; scroll-margin-top: 20px; }
+.post-content h3 { margin: 32px 0 10px; font-size: 19px; scroll-margin-top: 20px; }
 .post-content p { margin: 8px 0 16px; }
 .post-content img {
   display: block;
@@ -322,6 +330,31 @@ body.is-resizing {
 .post-content pre { max-width: 100%; overflow-x: auto; border-radius: 9px; background: #15191f; color: #f7f7f7; padding: 18px; }
 .post-content code { font-family: "SFMono-Regular", Consolas, monospace; }
 .post-content blockquote { margin: 16px 0; padding: 12px 18px; background: #fff7dc; border: 1px solid #f5df99; border-radius: 8px; color: #4e4430; }
+.post-content table {
+  display: block;
+  width: max-content;
+  max-width: 100%;
+  margin: 18px 0;
+  overflow-x: auto;
+  border-collapse: collapse;
+  font-size: 15px;
+  line-height: 1.6;
+}
+.post-content th,
+.post-content td {
+  padding: 10px 14px;
+  border: 1px solid #dfe5ec;
+  text-align: left;
+  vertical-align: top;
+  word-break: keep-all;
+  overflow-wrap: normal;
+}
+.post-content th {
+  background: #f5f8fc;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.post-content tr:nth-child(even) td { background: #fafbfd; }
 .post-navigation { display: grid; grid-template-columns: 1fr 1fr; border: 1px solid var(--line); border-radius: 9px; margin-top: 34px; overflow: hidden; }
 .post-navigation > div { min-height: 72px; padding: 13px 18px; }
 .post-navigation > div + div { border-left: 1px solid var(--line); }

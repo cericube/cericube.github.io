@@ -13,9 +13,9 @@ layout: default
     <nav class="toc-box" aria-label="목차">
       <details>
         <summary>☷ 목차</summary>
-        <ol>
+        <ul>
           {% for item in page.toc %}<li><a href="#{{ item.id }}">{{ item.title }}</a></li>{% endfor %}
-        </ol>
+        </ul>
       </details>
     </nav>
   {% endif %}
