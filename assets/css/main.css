@@ -45,22 +45,17 @@ button, select { font: inherit; }
 .brand-row {
   display: flex;
   align-items: center;
-  gap: 12px;
+  justify-content: center;
 }
-.brand-mark { flex: 0 0 42px; width: 42px; margin: 0; }
-.brand-mark svg { display: block; width: 100%; }
-.brand-copy { min-width: 0; line-height: 1.15; }
-.brand-name {
-  color: #15356f;
-  font-size: 21px;
-  font-weight: 800;
-  letter-spacing: -.3px;
+.brand-mark {
+  flex: 0 0 88px;
+  width: 88px;
+  margin: -5px 0 -7px;
 }
-.brand-subtitle {
-  margin-top: 4px;
-  color: #566174;
-  font-size: 13px;
-  font-weight: 650;
+.brand-mark img {
+  display: block;
+  width: 100%;
+  height: auto;
 }
 .profile-details {
   margin-top: 10px;
