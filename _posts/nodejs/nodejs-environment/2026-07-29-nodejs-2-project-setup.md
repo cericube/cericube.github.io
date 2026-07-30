@@ -1,6 +1,6 @@
 ---
 layout: post
-title: "2. Node.js 프로젝트 초기화와 ESLint·Prettier 개발 환경 구성"
+title: "2. 프로젝트 초기화와 ESLint·Prettier 개발 환경 구성"
 description: "npm으로 Node.js 프로젝트를 초기화하고 package.json의 구조와 ESM·의존성 설정을 살펴봅니다. ESLint와 Prettier, VS Code 설정을 연동해 코드 검사와 포맷팅을 자동화하는 방법을 정리합니다."
 category_id: nodejs-environment
 categories: [nodejs, nodejs-environment]
@@ -16,37 +16,42 @@ toc:
     title: "3. VSCode 확장과 settings.json 통합"
 ---
 
-<h2 id="session-01">1. 프로젝트 초기화: init과 package.json 구조 이해</h2>
+## 1. 프로젝트 초기화: init과 package.json 구조 이해 {#session-01}
 
 ### 🟦 프로젝트 폴더 선택
 
-VS Code 상단 메뉴에서 **File → Add Folder to Workspace...**를 선택한 뒤, 다음 프로젝트 폴더를 지정합니다.  
+VS Code 상단 메뉴에서 **File →  Open Folder ...**를 선택한 뒤, 다음 프로젝트 폴더를 지정합니다.
 
-```
+```text
 /home/ubuntu/blog-workspaces/nodejs-workbook/
-```  
-![alt text](/assets/images/nodejs/nodejs-environment/image-2026-07-29.png)
-폴더를 선택하면 현재 VS Code 워크스페이스에 nodejs-workbook 프로젝트가 추가됩니다.  
+```
+
+![alt text](/assets/images/nodejs/nodejs-environment/image-2026-07-29-4.png)
+폴더를 선택하면 nodejs-workbook 프로젝트가 생성됩니다.  
 이제 탐색기(Explorer) 영역에서 프로젝트의 파일과 디렉터리 구조를 확인할 수 있습니다.
 
-### 🟦 Node.js 프로젝트 초기화  
-```
-ubuntu:~/blog-workspaces/nodejs-workbook$ npm init -y 
+### 🟦 Node.js 프로젝트 초기화
+
+```text
+ubuntu:~/blog-workspaces/nodejs-workbook$ npm init -y
 Wrote to /home/ubuntu/blog-workspaces/nodejs-workbook/package.json:
 ```
-이 명령을 실행하면 프로젝트의 루트 디렉터리에 package.json 파일이 생성됩니다.  
-package.json은 Node.js 생태계에서 프로젝트의 정체성 카드이자 통합 설정 파일 역할을 합니다.  
 
-이 파일에는 다음과 같은 정보가 담깁니다.  
+이 명령을 실행하면 프로젝트의 루트 디렉터리에 package.json 파일이 생성됩니다.  
+package.json은 Node.js 생태계에서 프로젝트의 정체성 카드이자 통합 설정 파일 역할을 합니다.
+
+이 파일에는 다음과 같은 정보가 담깁니다.
+
 - 프로젝트의 이름(name)
 - 현재 버전(version)
 - 실행 가능한 명령어(scripts)
-- 프로젝트에 필요한 의존성(dependencies)  
-  
+- 프로젝트에 필요한 의존성(dependencies)
+
 즉, package.json은 프로젝트의 기본 정보와 실행 환경을 한곳에서 관리하는 핵심 파일입니다.
 
-### 🟦 package.json 기본 구조 예시  
-```
+### 🟦 package.json 기본 구조 예시
+
+```json
 {
   "name": "nodejs-workbook",
   "version": "1.0.0",
@@ -56,54 +61,63 @@ package.json은 Node.js 생태계에서 프로젝트의 정체성 카드이자 �
     "dev": "node --watch dist/index.js",
     "build": "tsc -p tsconfig.json",
     "lint": "eslint src --ext .ts,.js",
-    "format": "prettier --write 
+    "format": "prettier --write
   },
   "author": "",
   "license": "MIT",
   "type": "module"
 }
 ```
+
 #### ✔️ "type": "module" — ESM 사용 설정
 
 ESM(ECMAScript Modules)은 JavaScript의 표준 모듈 시스템으로, import와 export 문법을 사용해 모듈을 불러오거나 내보냅니다.  
-package.json에 다음 설정을 추가하면 Node.js는 해당 패키지 내부의 .js 파일을 ES 모듈로 해석합니다.  
-```
-{ 
-  "type": "module" 
+package.json에 다음 설정을 추가하면 Node.js는 해당 패키지 내부의 .js 파일을 ES 모듈로 해석합니다.
+
+```json
+{
+  "type": "module"
 }
 ```
+
 따라서 브라우저 JavaScript와 유사한 방식으로 import와 export 문법을 사용할 수 있습니다.
+
 ```typescript
-// ESM 방식 
-import fs from "node:fs"; 
-import path from "node:path"; 
+// ESM 방식
+import fs from "node:fs";
+import path from "node:path";
 
 console.log("ESM 기반 Node.js 환경입니다.");
 ```
 
-모듈 형식 정리  
-- "type": "module": .js 파일을 ESM으로 해석  
-- "type": "commonjs" 또는 "type" 생략: .js 파일을 CommonJS로 해석 
-- .mjs: "type" 설정과 관계없이 ESM으로 해석  
-- .cjs: "type" 설정과 관계없이 CommonJS로 해석  
+모듈 형식 정리
 
-#### ✔️ scripts - 개발 생산성을 높이는 명령어 관리 기능  
+- "type": "module": .js 파일을 ESM으로 해석
+- "type": "commonjs" 또는 "type" 생략: .js 파일을 CommonJS로 해석
+- .mjs: "type" 설정과 관계없이 ESM으로 해석
+- .cjs: "type" 설정과 관계없이 CommonJS로 해석
+
+#### ✔️ scripts - 개발 생산성을 높이는 명령어 관리 기능
+
 scripts는 package.json에서 제공하는 명령어 매핑 기능입니다.  
 자주 사용하는 긴 명령어를 짧은 이름으로 등록해 두면, 매번 전체 명령어를 입력하거나 기억하지 않아도 됩니다.  
-또한 팀원 모두가 동일한 명령어를 사용하게 되므로 프로젝트의 실행, 빌드, 검사 과정을 일관되게 관리할 수 있습니다.  
+또한 팀원 모두가 동일한 명령어를 사용하게 되므로 프로젝트의 실행, 빌드, 검사 과정을 일관되게 관리할 수 있습니다.
 
-예를 들어 package.json에 다음과 같이 스크립트를 정의할 수 있습니다.  
-```typescript
-{ 
-  "scripts": { 
-    "dev": "node --watch dist/index.js", 
-    "build": "tsc -p tsconfig.json", 
-    "lint": "eslint src", 
-    "format": "prettier --write ." 
-    } 
+예를 들어 package.json에 다음과 같이 스크립트를 정의할 수 있습니다.
+
+```json
+{
+  "scripts": {
+    "dev": "node --watch dist/index.js",
+    "build": "tsc -p tsconfig.json",
+    "lint": "eslint src",
+    "format": "prettier --write ."
+    }
 }
-```  
-예를 들어 다음과 같은 스크립트를 정의했다고 가정해 보겠습니다.  
+```
+
+예를 들어 다음과 같은 스크립트를 정의했다고 가정해 보겠습니다.
+
 - `npm run dev`
   - `dist/index.js`를 실행하고, 파일이 변경되면 자동으로 다시 실행합니다.
 
@@ -122,18 +136,22 @@ scripts는 package.json에서 제공하는 명령어 매핑 기능입니다.
 npm run build
 ```
 
-#### ✔️ `dependencies`와 `devDependencies`   
+#### ✔️ `dependencies`와 `devDependencies`
+
 Node.js 프로젝트에서 사용하는 패키지는 용도에 따라 `dependencies`와 `devDependencies`로 구분합니다.  
 애플리케이션이 실제로 실행될 때 필요한 패키지는 `dependencies`에 등록하고, 개발·빌드·테스트 과정에서만 사용하는 도구는 `devDependencies`에 등록합니다.  
-ESLint, Prettier, TypeScript는 대표적인 개발 도구이므로 `--save-dev` 옵션으로 설치합니다.  
+ESLint, Prettier, TypeScript는 대표적인 개발 도구이므로 `--save-dev` 옵션으로 설치합니다.
+
 ```bash
 npm install --save-dev typescript eslint prettier
 ```
+
 `--save-dev`는 다음과 같이 `-D`로 줄여 사용할 수도 있습니다.
 
 ```bash
 npm install -D typescript eslint prettier
 ```
+
 설치가 완료되면 `package.json`의 `devDependencies` 항목에 패키지 정보가 자동으로 추가됩니다.
 
  ▸ `dependencies`
@@ -143,53 +161,63 @@ npm install -D typescript eslint prettier
 
 ▸ `devDependencies`
 개발, 빌드, 테스트, 코드 검사, 코드 포맷팅 과정에서만 사용하는 패키지입니다.  
-대표적인 예시는 다음과 같습니다.  
+대표적인 예시는 다음과 같습니다.
+
 - TypeScript
 - ESLint
 - Prettier
 - Jest
 - Vite
 - Webpack
+
 ```bash
 npm install -D typescript eslint prettier
 ```
 
-<h2 id="session-02">2. ESLint와 Prettier로 코드 품질 관리하기</h2>  
-Node.js와 TypeScript 프로젝트에서 코드 품질과 코드 스타일을 일관되게 유지하려면 ESLint와 Prettier를 함께 사용하는 것이 일반적입니다.  
+## 2. ESLint와 Prettier로 코드 품질 관리하기 {#session-02}
 
-두 도구는 비슷해 보이지만 담당하는 역할이 다릅니다.  
-- ESLint는 잠재적인 오류와 잘못된 코드 패턴을 검사하여 코드 품질을 관리합니다.  
-- Prettier는 들여쓰기, 줄바꿈, 따옴표와 같은 코드 형식을 자동으로 정리합니다.  
+Node.js와 TypeScript 프로젝트에서 코드 품질과 코드 스타일을 일관되게 유지하려면 ESLint와 Prettier를 함께 사용하는 것이 일반적입니다.
 
-최신 ESLint에서는 Flat Config가 기본 설정 방식으로 사용됩니다.   
+두 도구는 비슷해 보이지만 담당하는 역할이 다릅니다.
 
-### 🟦 1단계 - ESLint 자동 초기화 (npx eslint --init)  
+- ESLint는 잠재적인 오류와 잘못된 코드 패턴을 검사하여 코드 품질을 관리합니다.
+- Prettier는 들여쓰기, 줄바꿈, 따옴표와 같은 코드 형식을 자동으로 정리합니다.
+
+최신 ESLint에서는 Flat Config가 기본 설정 방식으로 사용됩니다.
+
+### 🟦 1단계 - ESLint 자동 초기화 (npx eslint --init)
+
 ESLint v9부터는 **Flat Config**가 기본 설정 방식(Default Configuration Format)으로 채택되었습니다.  
 프로젝트 루트 디렉터리에서 다음 명령을 실행합니다.
+
 ```bash
 npx eslint --init
 ```
+
 이 명령을 실행하면 ESLint의 공식 설정 생성기인 `@eslint/create-config`가 실행됩니다.  
-생성기는 프로젝트 환경에 맞는 ESLint 설정을 만들기 위해 몇 가지 질문을 순서대로 표시하며, 응답한 내용에 따라 필요한 패키지를 설치하고 `eslint.config.js`(또는 환경에 맞는 설정 파일)를 생성합니다.  
+생성기는 프로젝트 환경에 맞는 ESLint 설정을 만들기 위해 몇 가지 질문을 순서대로 표시하며, 응답한 내용에 따라 필요한 패키지를 설치하고 `eslint.config.js`(또는 환경에 맞는 설정 파일)를 생성합니다.
 
 #### ✔️ 질문 예시
-실제로 실행하면 다음과 같은 과정이 진행됩니다:
-1. What do you want to lint?
-→ JavaScript, JSON 등 검사할 파일 형식을 선택
-2. How would you like to use ESLint?
-→ 문법 오류와 문제만 검사할지, 스타일 규칙까지 포함할지 선택 (일반적으로 “problems” 선택)
-3. What type of modules does your project use?
-→ ESM ("type": "module") 환경 선택
-4. Does your project use TypeScript?
-→ Yes 선택 → TypeScript 린팅 자동 구성
-5. Where does your code run?
-→ browser, node 등 환경 선택
-6. Which language do you want your configuration file be written in?
-→ JavaScript 
 
-모든 질문에 답하면 ESLint는 선택한 환경에 맞는 패키지를 설치하고, 프로젝트 루트에 Flat Config 기반의 설정 파일을 생성합니다.  
-이렇게 생성된 설정은 프로젝트의 기본 출발점이며, 이후 TypeScript 규칙이나 Prettier 연동 등 프로젝트에 필요한 옵션을 추가하여 사용할 수 있습니다.  
+실제로 실행하면 다음과 같은 과정이 진행됩니다:
+
+1. What do you want to lint?
+   → JavaScript, JSON 등 검사할 파일 형식을 선택
+2. How would you like to use ESLint?
+   → 문법 오류와 문제만 검사할지, 스타일 규칙까지 포함할지 선택 (일반적으로 “problems” 선택)
+3. What type of modules does your project use?
+   → ESM ("type": "module") 환경 선택
+4. Does your project use TypeScript?
+   → Yes 선택 → TypeScript 린팅 자동 구성
+5. Where does your code run?
+   → browser, node 등 환경 선택
+6. Which language do you want your configuration file be written in?
+   → JavaScript
+
+모든 질문에 답하면 ESLint는 선택한 환경에 맞는 패키지를 설치하고, 프로젝트 루트에 Flat Config 기반의 설정 파일(eslint.config.mjs)을 생성합니다.  
+이렇게 생성된 설정은 프로젝트의 기본 출발점이며, 이후 TypeScript 규칙이나 Prettier 연동 등 프로젝트에 필요한 옵션을 추가하여 사용할 수 있습니다.
 ![alt text](/assets/images/nodejs/nodejs-environment/image-2026-07-29-1.png)
+
 ```bash
 ubuntu:~/blog-workspaces/nodejs-workbook$ npm list
 nodejs-workbook@1.0.0 /home/ubuntu/blog-workspaces/nodejs-workbook
@@ -202,114 +230,38 @@ nodejs-workbook@1.0.0 /home/ubuntu/blog-workspaces/nodejs-workbook
 └── typescript-eslint@8.65.0
 ```
 
-#### ✔️ eslint.config.mjs 예시 
-```typescript
-import js from "@eslint/js";
-import globals from "globals";
-import tseslint from "typescript-eslint";
-import json from "@eslint/json";
-import { defineConfig } from "eslint/config";
+### 🟦 2단계 - Prettier 설치 및 스타일 설정
 
-/*
- * ESLint의 Flat Config 형식을 사용하는 설정 파일입니다.
- *
- * defineConfig()에 전달한 배열의 설정은 위에서 아래 순서로 적용됩니다.
- */
-export default defineConfig([
-  {
-    /*
-     * 일반 JavaScript와 TypeScript 파일에 적용할 공통 설정입니다.
-     *
-     * - js: 일반 JavaScript
-     * - mjs: ECMAScript 모듈
-     * - cjs: CommonJS 모듈
-     * - ts: 일반 TypeScript
-     * - mts: ECMAScript 모듈 방식의 TypeScript
-     * - cts: CommonJS 모듈 방식의 TypeScript
-     */
-    files: ["**/*.{js,mjs,cjs,ts,mts,cts}"],
+ESLint와 Prettier는 서로 다른 역할을 담당합니다.
 
-    /*
-     * @eslint/js 플러그인을 "js"라는 이름으로 등록합니다.
-     * 아래 extends에서 "js/recommended" 설정을 사용하기 위해 필요합니다.
-     */
-    plugins: {
-      js,
-    },
-
-    /*
-     * ESLint가 공식적으로 권장하는 JavaScript 규칙 모음을 적용합니다.
-     * 잠재적인 오류나 일반적으로 문제가 되는 코드를 기본 수준에서 검사합니다.
-     */
-    extends: ["js/recommended"],
-
-    languageOptions: {
-      /*
-       * 브라우저와 Node.js 환경에서 제공되는 전역 변수를 모두 허용합니다.
-       */
-      globals: {
-        ...globals.browser,
-        ...globals.node,
-      },
-    },
-  },
-
-  /*
-   * TypeScript 분석을 위한 typescript-eslint의 권장 설정을 적용합니다.
-   */
-  tseslint.configs.recommended,
-
-  {
-    // 프로젝트 안의 모든 JSON 파일에 적용합니다.
-    files: ["**/*.json"],
-
-    /*
-     * @eslint/json 플러그인을 "json"이라는 이름으로 등록합니다.
-     * JSON 전용 언어 분석기와 권장 규칙을 사용할 수 있게 합니다.
-     */
-    plugins: {
-      json,
-    },
-
-    /*
-     * JSON 파일을 JavaScript가 아닌 표준 JSON 문법으로 분석합니다.
-     * 따라서 주석이나 작은따옴표처럼 표준 JSON에서 허용되지 않는 문법도
-     * 올바르게 오류로 감지할 수 있습니다.
-     */
-    language: "json/json",
-
-    // JSON 문법 오류와 일반적인 문제를 검사하는 권장 규칙 모음입니다.
-    extends: ["json/recommended"],
-  },
-]);
-
-```
-
-### 🟦 2단계 - Prettier 설치 및 스타일 설정      
-ESLint와 Prettier는 서로 다른 역할을 담당합니다.  
 - ESLint: 잠재적인 오류와 잘못된 코드 패턴을 검사하여 코드 품질을 관리합니다.
 - Prettier: 들여쓰기, 따옴표, 줄바꿈과 같은 코드 형식을 일관되게 정리합니다.
 
 ```bash
 npm install -D prettier eslint-config-prettier
 ```
+
 eslint-config-prettier는 Prettier와 충돌할 수 있는 ESLint의 서식 관련 규칙을 비활성화합니다.
 
 > Prettier 자체가 ESLint 안에서 실행되는 것은 아닙니다. ESLint는 코드 품질을 검사하고, Prettier는 별도의 포맷팅 도구로 실행하는 방식이 일반적입니다.
 
 #### ✔️ .prettierrc 파일 생성
-프로젝트 루트 디렉터리에 .prettierrc 파일을 생성하고 다음 내용을 작성합니다.  
-``` javascript
-{ 
-  "semi": true, 
-  "singleQuote": true, 
-  "tabWidth": 2, 
-  "trailingComma": "all", 
-  "printWidth": 100, 
-  "endOfLine": "lf" 
+
+프로젝트 루트 디렉터리에 .prettierrc 파일을 생성하고 다음 내용을 작성합니다.
+
+```json
+{
+  "semi": true,
+  "singleQuote": true,
+  "tabWidth": 2,
+  "trailingComma": "all",
+  "printWidth": 100,
+  "endOfLine": "lf"
 }
 ```
-이 설정은 프로젝트 전체에서 동일한 코드 스타일을 유지하기 위한 포맷팅 기준으로 사용됩니다.  
+
+이 설정은 프로젝트 전체에서 동일한 코드 스타일을 유지하기 위한 포맷팅 기준으로 사용됩니다.
+
 | 옵션 | 의미 |
 | --- | --- |
 | `semi` | 세미콜론 사용 |
@@ -319,30 +271,34 @@ eslint-config-prettier는 Prettier와 충돌할 수 있는 ESLint의 서식 관�
 | `printWidth` | 100자에서 줄바꿈 |
 | `endOfLine` | 줄바꿈 문자를 LF로 통일 |
 
-
 #### ✔️ 포맷팅 제외 파일 설정
+
 필요하다면 프로젝트 루트에 .prettierignore 파일을 생성하여 포맷팅 대상에서 제외할 파일과 디렉터리를 지정할 수 있습니다.
-```
-node_modules 
-dist 
-coverage 
+
+```text
+node_modules
+dist
+coverage
 *.min.js
 ```
+
 빌드 결과물이나 외부 패키지처럼 직접 관리하지 않는 파일은 Prettier 검사 대상에서 제외하는 것이 좋습니다
 
 ### 🟦 3단계 - ESLint와 Prettier 충돌 방지
+
 - ESLint는 잠재적인 오류와 잘못된 코드 패턴을 검사하여 코드 품질을 관리합니다.
-- Prettier는 코드의 형식을 자동으로 정리하여 일관된 스타일을 유지합니다. 
- 
+- Prettier는 코드의 형식을 자동으로 정리하여 일관된 스타일을 유지합니다.
+
 두 도구는 목적이 다르지만, ESLint 설정에도 들여쓰기나 따옴표처럼 코드 형식과 관련된 규칙이 포함될 수 있습니다.  
-이 경우 Prettier가 자동으로 정리한 코드를 ESLint가 다시 스타일 오류로 판단하는 충돌이 발생할 수 있습니다.  
+이 경우 Prettier가 자동으로 정리한 코드를 ESLint가 다시 스타일 오류로 판단하는 충돌이 발생할 수 있습니다.
 
 이러한 충돌을 방지하기 위해 eslint-config-prettier를 사용합니다.  
 eslint-config-prettier는 Prettier와 충돌하거나 함께 사용할 필요가 없는 ESLint의 서식 관련 규칙을 비활성화합니다.
 
 #### ✔️ 왜 배열의 마지막에 추가해야 할까?
-ESLint Flat Config는 설정 배열을 앞에서부터 순서대로 적용합니다.   
-동일한 파일에 여러 설정이 적용되고 같은 규칙이 중복으로 정의된 경우, 일반적으로 뒤에 있는 설정이 앞의 설정을 덮어씁니다.  
+
+ESLint Flat Config는 설정 배열을 앞에서부터 순서대로 적용합니다.  
+동일한 파일에 여러 설정이 적용되고 같은 규칙이 중복으로 정의된 경우, 일반적으로 뒤에 있는 설정이 앞의 설정을 덮어씁니다.
 
 따라서 `eslint-config-prettier`를 마지막에 배치해야 앞에서 활성화된 서식 관련 ESLint 규칙을 최종적으로 비활성화할 수 있습니다.  
 설정 적용 순서는 다음과 같이 구성할 수 있습니다.
@@ -354,8 +310,8 @@ ESLint Flat Config는 설정 배열을 앞에서부터 순서대로 적용합니
 4. Prettier와 충돌하는 서식 규칙 비활성화
 ```
 
+#### ✔️ 통합 eslint.config.mjs 예시
 
-#### ✔️ 통합 eslint.config.mjs 예시 
 ```javascript
 import js from '@eslint/js';
 import json from '@eslint/json';
@@ -384,6 +340,8 @@ export default defineConfig([
     '**/coverage/**',
     '**/node_modules/**',
     '**/.git/**',
+    '**/.vscode/**',
+    '**/*.log',
   ]),
 
   /**
@@ -453,10 +411,7 @@ export default defineConfig([
   {
     files: ['**/*.{ts,mts}'],
 
-    extends: [
-      js.configs.recommended,
-      ...tseslint.configs.recommendedTypeChecked,
-    ],
+    extends: [js.configs.recommended, ...tseslint.configs.recommendedTypeChecked],
 
     languageOptions: {
       ecmaVersion: 'latest',
@@ -483,10 +438,7 @@ export default defineConfig([
   {
     files: ['**/*.cts'],
 
-    extends: [
-      js.configs.recommended,
-      ...tseslint.configs.recommendedTypeChecked,
-    ],
+    extends: [js.configs.recommended, ...tseslint.configs.recommendedTypeChecked],
 
     languageOptions: {
       ecmaVersion: 'latest',
@@ -505,21 +457,23 @@ export default defineConfig([
 
   /**
    * --------------------------------------------------------------------
-   * 6. JSON 파일 설정
+   * 6. JSON 및 JSONC 파일 설정
    * --------------------------------------------------------------------
    *
-   * JSON 파일은 JavaScript나 TypeScript가 아니므로
+   * JSON 계열 파일은 JavaScript나 TypeScript가 아니므로
    * @eslint/json에서 제공하는 전용 language를 사용합니다.
    *
    * `json/recommended` 설정을 통해 중복 키, 빈 키,
    * 안전하지 않은 값 등의 문제를 검사합니다.
    *
-   * package-lock.json은 npm이 자동으로 생성하고 관리하므로
-   * 일반적으로 린트 대상에서 제외합니다.
+   * 일반 JSON 파일에는 json/json을 적용합니다. 주석을 허용하는
+   * tsconfig 계열 파일에는 json/jsonc를 별도로 적용합니다.
+   *
+   * package-lock.json은 npm이 자동으로 생성하고 관리하므로 제외합니다.
    */
   {
     files: ['**/*.json'],
-    ignores: ['**/package-lock.json'],
+    ignores: ['**/package-lock.json', '**/tsconfig*.json'],
 
     plugins: {
       json,
@@ -529,27 +483,44 @@ export default defineConfig([
 
     extends: ['json/recommended'],
   },
+  {
+    files: ['**/tsconfig*.json'],
+
+    plugins: {
+      json,
+    },
+
+    language: 'json/jsonc',
+
+    extends: ['json/recommended'],
+  },
 
   /**
    * --------------------------------------------------------------------
    * 7. Prettier와 ESLint 규칙 충돌 방지
    * --------------------------------------------------------------------
    *
-   * eslint-config-prettier는 Prettier와 충돌할 수 있는 ESLint의 포맷 관련 규칙을 비활성화합니다.
-   * 앞에서 적용된 설정을 최종적으로 덮어쓸 수 있도록  설정 배열의 마지막에 배치합니다.
+   * eslint-config-prettier는 Prettier와 충돌할 수 있는
+   * ESLint의 포맷 관련 규칙을 비활성화합니다.
    *
-   * 실제 코드 포맷팅은 Prettier가 담당하며, eslint-config-prettier는 코드를 직접 포맷팅하지 않습니다.
+   * 앞에서 적용된 설정을 최종적으로 덮어쓸 수 있도록
+   * 설정 배열의 마지막에 배치합니다.
+   *
+   * 실제 코드 포맷팅은 Prettier가 담당하며,
+   * eslint-config-prettier는 코드를 직접 포맷팅하지 않습니다.
    */
   eslintConfigPrettier,
 ]);
 ```
 
-### 🟦 4단계 - ESLint와 Prettier 실행 스크립트 등록 
+### 🟦 4단계 - ESLint와 Prettier 실행 스크립트 등록
+
 ESLint와 Prettier는 각각 CLI(Command Line Interface) 명령어를 제공합니다.  
 하지만 검사나 포맷팅을 실행할 때마다 긴 명령어를 직접 입력하면 번거롭고, 팀원마다 실행 방식이 달라질 수 있습니다.  
 따라서 자주 사용하는 명령어를 `package.json`의 `scripts` 항목에 등록해 두면 더 짧고 일관된 방식으로 실행할 수 있습니다.  
 
 다음은 ESLint와 Prettier를 사용할 때 일반적으로 구성하는 스크립트입니다.
+
 ```json
 {
   "scripts": {
@@ -560,6 +531,7 @@ ESLint와 Prettier는 각각 CLI(Command Line Interface) 명령어를 제공합�
   }
 }
 ```
+
 ```bash
 # 프로젝트 전체를 대상으로 ESLint 검사를 실행합니다.
 npm run lint
@@ -575,8 +547,9 @@ npm run format:check
 ```
 
 #### ✔️ package.json 예시
-```javascript 
-{ 
+
+```json
+{
   "name": "nodejs-workbook",
   "version": "1.0.0",
   "description": "",
@@ -601,12 +574,14 @@ npm run format:check
     "typescript-eslint": "^8.65.0"
   }
 }
-``` 
+```
 
-<h2 id="session-03">3. VSCode 확장과 settings.json 통합</h2>
-프로젝트에 ESLint와 Prettier를 설치하고 설정까지 완료했다면, 이제 두 도구가 VS Code 안에서 자연스럽게 동작하도록 연결해야 합니다.  
+## 3. VSCode 확장과 settings.json 통합 {#session-03}
 
-VS Code 연동을 완료하면 다음과 같은 개발 환경을 구성할 수 있습니다.  
+프로젝트에 ESLint와 Prettier를 설치하고 설정까지 완료했다면, 이제 두 도구가 VS Code 안에서 자연스럽게 동작하도록 연결해야 합니다.
+
+VS Code 연동을 완료하면 다음과 같은 개발 환경을 구성할 수 있습니다.
+
 - 코드를 작성하는 동안 ESLint 오류와 경고를 실시간으로 확인
 - 파일을 저장할 때 ESLint가 수정 가능한 문제를 자동으로 처리
 - 파일을 저장할 때 Prettier가 코드 스타일을 자동으로 정리
@@ -617,22 +592,26 @@ VS Code 연동을 완료하면 다음과 같은 개발 환경을 구성할 수 �
 ### 🟦 확장 설치
 
 🔸 ESLint (Marketplace ID: dbaeumer.vscode-eslint)
-프로젝트에 설치된 ESLint를 사용해 코드 오류와 규칙 위반을 실시간으로 표시하고, 저장 시 자동 수정 기능을 제공합니다.  
-![alt text](/assets/images/nodejs/nodejs-environment/image-2026-07-29-2.png) 
+프로젝트에 설치된 ESLint를 사용해 코드 오류와 규칙 위반을 실시간으로 표시하고, 저장 시 자동 수정 기능을 제공합니다.
+![alt text](/assets/images/nodejs/nodejs-environment/image-2026-07-29-2.png)
 
 🔸 Prettier - Code formatter
-프로젝트의 Prettier 설정에 따라 들여쓰기, 따옴표, 세미콜론, 줄바꿈 등을 자동으로 정리합니다.  
+프로젝트의 Prettier 설정에 따라 들여쓰기, 따옴표, 세미콜론, 줄바꿈 등을 자동으로 정리합니다.
 ![alt text](/assets/images/nodejs/nodejs-environment/image-2026-07-29-3.png)
 
-
-
 ### 🟦 .vscode/settings.json 구성
+
 프로젝트 루트에 .vscode/settings.json 파일을 생성합니다.  
 
-이 파일은 현재 프로젝트에만 적용되는 VS Code 워크스페이스 설정입니다.  
+이 파일은 현재 프로젝트에만 적용되는 VS Code 설정입니다.  
 Git 저장소에 포함하면 팀원 모두 동일한 에디터 설정을 사용할 수 있습니다.
+
 ```jsonc
 {
+  "terminal.integrated.env.linux": {
+    "PATH": "/home/ubuntu/runtimes/node-v24.18.0-linux-x64/bin:${env:PATH}"
+  },
+
   // ===============================================================
   // 1. 저장 시 Prettier 포맷팅 실행
   // ---------------------------------------------------------------

@@ -3,9 +3,4 @@
     "/_posts/**/*": "/assets/images/${documentRelativeDirName/^_posts\\/(.*)$/$1/}/image-${documentBaseName/^([^-]+-[^-]+-[^-]+).*$/$1/}.${fileExtName}"
   },  
   "markdown.copyFiles.overwriteBehavior": "nameIncrementally",
-
-
-  "terminal.integrated.env.linux": {
-    "PATH": "/home/ubuntu/runtimes/node-v24.18.0-linux-x64/bin:${env:PATH}"
-  }
 }
