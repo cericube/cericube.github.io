@@ -130,6 +130,47 @@
     }, { passive: true });
   }
 
+  const codeBlocks = document.querySelectorAll('.post-content pre');
+  const codeCollapseLineThreshold = 24;
+
+  codeBlocks.forEach((pre, index) => {
+    const code = pre.querySelector('code');
+    const source = (code || pre).textContent.replace(/\n$/, '');
+    const lineCount = source ? source.split('\n').length : 0;
+
+    if (lineCount <= codeCollapseLineThreshold) return;
+
+    const block = pre.closest('.highlighter-rouge') || pre;
+    const wrapper = document.createElement('div');
+    const viewport = document.createElement('div');
+    const toggle = document.createElement('button');
+    const codeBlockId = `code-block-${index + 1}`;
+
+    wrapper.className = 'code-collapse';
+    viewport.className = 'code-collapse__viewport';
+    toggle.className = 'code-collapse__toggle';
+    toggle.type = 'button';
+    toggle.textContent = `전체 코드 보기 (${lineCount}줄)`;
+    toggle.setAttribute('aria-expanded', 'false');
+    toggle.setAttribute('aria-controls', codeBlockId);
+    viewport.id = codeBlockId;
+
+    block.parentNode.insertBefore(wrapper, block);
+    wrapper.appendChild(viewport);
+    viewport.appendChild(block);
+    wrapper.appendChild(toggle);
+
+    toggle.addEventListener('click', () => {
+      const expanded = wrapper.classList.toggle('is-expanded');
+      toggle.textContent = expanded ? '코드 접기' : `전체 코드 보기 (${lineCount}줄)`;
+      toggle.setAttribute('aria-expanded', String(expanded));
+
+      if (!expanded && wrapper.getBoundingClientRect().top < 0) {
+        wrapper.scrollIntoView({ block: 'start' });
+      }
+    });
+  });
+
   const postList = document.getElementById('postList');
   if (!postList) return;
 

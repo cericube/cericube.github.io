@@ -16,7 +16,7 @@
   name: "3.Node.js"
   children:
     - id: nodejs-environment
-      name: "개발환경"
+      name: "Node.js기본"
     - id: nodejs-typescript
       name: "TypeScript"
     - id: nodejs-prisma
