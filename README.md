@@ -171,18 +171,6 @@ cericube.github.io/
 ├── _data/
 │   └── categories.yml
 ├── _posts/
-│   ├── tech-notes/
-│   │   └── tech-notes-concepts/
-│   ├── system-infra/
-│   │   ├── system-infra-virtualization/
-│   │   └── system-infra-ubuntu/
-│   └── nodejs/
-│       ├── nodejs-environment/
-│       ├── nodejs-typescript/
-│       ├── nodejs-prisma/
-│       ├── nodejs-vitest/
-│       ├── nodejs-typebox/
-│       └── nodejs-redis/
 ├── assets/
 │   ├── css/
 │   ├── images/
