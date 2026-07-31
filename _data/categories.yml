@@ -18,7 +18,7 @@
     - id: nodejs-environment
       name: "Node.js기본"
     - id: nodejs-typescript
-      name: "TypeScript"
+      name: "JavaScript&TypeScript"
     - id: nodejs-prisma
       name: "Prisma(ORM)"
     - id: nodejs-vitest

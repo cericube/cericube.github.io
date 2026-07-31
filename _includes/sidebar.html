@@ -23,8 +23,8 @@
         {%- assign child_posts = site.posts | where: "category_id", child.id -%}
         {%- assign parent_post_count = parent_post_count | plus: child_posts.size -%}
       {%- endfor %}
-      <section class="tree-group" data-tree-group="{{ parent.id }}">
-        <button class="tree-parent" type="button" aria-expanded="false">
+      <section class="tree-group is-open" data-tree-group="{{ parent.id }}">
+        <button class="tree-parent" type="button" aria-expanded="true">
           <span class="tree-arrow">›</span>
           <span>{{ parent.name }} <strong>({{ parent_post_count }})</strong></span>
         </button>
@@ -32,16 +32,28 @@
           {% for child in parent.children -%}
             {%- assign child_posts = site.posts | where: "category_id", child.id %}
             <div class="tree-child {% if page.category_id == child.id %}is-active{% endif %}" data-category-id="{{ child.id }}">
-              <a href="{{ '/' | relative_url }}?category={{ child.id }}" class="category-link" data-filter="{{ child.id }}">
+              <a
+                href="{{ '/' | relative_url }}?category={{ child.id }}"
+                class="category-link"
+                data-filter="{{ child.id }}"
+                {% if child_posts.size > 0 -%}
+                  aria-expanded="false"
+                  aria-controls="tree-posts-{{ parent.id }}-{{ child.id }}"
+                {%- endif %}
+              >
                 <span class="folder-icon">□</span>
                 <span>{{ child.name }} <strong>({{ child_posts.size }})</strong></span>
               </a>
               {%- if child_posts.size > 0 %}
-                <div class="tree-posts">
-                  {%- for post in child_posts %}
-                    <a href="{{ post.url | relative_url }}" class="tree-post-link {% if page.url == post.url %}is-current{% endif %}">
-                      {{ post.title }}
-                    </a>
+                <div class="tree-posts" id="tree-posts-{{ parent.id }}-{{ child.id }}">
+                  {%- assign child_series_groups = child_posts | group_by: "series" | sort: "name" %}
+                  {%- for series_group in child_series_groups %}
+                    {%- assign series_posts = series_group.items | sort: "series_order" | reverse %}
+                    {%- for post in series_posts %}
+                      <a href="{{ post.url | relative_url }}" class="tree-post-link {% if page.url == post.url %}is-current{% endif %}">
+                        {{ post.title }}
+                      </a>
+                    {%- endfor %}
                   {%- endfor %}
                 </div>
               {%- endif %}

@@ -121,9 +121,9 @@ button, select { font: inherit; }
 .tree-child.is-active > .category-link { color: var(--blue); font-weight: 700; }
 .folder-icon { color: var(--blue); }
 .tree-posts { display: none; padding-left: 18px; }
-.tree-child.is-active .tree-posts { display: block; }
+.tree-child.is-open .tree-posts { display: block; }
 .tree-post-link { display: block; padding: 6px 8px; color: #4f5967; line-height: 1.35; border-radius: 6px; }
-.tree-post-link:hover, .tree-post-link.is-current { background: #eaf3ff; color: #0862c7; font-weight: 700; }
+.tree-post-link:hover, .tree-post-link.is-current { background: #eaf3ff; color: #0862c7; }
 
 .sidebar-resizer {
   position: fixed;

@@ -86,14 +86,63 @@
   }
 
   const groups = document.querySelectorAll('.tree-group');
-  const currentPost = document.querySelector('.tree-post-link.is-current');
-  const activeChild = document.querySelector('.tree-child.is-active');
+  const categoryLinks = document.querySelectorAll('[data-filter]');
+  const treeStateKey = 'categoryTreeState:v1';
 
-  function openGroup(group) {
-    if (!group) return;
-    const button = group.querySelector('.tree-parent');
-    group.classList.add('is-open');
-    button.setAttribute('aria-expanded', 'true');
+  function setChildOpen(child, open) {
+    if (!child) return;
+    const posts = child.querySelector('.tree-posts');
+    if (!posts) return;
+
+    const link = child.querySelector('.category-link');
+    child.classList.toggle('is-open', open);
+    link.setAttribute('aria-expanded', String(open));
+  }
+
+  function saveTreeState() {
+    const openGroups = Array.from(groups)
+      .filter((group) => group.classList.contains('is-open'))
+      .map((group) => group.dataset.treeGroup);
+    const openChildren = Array.from(document.querySelectorAll('.tree-child.is-open'))
+      .map((child) => child.dataset.categoryId);
+
+    sessionStorage.setItem(treeStateKey, JSON.stringify({
+      openGroups,
+      openChildren,
+    }));
+  }
+
+  function restoreTreeState() {
+    const savedState = sessionStorage.getItem(treeStateKey);
+    if (!savedState) return;
+
+    try {
+      const state = JSON.parse(savedState);
+      if (!Array.isArray(state.openGroups) || !Array.isArray(state.openChildren)) {
+        throw new TypeError('Invalid category tree state');
+      }
+
+      const openGroups = new Set(state.openGroups);
+      const openChildren = new Set(state.openChildren);
+
+      groups.forEach((group) => {
+        const open = openGroups.has(group.dataset.treeGroup);
+        const button = group.querySelector('.tree-parent');
+        group.classList.toggle('is-open', open);
+        button.setAttribute('aria-expanded', String(open));
+      });
+
+      document.querySelectorAll('.tree-child').forEach((child) => {
+        setChildOpen(child, openChildren.has(child.dataset.categoryId));
+      });
+    } catch (error) {
+      sessionStorage.removeItem(treeStateKey);
+    }
+  }
+
+  function toggleChild(child) {
+    setChildOpen(child, !child.classList.contains('is-open'));
+    saveTreeState();
   }
 
   groups.forEach((group) => {
@@ -101,17 +150,11 @@
     button.addEventListener('click', () => {
       const open = group.classList.toggle('is-open');
       button.setAttribute('aria-expanded', String(open));
+      saveTreeState();
     });
   });
 
-  if (currentPost) {
-    openGroup(currentPost.closest('.tree-group'));
-    currentPost.closest('.tree-child')?.classList.add('is-active');
-  } else if (activeChild) {
-    openGroup(activeChild.closest('.tree-group'));
-  } else {
-    openGroup(document.querySelector('.tree-group'));
-  }
+  restoreTreeState();
 
   const categoryTree = document.querySelector('.category-tree');
   const categoryScrollKey = 'categoryTreeScrollTop';
@@ -172,14 +215,25 @@
   });
 
   const postList = document.getElementById('postList');
-  if (!postList) return;
+  if (!postList) {
+    categoryLinks.forEach((link) => {
+      const child = link.closest('.tree-child');
+      if (!child) return;
+
+      link.addEventListener('click', (event) => {
+        event.preventDefault();
+        toggleChild(child);
+      });
+    });
+
+    return;
+  }
 
   const cards = Array.from(postList.querySelectorAll('.post-card'));
   const title = document.getElementById('listTitle');
   const count = document.getElementById('postCount');
   const empty = document.getElementById('emptyMessage');
   const sort = document.getElementById('sortPosts');
-  const categoryLinks = document.querySelectorAll('[data-filter]');
 
   const params = new URLSearchParams(window.location.search);
   let selected = params.get('category') || 'all';
@@ -209,7 +263,6 @@
     const active = document.querySelector(`.tree-child[data-category-id="${selected}"]`);
     if (active) {
       active.classList.add('is-active');
-      openGroup(active.closest('.tree-group'));
     }
   }
 
@@ -217,6 +270,12 @@
     link.addEventListener('click', (event) => {
       if (!link.dataset.filter) return;
       event.preventDefault();
+
+      const child = link.closest('.tree-child');
+      if (child) {
+        toggleChild(child);
+      }
+
       selected = link.dataset.filter;
       const url = selected === 'all' ? location.pathname : `${location.pathname}?category=${selected}`;
       history.replaceState({}, '', url);

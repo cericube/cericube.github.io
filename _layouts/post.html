@@ -32,20 +32,27 @@ layout: default
     {% endif %}
 
     {%- assign category_posts = site.posts | where: "category_id", page.category_id -%}
+    {%- assign category_series_groups = category_posts | group_by: "series" | sort: "name" -%}
     {%- assign category_previous = nil -%}
     {%- assign category_next = nil -%}
-    {%- assign newer_candidate = nil -%}
+    {%- assign previous_candidate = nil -%}
     {%- assign current_post_found = false -%}
-    {%- for category_post in category_posts -%}
-      {%- if current_post_found -%}
-        {%- assign category_previous = category_post -%}
+    {%- for series_group in category_series_groups -%}
+      {%- assign series_posts = series_group.items | sort: "series_order" | reverse -%}
+      {%- for category_post in series_posts -%}
+        {%- if current_post_found -%}
+          {%- assign category_next = category_post -%}
+          {%- break -%}
+        {%- endif -%}
+        {%- if category_post.url == page.url -%}
+          {%- assign category_previous = previous_candidate -%}
+          {%- assign current_post_found = true -%}
+        {%- else -%}
+          {%- assign previous_candidate = category_post -%}
+        {%- endif -%}
+      {%- endfor -%}
+      {%- if category_next -%}
         {%- break -%}
-      {%- endif -%}
-      {%- if category_post.url == page.url -%}
-        {%- assign category_next = newer_candidate -%}
-        {%- assign current_post_found = true -%}
-      {%- else -%}
-        {%- assign newer_candidate = category_post -%}
       {%- endif -%}
     {%- endfor -%}
 
