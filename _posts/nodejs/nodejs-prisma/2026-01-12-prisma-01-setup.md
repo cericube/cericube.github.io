@@ -492,8 +492,7 @@ main()
 
 ```bash
 cd ~/blog-workspaces/nodejs-workbook/prisma-basics
-npm run typecheck
-npm run start
+npx tsx ./src/ch01/index.ts
 ```
 
 ## 4. Prisma CLI 주요 명령어 정리 {#session-04}
