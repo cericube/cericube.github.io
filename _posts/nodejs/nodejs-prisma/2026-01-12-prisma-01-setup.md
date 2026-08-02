@@ -285,6 +285,8 @@ model PostLike {
 `PostLike`의 `@@id([userId, postId])`는 같은 사용자가 같은 게시글에 좋아요를 중복으로 등록하지 못하게 합니다.  
 `@@index([postId])`는 특정 게시글을 기준으로 좋아요 목록을 조회할 때 사용할 인덱스입니다.  
 
+![alt text](/assets/images/nodejs/nodejs-prisma/image-2026-01-12.png)
+
 ## 3. DB 스키마 반영 및 Prisma Client 구현 {#session-03}
 
 ### 🟦 DB 스키마 반영: `npx prisma migrate dev`
