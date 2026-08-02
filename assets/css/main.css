@@ -292,6 +292,18 @@ body.is-resizing {
 .post-content h2 { margin: 28px 0 10px; font-size: 23px; scroll-margin-top: 20px; }
 .post-content h3 { margin: 32px 0 10px; font-size: 19px; scroll-margin-top: 20px; }
 .post-content p { margin: 8px 0 16px; }
+.post-content a {
+  color: #005fda;
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+}
+.post-content a:hover { color: var(--blue-dark); }
+.post-content a:focus-visible {
+  border-radius: 2px;
+  outline: 2px solid #5c9ee8;
+  outline-offset: 2px;
+}
 .post-content img {
   display: block;
   width: auto;
