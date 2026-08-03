@@ -79,9 +79,10 @@ npm install @prisma/client@7 pg @prisma/adapter-pg dotenv
 # TypeScript 설정 파일을 생성합니다.
 npx tsc --init
 
-# 문서의 실행 명령어와 연결할 npm 스크립트를 추가합니다.
-npm pkg set scripts.typecheck="tsc --noEmit"
-npm pkg set scripts.start="tsx src/ch01/index.ts"
+# 문서의 실행 명령어와 연결할 npm 스크립트를 추가(package.json)합니다.
+# 
+# npm pkg set scripts.typecheck="tsc --noEmit"
+# npm pkg set scripts.start="tsx src/ch01/index.ts"
 ```
 
 - `@prisma/client`: 실제 애플리케이션 코드에서 불러와 사용하는 ORM 라이브러리입니다.

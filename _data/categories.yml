@@ -20,7 +20,7 @@
     - id: nodejs-typescript
       name: "JavaScript&TypeScript"
     - id: nodejs-prisma
-      name: "Prisma(ORM)"
+      name: "Prisma"
     - id: nodejs-vitest
       name: "Vitest&TypeBox"
     - id: nodejs-redis
