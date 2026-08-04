@@ -14,6 +14,8 @@ toc:
     title: "2. 관계 데이터 생성 패턴: connect / create / connectOrCreate"
 ---
 
+📂 **[[GitHub 코드 보러가기]](https://github.com/cericube/nodejs-workbook/tree/main/prisma-basics){: target="_blank" rel="noopener noreferrer" }**
+
 ## 1. 조회 쿼리 고급 옵션: where / select / include / pagination {#session-01}
 
 ### 🟦 `where` 조건: 정밀한 필터링

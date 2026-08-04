@@ -18,6 +18,8 @@ toc:
     title: "4. 트랜잭션 기반 다중 CRUD 처리 실습"
 ---
 
+📂 **[[GitHub 코드 보러가기]](https://github.com/cericube/nodejs-workbook/tree/main/prisma-basics){: target="_blank" rel="noopener noreferrer" }**
+
 ## 1. 트랜잭션의 역할과 데이터 정합성 전략 {#session-01}
 
 트랜잭션(Transaction)은 여러 데이터베이스 작업을 하나의 논리적인 작업 단위로 묶어 처리하는 기능입니다.  

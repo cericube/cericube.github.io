@@ -18,6 +18,9 @@ toc:
     title: "4. Prisma CLI 주요 명령어 정리"
 ---
 
+
+📂 **[[GitHub 코드 보러가기]](https://github.com/cericube/nodejs-workbook/tree/main/prisma-basics){: target="_blank" rel="noopener noreferrer" }**
+
 ## 1. 개발 환경 구축 및 프로젝트 초기화 {#session-01}
 
 Prisma는 Node.js에서 데이터베이스를 다룰 때 SQL을 직접 작성하는 방식 대신 타입 안전한 데이터 접근 API를 제공하는 ORM 도구입니다.  

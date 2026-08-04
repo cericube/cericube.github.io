@@ -16,6 +16,9 @@ toc:
     title: "3. 관계 로드 전략(Relation Load Strategy)"
 ---
 
+📂 **[[GitHub 코드 보러가기]](https://github.com/cericube/nodejs-workbook/tree/main/prisma-basics){: target="_blank" rel="noopener noreferrer" }**
+
+
 ## 1. include와 select의 차이와 실무 선택 기준 {#session-01}
 
 Prisma Client를 사용하면 SQL의 `JOIN`을 직접 작성하지 않아도 됩니다.  

@@ -1,11 +1,13 @@
 {%- assign preview_source = post.excerpt -%}
-{%- if preview_source contains '<h2' -%}
-  {%- assign content_sections = post.content | split: '</h2>' -%}
-  {%- assign first_section = content_sections[1] | default: post.content -%}
-  {%- assign paragraph_parts = first_section | split: '</p>' -%}
-  {%- assign preview_source = paragraph_parts[0] -%}
-{%- endif -%}
-{%- assign preview_text = preview_source | strip_html | normalize_whitespace | truncate: 140 -%}
+{%- assign content_sections = post.content | split: '</h2>' -%}
+{%- assign first_section = content_sections[1] | default: post.content -%}
+{%- assign paragraph_starts = first_section | split: '<p>' -%}
+{%- assign first_paragraph = paragraph_starts[1] | default: first_section -%}
+{%- assign first_paragraph_ends = first_paragraph | split: '</p>' -%}
+{%- assign second_paragraph = paragraph_starts[2] | default: '' -%}
+{%- assign second_paragraph_ends = second_paragraph | split: '</p>' -%}
+{%- assign preview_source = first_paragraph_ends[0] | append: ' ' | append: second_paragraph_ends[0] -%}
+{%- assign preview_text = preview_source | strip_html | normalize_whitespace | truncate: 200 -%}
 <article class="post-card" data-category="{{ post.category_id }}" data-date="{{ post.date | date: '%Y%m%d' }}">
   <a href="{{ post.url | relative_url }}" class="post-card-link">
     <h2>{{ post.title }}</h2>

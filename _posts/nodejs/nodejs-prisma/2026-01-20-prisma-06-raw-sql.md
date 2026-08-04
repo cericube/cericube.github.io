@@ -18,6 +18,8 @@ toc:
     title: "4. Prisma.sql: 유연하고 안전한 동적 쿼리 조립"
 ---
 
+📂 **[[GitHub 코드 보러가기]](https://github.com/cericube/nodejs-workbook/tree/main/prisma-basics){: target="_blank" rel="noopener noreferrer" }**
+
 ## 1. $queryRaw: 조회 전용 Raw SQL 다루기 {#session-01}
 
 Prisma Client의 기본 쿼리 API만으로 표현하기 어려운 통계, 집계 함수 또는 데이터베이스 전용 기능이 필요할 때가 있습니다.  

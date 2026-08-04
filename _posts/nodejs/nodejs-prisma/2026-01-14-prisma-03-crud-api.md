@@ -14,6 +14,8 @@ toc:
     title: "2. CRUD 실전 API: create / read / update / delete / upsert"
 ---
 
+📂 **[[GitHub 코드 보러가기]](https://github.com/cericube/nodejs-workbook/tree/main/prisma-basics){: target="_blank" rel="noopener noreferrer" }**
+
 ## 1. Prisma Client Query 구조 이해 {#session-01}
 
 ### 🟦 Prisma Client 호출의 핵심 구조

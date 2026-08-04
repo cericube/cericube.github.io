@@ -18,6 +18,8 @@ toc:
     title: "4. 관계(Relation) 모델링 패턴: 1:1, 1:N, N:M"
 ---
 
+📂 **[[GitHub 코드 보러가기]](https://github.com/cericube/nodejs-workbook/tree/main/prisma-basics){: target="_blank" rel="noopener noreferrer" }**
+
 ## 1. schema.prisma 구성과 모델 선언 규칙 {#session-01}
 
 ### 🟦 `schema.prisma`의 역할과 구성 요소

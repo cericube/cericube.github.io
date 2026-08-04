@@ -18,6 +18,8 @@ toc:
     title: "4. Fastify 레이어별 오류 처리 예시"
 ---
 
+📂 **[[GitHub 코드 보러가기]](https://github.com/cericube/nodejs-workbook/tree/main/prisma-basics){: target="_blank" rel="noopener noreferrer" }**
+
 ## 1. Prisma 오류 분류 체계 {#session-01}
 
 Prisma Client는 데이터베이스 접근을 추상화하는 클라이언트 계층입니다.  
