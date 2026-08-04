@@ -80,16 +80,16 @@ npm install @prisma/client@7 pg @prisma/adapter-pg dotenv
 npx tsc --init
 
 # 문서의 실행 명령어와 연결할 npm 스크립트를 추가(package.json)합니다.
-# 
+#
 # npm pkg set scripts.typecheck="tsc --noEmit"
 # npm pkg set scripts.start="tsx src/ch01/index.ts"
 ```
 
-- `@prisma/client`: 실제 애플리케이션 코드에서 불러와 사용하는 ORM 라이브러리입니다.
-- `pg`(node-postgres): Node.js에서 PostgreSQL과 통신할 때 사용하는 드라이버입니다.
-- `@prisma/adapter-pg`: Prisma Client와 `pg`를 연결하는 드라이버 어댑터입니다.
-- `@types/pg`: `pg`의 TypeScript 타입 정의입니다.
-- `dotenv`: `.env` 파일의 환경 변수를 불러오는 라이브러리입니다.
+- `@prisma/client`: 실제 애플리케이션 코드에서 불러와 사용하는 ORM 라이브러리입니다.  
+- `pg`(node-postgres): Node.js에서 PostgreSQL과 통신할 때 사용하는 드라이버입니다.  
+- `@prisma/adapter-pg`: Prisma Client와 `pg`를 연결하는 드라이버 어댑터입니다.  
+- `@types/pg`: `pg`의 TypeScript 타입 정의입니다.  
+- `dotenv`: `.env` 파일의 환경 변수를 불러오는 라이브러리입니다.  
 
 `prisma-basics`는 자체 `package.json`과 `package-lock.json`으로 의존성을 독립적으로 관리하는 하위 프로젝트입니다.  
 Prisma CLI 실행과 타입 검사도 `prisma-basics` 디렉터리에서 수행합니다.  
@@ -136,9 +136,9 @@ npx prisma init
 
 실행 후 일반적으로 다음 파일이 생성됩니다.  
 
-- `prisma/schema.prisma`: 모델, 데이터 소스와 Prisma Client 생성 설정을 관리합니다.
-- `.env`: 프로젝트의 데이터베이스 접속 정보를 보관합니다.
-- `prisma.config.ts`: 프로젝트 단위 Prisma CLI 설정을 관리합니다.
+- `prisma/schema.prisma`: 모델, 데이터 소스와 Prisma Client 생성 설정을 관리합니다.  
+- `.env`: 프로젝트의 데이터베이스 접속 정보를 보관합니다.  
+- `prisma.config.ts`: 프로젝트 단위 Prisma CLI 설정을 관리합니다.  
 
 ## 2. DB 연동 및 스키마 설계(PostgreSQL) {#session-02}
 
@@ -150,7 +150,7 @@ npx prisma init
 DATABASE_URL="postgresql://USER:PASSWORD@localhost:5432/prisma_basics?schema=study"
 ```
 
-- `USER`와 `PASSWORD`는 로컬 PostgreSQL 계정에 맞게 변경합니다.
+- `USER`와 `PASSWORD`는 로컬 PostgreSQL 계정에 맞게 변경합니다.  
 
 ### 🟦 `prisma.config.ts` 설정 이해
 
@@ -348,13 +348,22 @@ import { PrismaPg } from '@prisma/adapter-pg';
 import * as dotenv from 'dotenv';
 import { PrismaClient } from '../../generated/prisma/client';
 
-// 현재 파일 위치(import.meta.url)를 기준으로
-// 두 단계 위에 있는 .env 파일을 찾아 환경 변수를 불러옵니다.
-dotenv.config({ path: new URL('../../.env', import.meta.url) });
+import * as path from 'path';
 
-// NODE_ENV 값이 'development'이면 개발 환경으로 판단합니다.
-// 개발 환경에서는 쿼리 로그를 더 자세히 출력하고 Prisma Client를 재사용합니다.
-const isDev = process.env.NODE_ENV === 'development';
+// 지정한 .env 파일을 이 공통 모듈에서 한 번만 읽어 process.env에 반영합니다.
+// dotenv는 기본적으로 이미 설정된 환경 변수의 값을 덮어쓰지 않습니다.
+dotenv.config({ path: path.resolve(__dirname, '../../.env') });
+
+// Vitest가 NODE_ENV를 'test'로 설정하더라도, 애플리케이션 환경을 나타내는
+// APP_ENV는 영향을 받지 않고 .env에 지정한 값을 사용합니다.
+
+// APP_ENV 값이 'development'이면 개발 환경으로 판단합니다.
+// 개발 환경에서는 Prisma Client를 전역 객체에 저장해 다시 사용합니다.
+const isDev = process.env.APP_ENV === 'development';
+
+// 실행 환경과 관계없이 PRISMA_QUERY_LOG가 'true'일 때 상세 쿼리 로그를 활성화합니다.
+// 테스트에서도 실행 환경 값을 변경하지 않고 SQL 실행 내용을 확인할 수 있습니다.
+const enableQueryLog = process.env.PRISMA_QUERY_LOG === 'true';
 
 // globalThis 객체에 prisma라는 값을 저장할 수 있도록
 // TypeScript에 전역 변수의 타입을 알려 줍니다.
@@ -384,9 +393,9 @@ function getPrismaClient(): PrismaClient {
   return new PrismaClient({
     adapter,
 
-    // 개발 환경에서는 실행된 SQL과 각종 정보를 자세히 출력합니다.
-    // 운영 환경에서는 오류 메시지만 출력합니다.
-    log: isDev ? ['query', 'info', 'warn', 'error'] : ['error'],
+    // 상세 로그가 활성화되면 실행된 SQL과 각종 정보를 출력합니다.
+    // 활성화하지 않으면 오류 메시지만 출력합니다.
+    log: enableQueryLog ? ['query', 'info', 'warn', 'error'] : ['error'],
   });
 }
 
@@ -406,8 +415,10 @@ let shuttingDown = false;
 // 프로그램이 종료될 때 데이터베이스 연결을 안전하게 정리하는 함수입니다.
 const shutdown = async (): Promise<void> => {
   // 이미 종료 처리가 시작되었다면 다시 실행하지 않습니다.
-  if (shuttingDown) return;
-
+  if (shuttingDown) {
+    console.log('이미 종료 처리가 진행 중입니다. 추가 종료 요청은 무시됩니다.');
+    return;
+  }
   // 종료 처리가 시작되었음을 기록합니다.
   shuttingDown = true;
 
@@ -415,6 +426,7 @@ const shutdown = async (): Promise<void> => {
     // Prisma가 사용 중인 데이터베이스 연결을 종료합니다.
     await prisma.$disconnect();
 
+    console.log('데이터베이스 연결이 안전하게 종료되었습니다.');
     // 정상적으로 연결을 종료했으므로 성공 코드 0으로 프로세스를 끝냅니다.
     process.exit(0);
   } catch (error) {
@@ -444,6 +456,55 @@ process.once('SIGTERM', () => {
 `dotenv.config()`에 경로를 지정하지 않으면 기본적으로 현재 작업 디렉터리의 `.env`를 찾습니다.  
 위 예제는 `import.meta.url`을 기준으로 `.env`의 위치를 지정하므로 명령을 실행한 디렉터리와 관계없이 `prisma-basics/.env`를 불러옵니다.  
 Prisma CLI는 `prisma.config.ts`의 `import 'dotenv/config'`를 통해 같은 환경 변수를 불러옵니다.  
+
+### 🟦 Connection Pool 설정: Prisma ORM v6와 v7
+
+Connection Pool은 데이터베이스 연결을 재사용하여 연결 생성 비용을 줄이고, 동시에 사용할 연결 수를 제어합니다.  
+앞의 싱글톤 구조는 하나의 Node.js 프로세스에서 `PrismaClient`와 연결 풀을 재사용하도록 돕습니다.  
+
+#### Prisma ORM v6 이전
+
+Prisma ORM v6 이전에서는 Prisma Query Engine이 Connection Pool을 관리했습니다.  
+풀의 최대 연결 수와 대기 시간은 주로 `DATABASE_URL`의 쿼리 파라미터로 설정했습니다.  
+
+```dotenv
+DATABASE_URL="postgresql://user:password@localhost:5432/database?connection_limit=10&pool_timeout=10"
+```
+
+`connection_limit=10`은 최대 연결 수를 10개로 제한하고, `pool_timeout=10`은 사용 가능한 연결을 최대 10초까지 기다립니다.  
+두 값을 생략하면 풀 크기는 `물리 CPU 코어 수 × 2 + 1`, `pool_timeout`은 10초로 설정됩니다.  
+
+#### Prisma ORM v7
+
+Prisma ORM v7에서는 `pg` 드라이버가 Connection Pool을 관리하며, 풀 옵션은 `PrismaPg` 생성자의 첫 번째 인자에 전달합니다.  
+
+```typescript
+// pg 드라이버가 관리할 Connection Pool의 옵션을 설정합니다.
+const adapter = new PrismaPg(
+  {
+    connectionString,
+    max: 10,
+    connectionTimeoutMillis: 5_000,
+    idleTimeoutMillis: 10_000,
+    maxLifetimeSeconds: 0,
+  },
+  {
+    // PostgreSQL의 study 스키마를 사용합니다.
+    schema: 'study',
+  },
+);
+```
+
+| 옵션 | 예시 값 | 기본값 | 설명 |
+| --- | ---: | ---: | --- |
+| `max` | `10` | `10` | 풀이 유지할 최대 연결 수 |
+| `connectionTimeoutMillis` | `5_000` | `0` | 연결을 얻을 때까지 기다리는 최대 시간(밀리초) |
+| `idleTimeoutMillis` | `10_000` | `10_000` | 사용하지 않는 연결을 유지하는 시간(밀리초) |
+| `maxLifetimeSeconds` | `0` | `0` | 각 연결의 최대 유지 시간(초) |
+
+`0`으로 설정한 시간 옵션은 제한이 없다는 뜻입니다.  
+앞의 싱글톤 예제처럼 풀 옵션을 생략해도 `PrismaPg`가 기본값으로 풀을 관리하므로 `Pool`을 따로 생성할 필요가 없습니다.  
+v6에서 v7로 옮길 때는 기본 풀 크기와 대기 시간이 달라지므로, 배포 환경의 동시 요청 수와 데이터베이스의 최대 연결 수를 기준으로 설정을 다시 확인합니다.  
 
 ### 🟦 첫 실행 스크립트: `prisma-basics/src/ch01/index.ts`
 

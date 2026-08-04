@@ -18,9 +18,13 @@ toc:
 
 ### 🟦 `where` 조건: 정밀한 필터링
 
+`where`는 조회할 데이터의 조건을 정할 때 사용합니다.  
+먼저 기본 필드에 조건을 적용한 뒤, 여러 조건과 관계 조건을 차례로 살펴보겠습니다.  
+
 ### 🔷 1) 기본 스칼라 필터(Boolean / Number / Date)
 
-다음 조건은 한 번에 하나씩 `where`에 적용하는 예시입니다.  
+다음 예제는 Boolean, 숫자와 날짜 필드에 조건을 적용하는 방법입니다.  
+각 필터 객체를 `where`에 하나씩 넣어 결과를 확인할 수 있습니다.  
 
 ```typescript
 // published 컬럼이 true인 게시글만 조회합니다.
@@ -28,27 +32,27 @@ const publishedFilter = {
   published: true,
 };
 
-// id가 100을 초과하는 게시글만 조회합니다(>).
+// id가 100보다 큰 게시글만 조회합니다.
 const greaterThanFilter = {
   id: { gt: 100 },
 };
 
-// id가 100 이상인 게시글만 조회합니다(>=).
+// id가 100 이상인 게시글만 조회합니다.
 const greaterThanOrEqualFilter = {
   id: { gte: 100 },
 };
 
-// id가 100 미만인 게시글만 조회합니다(<).
+// id가 100보다 작은 게시글만 조회합니다.
 const lessThanFilter = {
   id: { lt: 100 },
 };
 
-// id가 100 이하인 게시글만 조회합니다(<=).
+// id가 100 이하인 게시글만 조회합니다.
 const lessThanOrEqualFilter = {
   id: { lte: 100 },
 };
 
-// createdAt이 2025-01-01 00:00:00 이후인 게시글만 조회합니다(>=).
+// createdAt이 2025-01-01 00:00:00 이후인 게시글만 조회합니다.
 const createdAfterFilter = {
   createdAt: { gte: new Date('2025-01-01T00:00:00.000Z') },
 };
@@ -67,8 +71,8 @@ const posts = await prisma.post.findMany({
 
 ### 🔷 2) 문자열 필터(String)
 
-다음 조건도 한 번에 하나씩 `where`에 적용합니다.  
-PostgreSQL에서는 `mode: 'insensitive'`를 함께 사용하여 대소문자를 구분하지 않는 검색을 지정할 수 있습니다.  
+문자열은 값이 같은지 확인할 뿐만 아니라 특정 글자가 포함되는지, 어떤 글자로 시작하거나 끝나는지도 검색할 수 있습니다.  
+PostgreSQL에서 대소문자를 구분하지 않으려면 `mode: 'insensitive'`를 함께 사용합니다.  
 
 ```typescript
 // title이 'Prisma'와 완전히 일치하는 게시글만 조회합니다.
@@ -121,7 +125,8 @@ const posts = await prisma.post.findMany({
 
 ### 🔷 3) `NULL` 필터(Nullable 필드)
 
-`content`는 선택 필드이므로 `null` 여부를 기준으로 조회할 수 있습니다.  
+`content`는 값이 없을 수 있는 선택 필드입니다.  
+따라서 `null`인지 아닌지를 조건으로 게시글을 조회할 수 있습니다.  
 
 ```typescript
 // content가 NULL인 게시글만 조회합니다.
@@ -137,16 +142,20 @@ const notNullFilter = {
 };
 
 const posts = await prisma.post.findMany({
+  // 내용이 없는 게시글을 확인하기 위해 nullFilter를 적용합니다.
   where: nullFilter,
 });
 ```
 
 ### 🔷 4) 논리 조합(AND / OR / NOT)
 
-`AND`, `OR`, `NOT`을 사용하면 여러 조건을 논리적으로 조합할 수 있습니다.  
+조건이 여러 개라면 `AND`, `OR`, `NOT`으로 묶을 수 있습니다.  
+`AND`는 모든 조건, `OR`은 하나 이상의 조건을 만족해야 하며, `NOT`은 해당 조건을 만족하는 데이터를 제외합니다.  
 
 ```typescript
+// 여러 조건을 한 번에 조합하여 게시글을 조회합니다.
 const posts = await prisma.post.findMany({
+  // where 안에서 AND, OR와 NOT을 함께 사용할 수 있습니다.
   where: {
     // 아래 조건을 모두 만족해야 합니다.
     AND: [
@@ -170,8 +179,8 @@ const posts = await prisma.post.findMany({
 
 ### 🔷 5) 다대일 관계 필터: `is` / `isNot`
 
-`Post.author`와 같은 단일 관계는 `is`와 `isNot`으로 관계 모델의 조건을 검사합니다.  
-제공된 스키마에서 `author`는 필수 관계이므로 관계의 존재 여부가 아니라 작성자 필드의 조건을 검사합니다.  
+`Post.author`처럼 하나의 레코드와 연결된 관계에는 `is`와 `isNot`을 사용합니다.  
+이 글의 스키마에서 모든 게시글에는 작성자가 반드시 있으므로, 작성자의 존재 여부가 아니라 이메일 같은 작성자 필드에 조건을 적용합니다.  
 
 - `is`: 관계 대상이 지정한 조건을 만족해야 합니다.
 - `isNot`: 관계 대상이 지정한 조건을 만족하지 않아야 합니다.
@@ -179,8 +188,8 @@ const posts = await prisma.post.findMany({
 - `isNot: null`: 선택 관계가 연결된 데이터를 찾습니다. 현재 스키마의 `Post.author`는 항상 연결되어 있습니다.
 
 ```typescript
-// 작성자 이메일의 도메인이 example.com이고, 해당 작성자가 작성한 게시글 중
-// 내용에 backend가 포함된 글이 하나 이상 존재하는 게시글을 조회합니다.
+// 작성자의 이메일 도메인이 example.com인지 확인합니다.
+// 또한 해당 작성자가 내용에 backend가 포함된 글을 작성했는지 확인합니다.
 const posts = await prisma.post.findMany({
   where: {
     author: {
@@ -201,6 +210,7 @@ const posts = await prisma.post.findMany({
 ```
 
 ```typescript
+// 작성자 이메일 도메인이 example.com이 아닌 게시글을 조회합니다.
 const posts = await prisma.post.findMany({
   where: {
     author: {
@@ -215,14 +225,16 @@ const posts = await prisma.post.findMany({
 
 ### 🔷 6) 일대다 관계 필터: `some` / `every` / `none`
 
-`Post.likes`와 같은 목록 관계에는 `some`, `every`, `none`을 사용합니다.  
+`Post.likes`처럼 여러 레코드와 연결된 관계에는 `some`, `every`, `none`을 사용합니다.  
+각각 하나 이상 만족하는지, 모두 만족하는지, 하나도 만족하지 않는지를 확인합니다.  
 
 ```typescript
+// 게시글의 likes 관계에 조건을 적용합니다.
 const posts = await prisma.post.findMany({
   where: {
     likes: {
-      // 좋아요를 누른 사용자 중
-      // 이메일이 @example.com으로 끝나는 사용자가 한 명 이상 존재하는 게시글을 조회합니다.
+      // 좋아요를 누른 사용자의 이메일을 확인합니다.
+      // @example.com으로 끝나는 사용자가 한 명 이상인 게시글을 조회합니다.
       some: {
         user: {
           is: {
@@ -231,27 +243,32 @@ const posts = await prisma.post.findMany({
         },
       },
 
-      // 게시글에 달린 모든 좋아요의 사용자 이메일이 @example.com으로 끝나는 게시글을 조회
+      // 모든 좋아요 사용자의 이메일이 @example.com으로 끝나는 게시글을 조회합니다.
       // every: { user: { is: { email: { endsWith: '@example.com' } } } },
 
-      // 사용자 이메일이 @spam.example로 끝나는 좋아요가 하나도 없는 게시글을 조회
+      // @spam.example 이메일 사용자의 좋아요가 하나도 없는 게시글을 조회합니다.
       // none: { user: { is: { email: { endsWith: '@spam.example' } } } },
     },
   },
 });
 ```
 
-`every`는 관련 좋아요가 하나도 없는 게시글도 조건을 만족한 것으로 판단할 수 있으므로, 관계 데이터가 반드시 있어야 한다면 `some: {}` 조건을 함께 사용합니다.  
-예를 들어:  
+`every`를 사용할 때는 관계 데이터가 하나도 없는 경우도 조건을 만족할 수 있다는 점에 주의해야 합니다.  
+좋아요가 반드시 하나 이상 있어야 한다면 `some: {}`도 함께 사용합니다.  
+결과는 다음과 같이 달라집니다.  
 
 - 좋아요 3개가 모두 @example.com 사용자 → 만족
 - 좋아요 3개 중 1개가 다른 도메인 → 불만족
 - 좋아요가 0개 → 만족할 수 있음
+
 좋아요가 반드시 하나 이상 있으면서 모든 좋아요가 조건을 만족해야 한다면 다음처럼 작성합니다.  
 
 ```typescript
+// some으로 좋아요가 하나 이상 있는지 먼저 확인합니다.
 likes: {
   some: {},
+
+  // every로 모든 좋아요 사용자의 이메일 도메인을 검사합니다.
   every: {
     user: {
       is: {
@@ -266,14 +283,12 @@ likes: {
 
 ### 🔷 7) 중첩 관계 조건
 
-관계를 따라가며 더 깊은 조건을 지정할 수도 있습니다.  
-다음 예시는 작성자가 이전에 쓴 게시글의 내용까지 확인합니다.  
+관계 안에서 다시 다른 관계로 이동하며 조건을 지정할 수도 있습니다.  
+다음 예제는 게시글의 작성자를 확인한 뒤, 그 작성자가 쓴 다른 게시글의 내용까지 검사합니다.  
 
 ```typescript
-
 // 내용에 backend가 포함된 게시글을 하나 이상 작성한 작성자를 찾습니다.
 // 그 작성자가 작성한 모든 게시글을 조회합니다.
-
 const posts = await prisma.post.findMany({
   where: {
     author: {
@@ -294,19 +309,23 @@ const posts = await prisma.post.findMany({
 
 ### 🔷 8) 배열 필드 필터(String[] 등)
 
-배열 필터는 실제 모델에 `String[]`과 같은 스칼라 목록 필드가 있을 때만 사용할 수 있습니다.  
+배열 필터는 모델에 `String[]`과 같은 목록 필드가 있을 때 사용합니다.  
+예를 들어 `tags` 필드가 있다면 특정 태그가 하나 또는 여러 개 포함되어 있는지 확인할 수 있습니다.  
 
 ```typescript
+// 아래 배열 필터는 tags 필드에 하나씩 적용하는 예시입니다.
 where: {
-  // tags 배열에 'prisma' 값이 "포함"된 글만 조회
+  // tags 배열에 'prisma'가 포함된 게시글만 조회합니다.
   tags: { has: 'prisma' },
-  // tags 배열에 ['prisma', 'node'] 중 "하나라도" 포함되면 조회
-  tags: { hasSome: ['prisma', 'node'] },
-  // tags 배열에 ['prisma', 'node']가 "모두" 포함되어야 조회
-  tags: { hasEvery: ['prisma', 'node'] },
-  // tags 배열이 비어있는지 여부
-  // isEmpty: false => 비어있지 않은 글만
-  tags: { isEmpty: false },
+
+  // 두 태그 중 하나 이상을 찾으려면 위 조건 대신 다음 조건을 사용합니다.
+  // tags: { hasSome: ['prisma', 'node'] },
+
+  // 두 태그가 모두 있는지 확인하려면 다음 조건을 사용합니다.
+  // tags: { hasEvery: ['prisma', 'node'] },
+
+  // 배열이 비어 있지 않은지 확인하려면 다음 조건을 사용합니다.
+  // tags: { isEmpty: false },
 }
 ```
 
@@ -319,12 +338,13 @@ where: {
 | 추천 상황 | 클라이언트 전달용 API, 대량 목록 조회 | 비즈니스 로직 연산, 전체 관계 데이터 확인 |
 | 관계 처리 | 하위 `select`를 통해 관계 필드도 선택할 수 있습니다. | 관계 내부에 `select`를 사용하지 않으면 관계 모델의 스칼라 필드를 모두 가져옵니다. |
 
-조회 쿼리를 설계할 때는 이 API에 필요한 최소한의 데이터가 무엇인지 먼저 생각해야 합니다.  
+조회 코드를 작성하기 전에는 화면이나 API에 어떤 데이터가 필요한지 먼저 정하는 것이 좋습니다.  
+필요한 필드만 고르려면 `select`를, 기본 필드와 관계 데이터를 함께 보려면 `include`를 사용합니다.  
 
 ### 🔷 1) `select`: 필드 선택(권장 기본값)
 
-`select`는 SQL의 `SELECT column1, column2`처럼 반환할 필드를 직접 선택합니다.  
-Prisma에서 `select`를 사용하면 명시하지 않은 필드는 반환 결과에 포함되지 않습니다.  
+`select`는 반환할 필드를 직접 고르는 기능입니다.  
+`select`에 작성하지 않은 필드는 조회 결과에 포함되지 않습니다.  
 
 - **보안**: 외부에 노출할 필요가 없는 이메일이나 내부 필드가 응답에 포함되는 실수를 줄입니다.
 - **성능**: 데이터베이스에서 애플리케이션 서버로 전송하는 데이터의 크기를 줄입니다.
@@ -333,7 +353,10 @@ Prisma에서 `select`를 사용하면 명시하지 않은 필드는 반환 결�
 ```typescript
 // 공개용 사용자 카드에 필요한 필드만 조회합니다.
 const userCard = await prisma.user.findUnique({
+  // id가 135인 사용자 한 명을 찾습니다.
   where: { id: 135 },
+
+  // 사용자 카드에 보여 줄 필드만 선택합니다.
   select: {
     id: true,
     displayName: true,
@@ -359,17 +382,21 @@ const userCard = await prisma.user.findUnique({
 }
 ```
 
-실제 SQL의 개수와 형태는 Prisma의 관계 로드 전략에 따라 달라질 수 있습니다.  
-따라서 관계 데이터를 항상 별도 SQL로 조회한다고 가정하기보다 쿼리 로그로 확인해야 합니다.  
+Prisma가 내부에서 실행하는 SQL의 개수와 모양은 관계 로드 전략에 따라 달라질 수 있습니다.  
+실제 동작이 궁금하다면 추측하기보다 쿼리 로그에서 확인하는 것이 정확합니다.  
 
 ### 🔷 2) `include`: 관계 데이터 포함
 
-`include`는 특정 모델을 조회하면서 연결된 관계 데이터를 함께 반환할 때 사용합니다.  
-게시글을 수정할 때 작성자 정보가 필요하거나, 관리자 화면에서 관계 데이터의 전체 모습을 확인할 때 편리합니다.  
+`include`는 모델을 조회하면서 연결된 데이터도 함께 가져올 때 사용합니다.  
+게시글과 작성자 정보를 함께 보거나 관리자 화면에서 전체 관계를 확인할 때 편리합니다.  
 
 ```typescript
+// 사용자 기본 정보와 작성한 게시글을 함께 조회합니다.
 const userWithPosts = await prisma.user.findUnique({
+  // id가 135인 사용자 한 명을 찾습니다.
   where: { id: 135 },
+
+  // include는 User의 기본 필드에 posts 관계를 추가합니다.
   include: {
     // User의 스칼라 필드와 연결된 Post의 스칼라 필드를 함께 가져옵니다.
     posts: true,
@@ -380,10 +407,12 @@ const userWithPosts = await prisma.user.findUnique({
 관계의 모든 필드가 필요하지 않다면 `include` 내부에서 `select`를 사용할 수 있습니다.  
 
 ```typescript
+// 사용자 기본 필드는 유지하고 게시글에서는 제목만 가져옵니다.
 const userWithPostTitles = await prisma.user.findUnique({
   where: { id: 135 },
   include: {
     posts: {
+      // 관계 안에서는 select로 필요한 필드만 선택할 수 있습니다.
       select: {
         title: true,
       },
@@ -394,8 +423,8 @@ const userWithPostTitles = await prisma.user.findUnique({
 
 ### 🔷 3) 최상위 `select`와 `include`는 동시에 사용할 수 없음
 
-같은 쿼리 단계의 최상위에서 `select`와 `include`를 동시에 사용할 수는 없습니다.  
-다만 `include` 안에 중첩 `select`를 사용하거나, 최상위 `select`에서 관계 필드를 선택하는 방식은 사용할 수 있습니다.  
+같은 단계에서 `select`와 `include`를 나란히 사용할 수는 없습니다.  
+대신 `include` 안에서 `select`를 사용하거나, 최상위 `select`에서 관계 필드까지 선택할 수 있습니다.  
 
 - `select`는 어떤 필드를 반환할지 필드 단위로 정의합니다.
 - `select`는 API 응답 구조를 명확하게 통제하는 데 초점을 둡니다.
@@ -404,19 +433,23 @@ const userWithPostTitles = await prisma.user.findUnique({
 
 ### 🔷 4) 중첩 `include`의 이해와 깊이 관리
 
-Prisma는 여러 테이블에 흩어진 관계 데이터를 한 번의 Client 호출로 계층 구조로 만들어 반환합니다.  
+Prisma는 여러 테이블에 나뉘어 있는 관계 데이터를 한 번의 Client 호출로 조회하여 중첩된 객체로 반환합니다.  
 
 ### (1) 중첩 `include`의 편리함
 
 ```typescript
-// 3단계 중첩: 사용자 -> 게시글 -> 좋아요 -> 좋아요를 누른 사용자
+// 사용자에서 게시글, 좋아요, 좋아요를 누른 사용자까지 세 단계로 조회합니다.
 const userFeed = await prisma.user.findUnique({
+  // 조회를 시작할 사용자를 지정합니다.
   where: { id: 1 },
   include: {
+    // 첫 번째 단계에서 사용자의 게시글을 포함합니다.
     posts: {
       include: {
+        // 두 번째 단계에서 각 게시글의 좋아요를 포함합니다.
         likes: {
           include: {
+            // 세 번째 단계에서 좋아요를 누른 사용자까지 포함합니다.
             user: true,
           },
         },
@@ -426,10 +459,11 @@ const userFeed = await prisma.user.findUnique({
 });
 ```
 
-복잡한 `JOIN` 쿼리를 직접 작성하지 않아도 되고 반환 데이터의 타입이 자동으로 추론된다는 장점이 있습니다.  
+이 방법을 사용하면 복잡한 `JOIN`을 직접 작성하지 않아도 되며, 반환되는 데이터의 타입도 자동으로 추론됩니다.  
 
 관계 조회가 단일 SQL 또는 테이블별 여러 SQL로 실행되는지는 적용한 관계 로드 전략에 따라 달라집니다.  
-여러 SQL을 사용하는 전략에서는 `IN` 조건 등을 활용해 관계별로 묶어서 조회할 수 있으므로, 각 레코드마다 쿼리를 반복하는 전형적인 N+1 문제를 줄일 수 있습니다.  
+여러 SQL을 사용하는 전략에서도 Prisma는 관계 데이터를 묶어서 조회할 수 있습니다.  
+따라서 게시글마다 좋아요를 따로 조회하는 식의 반복 코드를 줄일 수 있습니다.  
 
 ### (2) 중첩 `include`의 위험성
 
@@ -439,24 +473,30 @@ const userFeed = await prisma.user.findUnique({
 
 ### (3) 개선 방법: 중첩 `select` 사용
 
-중첩 구조가 필요하다면 하위 관계에서도 `select`와 `take`를 사용하여 필요한 데이터만 가져옵니다.  
+관계가 여러 단계로 이어질 때는 하위 관계에도 `select`와 `take`를 적용하는 것이 좋습니다.  
+그러면 필요한 필드와 개수만 조회하여 결과가 지나치게 커지는 것을 막을 수 있습니다.  
 
 ```typescript
 // 깊은 관계에서도 필요한 데이터만 선택합니다.
 const optimizedFeed = await prisma.user.findUnique({
   where: { id: 1 },
   select: {
+    // 사용자에서는 표시 이름만 가져옵니다.
     displayName: true,
     posts: {
+      // 최신 게시글 5개만 가져옵니다.
       take: 5,
       orderBy: { createdAt: 'desc' },
       select: {
+        // 게시글에서는 제목만 가져옵니다.
         title: true,
         likes: {
+          // 각 게시글의 좋아요도 최대 10개로 제한합니다.
           take: 10,
           select: {
             createdAt: true,
             user: {
+              // 좋아요를 누른 사용자는 표시 이름만 가져옵니다.
               select: { displayName: true },
             },
           },
@@ -480,7 +520,8 @@ const optimizedFeed = await prisma.user.findUnique({
 | 추천 상황 | 얕은 페이지 탐색과 소규모 목록 | 대용량 목록의 순차 탐색과 실시간 피드 |
 | 주요 조건 | 안정적인 정렬 기준이 필요합니다. | 고유하고 순차적인 커서 필드가 필요합니다. |
 
-데이터 규모만으로 방식을 단정하기보다 UI 요구 사항, 정렬 기준, 실제 쿼리 성능을 함께 고려하여 선택합니다.  
+페이지네이션 방식은 데이터 개수만 보고 결정하기 어렵습니다.  
+화면의 이동 방식, 정렬 기준과 실제 쿼리 속도를 함께 살펴보고 선택합니다.  
 
 - 소규모 프로젝트와 페이지 번호가 필요한 관리자 도구에는 Offset 방식이 편리합니다.
 - 데이터가 많고 무한 스크롤을 사용하는 사용자 피드에는 Cursor 방식이 적합합니다.
@@ -488,7 +529,7 @@ const optimizedFeed = await prisma.user.findUnique({
 
 ### 🔷 Offset 기반 페이지네이션
 
-Offset 방식은 데이터베이스에서 레코드를 일정 개수만큼 건너뛰고(`skip`) 필요한 개수만큼 가져옵니다(`take`).  
+Offset 방식은 앞의 데이터를 일정 개수만큼 건너뛰고(`skip`), 그다음 데이터를 필요한 만큼 가져옵니다(`take`).  
 
 ```typescript
 // 페이지는 1부터 시작하며, 여기서는 3페이지를 조회합니다.
@@ -519,8 +560,8 @@ const posts = await prisma.post.findMany({
 
 ### 🔷 Cursor 기반 페이지네이션
 
-Cursor 방식은 마지막으로 조회한 데이터의 고유한 값을 기준으로 다음 데이터를 가져옵니다.  
-커서는 다음 목록을 어디서부터 이어서 가져올지 알려 주는 책갈피와 같습니다.  
+Cursor 방식은 마지막으로 조회한 데이터의 고유한 값을 기준으로 그다음 데이터를 가져옵니다.  
+여기서 커서는 다음 목록의 시작 위치를 알려 주는 책갈피와 같습니다.  
 
 > 마지막으로 본 게시글이 `id=100`이라면, 다음 요청은 `id=100`을 커서로 전달하여 그다음 게시글을 가져옵니다.
 
@@ -549,7 +590,7 @@ const posts = await prisma.post.findMany({
 
 ### 🔷 복합 정렬 커서(Composite Cursor) 이해하기
 
-실무 API에서는 `id`순뿐만 아니라 `createdAt`을 기준으로 최신 게시글부터 정렬하는 경우가 많습니다.  
+실제 API에서는 `id`순뿐만 아니라 `createdAt`을 기준으로 최신 게시글부터 보여 주는 경우가 많습니다.  
 그러나 여러 게시글의 `createdAt` 값이 같으면 시간만으로는 각 게시글의 순서를 확정할 수 없습니다.  
 이때 `createdAt`을 1차 정렬 기준으로 사용하고 고유한 `id`를 2차 정렬 기준으로 사용하면 순서를 안정적으로 결정할 수 있습니다.  
 
@@ -560,10 +601,13 @@ Prisma Client의 `cursor`에는 고유 조건을 전달해야 합니다.
 
 ```prisma
 model Post {
+  // 게시글을 식별하는 자동 증가 기본 키입니다.
   id        Int      @id @default(autoincrement())
   title     String
   content   String?
   published Boolean  @default(false)
+
+  // 생성 시각과 마지막 수정 시각을 저장합니다.
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
@@ -571,6 +615,7 @@ model Post {
   authorId Int  @map("author_id")
   author   User @relation(fields: [authorId], references: [id], onDelete: Cascade)
 
+  // 게시글에 연결된 좋아요 목록입니다.
   likes PostLike[]
 
   // createdAt과 id를 함께 사용하는 복합 커서를 생성합니다.
@@ -618,7 +663,8 @@ const posts = await prisma.post.findMany({
 
 ### 🔷 Cursor 데이터 흐름
 
-Cursor 페이지네이션은 클라이언트와 서버가 마지막 데이터의 커서를 주고받으며 완성합니다.  
+Cursor 페이지네이션에서는 클라이언트와 서버가 마지막 데이터의 위치를 커서로 주고받습니다.  
+전체 흐름은 다음과 같습니다.  
 
 1. 첫 요청에서 클라이언트는 커서 없이 목록을 요청합니다.
 2. 서버는 게시글 목록과 마지막 게시글의 `createdAt`, `id`를 다음 커서로 응답합니다.
@@ -629,8 +675,8 @@ Cursor 페이지네이션은 클라이언트와 서버가 마지막 데이터의
 
 ## 2. 관계 데이터 생성 패턴: connect / create / connectOrCreate {#session-02}
 
-Prisma에서 관계 데이터를 생성할 때는 외래 키를 직접 지정하거나 관계 API로 연결 의도를 표현할 수 있습니다.  
-관계 API를 사용하면 기존 레코드를 연결하는지, 새 레코드를 함께 생성하는지 코드에서 명확하게 구분할 수 있습니다.  
+Prisma에서 관계 데이터를 만들 때는 외래 키를 직접 넣거나 관계 API를 사용할 수 있습니다.  
+관계 API를 사용하면 기존 데이터를 연결하는지, 새로운 데이터를 함께 만드는지 코드만 보고 쉽게 구분할 수 있습니다.  
 
 | 상황 | 추천 패턴 | 이유 |
 | --- | --- | --- |
@@ -641,7 +687,7 @@ Prisma에서 관계 데이터를 생성할 때는 외래 키를 직접 지정하
 
 ### 🟦 `connect`: 기존 데이터와 명시적으로 연결
 
-외래 키 ID를 직접 넣는 방식과 `connect`를 사용하는 방식은 같은 관계를 서로 다르게 표현합니다.  
+외래 키 ID를 직접 넣는 방법과 `connect`를 사용하는 방법은 같은 관계를 서로 다른 방식으로 표현합니다.  
 
 ### 🔷 1) 외래 키 직접 할당
 
@@ -649,9 +695,12 @@ Prisma에서 관계 데이터를 생성할 때는 외래 키를 직접 지정하
 존재하지 않는 값을 저장할 수 있는지는 데이터베이스의 외래 키 제약과 Prisma의 관계 모드 설정에 영향을 받습니다.  
 
 ```typescript
+// authorId에 기존 사용자의 ID를 직접 넣어 게시글을 생성합니다.
 await prisma.post.create({
   data: {
     title: '게시글',
+
+    // id가 1인 사용자를 게시글 작성자로 지정합니다.
     authorId: 1,
   },
 });
@@ -659,14 +708,15 @@ await prisma.post.create({
 
 ### 🔷 2) 관계 연결
 
-`connect`는 `@id` 또는 `@unique`로 식별할 수 있는 기존 레코드를 관계에 연결합니다.  
-연결할 대상이 없으면 관계 연결이 실패하므로 오류를 처리해야 합니다.  
+`connect`는 `@id` 또는 `@unique`로 찾을 수 있는 기존 데이터를 관계에 연결합니다.  
+연결하려는 데이터가 없으면 오류가 발생하므로 예외 처리도 준비해야 합니다.  
 
 ```typescript
 // 실제 애플리케이션에서는 로그인 세션에서 사용자 ID를 가져옵니다.
 const userId = 1;
 
 await prisma.post.create({
+  // 게시글의 필드와 작성자 관계를 함께 설정합니다.
   data: {
     title: 'Prisma 완벽 가이드',
     content: '관계 생성 패턴을 설명합니다.',
@@ -681,12 +731,13 @@ await prisma.post.create({
 
 ### 🟦 `create`: 관계 레코드 동시 생성
 
-중첩 `create`는 부모와 자식 레코드를 한 번의 Prisma Client 호출에서 함께 생성합니다.  
-Prisma는 중첩 쓰기를 트랜잭션으로 처리하므로 하나의 작업이 실패하면 전체 작업을 롤백합니다.  
+중첩 `create`를 사용하면 서로 연결된 데이터를 한 번의 Prisma Client 호출로 함께 만들 수 있습니다.  
+Prisma는 이 작업을 하나의 트랜잭션으로 처리하므로, 중간에 실패하면 앞에서 만든 데이터도 함께 되돌립니다.  
 
 ### 🔷 사용자와 여러 게시글 함께 생성
 
 ```typescript
+// 사용자 한 명과 그 사용자의 게시글 두 개를 함께 생성합니다.
 await prisma.user.create({
   data: {
     email: 'author@prisma.io',
@@ -714,6 +765,7 @@ await prisma.user.create({
 ### 🔷 게시글과 작성자 함께 생성
 
 ```typescript
+// 게시글과 새로운 작성자를 한 번에 생성합니다.
 await prisma.post.create({
   data: {
     title: '게시글',
@@ -730,11 +782,12 @@ await prisma.post.create({
 
 ### 🟦 `connectOrCreate`: 조건부 생성
 
-`connectOrCreate`는 대상이 있으면 연결하고 없으면 생성합니다.  
+`connectOrCreate`는 조건에 맞는 데이터가 있으면 연결하고, 없으면 새로 만듭니다.  
 `where`에는 `@id` 또는 `@unique`로 지정된 고유 조건을 사용해야 합니다.  
-외부 시스템 연동이나 태그처럼 데이터의 존재 여부를 미리 알기 어려운 경우에 사용할 수 있습니다.  
+외부 시스템에서 받은 데이터처럼 이미 저장되어 있는지 미리 알기 어려울 때 유용합니다.  
 
 ```typescript
+// 작성자가 이미 있는지 확인한 뒤 연결하거나 새로 생성합니다.
 await prisma.post.create({
   data: {
     title: '연동 게시글',
@@ -756,18 +809,26 @@ await prisma.post.create({
 
 ### 🟦 다대다 관계: `PostLike` 명시적 중간 모델
 
-`PostLike`처럼 명시적 중간 모델을 사용하면 사용자와 게시글의 다대다 관계에 `createdAt` 같은 추가 정보를 저장할 수 있습니다.  
+`PostLike` 같은 중간 모델을 만들면 사용자와 게시글의 다대다 관계를 직접 관리할 수 있습니다.  
+좋아요를 누른 시각처럼 관계 자체에 필요한 정보도 함께 저장할 수 있습니다.  
 
 ```prisma
 model PostLike {
+  // User와 Post를 연결하는 두 외래 키입니다.
   userId    Int      @map("user_id")
   postId    Int      @map("post_id")
+
+  // 좋아요를 누른 시각을 자동으로 저장합니다.
   createdAt DateTime @default(now()) @map("created_at")
 
+  // 각 외래 키가 참조하는 관계를 정의합니다.
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
   post Post @relation(fields: [postId], references: [id], onDelete: Cascade)
 
+  // 같은 사용자가 같은 게시글에 좋아요를 두 번 누르지 못하게 합니다.
   @@id([userId, postId])
+
+  // 게시글별 좋아요를 빠르게 찾기 위한 인덱스입니다.
   @@index([postId])
   @@map("post_likes")
 }
@@ -776,13 +837,16 @@ model PostLike {
 ### 🔷 게시글 좋아요 추가
 
 ```typescript
+// id가 1인 사용자가 id가 10인 게시글에 누른 좋아요를 생성합니다.
 await prisma.postLike.create({
   data: {
     // 기존 User와 Post를 PostLike에 연결합니다.
     user: {
+      // 기존 사용자를 좋아요에 연결합니다.
       connect: { id: 1 },
     },
     post: {
+      // 기존 게시글을 좋아요에 연결합니다.
       connect: { id: 10 },
     },
   },
@@ -796,9 +860,11 @@ await prisma.postLike.create({
 제공된 스키마에는 소프트 삭제 필드가 없으므로 좋아요 취소 시 중간 레코드를 삭제합니다.  
 
 ```typescript
+// 삭제할 좋아요의 사용자 ID와 게시글 ID를 준비합니다.
 const userId = 1;
 const postId = 10;
 
+// 두 ID로 좋아요 레코드를 찾아 삭제합니다.
 await prisma.postLike.delete({
   // @@id([userId, postId])가 생성한 복합 키 이름을 사용합니다.
   where: {
