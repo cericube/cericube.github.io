@@ -49,8 +49,6 @@ DB 조회 결과를 Redis에 60초 동안 저장
 사용자 데이터 반환
 ```
 
-### 🟦 사용하는 Redis 키
-
 사용자 캐시 키는 `RedisKey` 유틸리티에서 관리합니다.  
 
 ```typescript
@@ -171,7 +169,7 @@ async updateUser(userId: number, input: UpdateUserInput) {
 
 이처럼 유효 시간이 짧은 데이터는 Redis String에 TTL과 함께 저장하기 좋습니다.  
 
-### 🟦 사용하는 Redis 키
+이메일 인증 코드 키는 기존 `RedisKey` 유틸리티를 그대로 사용합니다.  
 
 ```typescript
 RedisKey.string.authCode(email);
@@ -287,7 +285,7 @@ async getAuthCodeTtl(email: string): Promise<number> {
 이와 같은 단순 증가 값은 Redis String의 `INCR` 명령으로 처리하기 좋습니다.  
 Redis String 값이 숫자 문자열이면 `INCR`, `DECR`, `INCRBY` 같은 명령어로 값을 증가하거나 감소시킬 수 있습니다.  
 
-### 🟦 사용하는 Redis 키
+게시글 조회수 카운터 키는 기존 `RedisKey` 유틸리티를 그대로 사용합니다.  
 
 ```typescript
 RedisKey.string.postViewCount(postId);
@@ -416,7 +414,7 @@ Rate Limiting은 일정 시간 동안 허용할 요청 수를 제한하는 기�
 같은 사용자에게 10초 동안 최대 20회 API 요청 허용
 ```
 
-### 🟦 사용하는 Redis 키
+요청 횟수 제한 키는 기존 `RedisKey` 유틸리티를 그대로 사용합니다.  
 
 ```typescript
 RedisKey.string.rateLimit(key);

@@ -70,8 +70,6 @@ hash:user-profile:1
 
 이렇게 저장하면 `name`, `status`, `point` 같은 특정 필드를 다루기 쉬워집니다.  
 
-### 🟦 사용하는 Redis 키
-
 사용자 프로필 Hash 키는 기존 `RedisKey` 유틸리티를 그대로 사용합니다.  
 
 ```typescript
@@ -85,10 +83,11 @@ hash:user-profile:1
 hash:user-profile:2
 ```
 
-### 🟦 Hash 캐시 조회
+사용자 프로필 Hash 캐시의 전체 동작 흐름은 다음과 같습니다.  
 
-사용자 프로필 조회의 핵심 메서드는 `getUserProfile()`입니다.  
-다음 코드는 `src/ch06/user-hash.service.ts`에서 캐시 조회와 직접 관련된 부분을 발췌한 것입니다.  
+![Redis Hash 사용자 프로필 캐시 조회·저장·갱신 흐름](/assets/images/nodejs/nodejs-redis/redis-hash-user-profile-cache-flow-v3.png)
+
+### 🟦 Hash 캐시 조회
 
 ```typescript
 // src/ch06/user-hash.service.ts
@@ -153,21 +152,26 @@ async saveUserProfileToHash(
   // 예: hash:user-profile:1
   const key = RedisKey.hash.userProfile(user.id);
 
+  // HSET과 EXPIRE를 Transaction으로 묶어 Hash와 TTL을 함께 저장합니다.
   // Redis Hash의 필드 값은 문자열로 저장합니다.
-  await redis.hSet(key, {
-    id: String(user.id),
-    email: user.email,
-    name: user.name,
-    point: String(user.point),
-    status: user.status,
-    createdAt: user.createdAt,
-    updatedAt: user.updatedAt,
-  });
-
-  // 기본 TTL은 300초이며, 시간이 지나면 Redis가 키를 자동 삭제합니다.
-  await redis.expire(key, ttlSeconds);
+  await redis
+    .multi()
+    .hSet(key, {
+      id: String(user.id),
+      email: user.email,
+      name: user.name,
+      point: String(user.point),
+      status: user.status,
+      createdAt: user.createdAt,
+      updatedAt: user.updatedAt,
+    })
+    .expire(key, ttlSeconds)
+    .exec();
 }
 ```
+
+`HSET`과 `EXPIRE`를 따로 실행하면 두 명령 사이에 오류가 발생했을 때 TTL이 없는 Hash만 남을 수 있습니다.  
+예시 코드에서는 두 명령을 Redis Transaction으로 묶어 프로필 저장과 TTL 설정 사이에 다른 명령이 끼어들지 않게 합니다.  
 
 ### 🟦 사용자 수정 후 Hash 갱신
 
@@ -219,7 +223,7 @@ async updateUserProfile(
 }
 ```
 
-실무에서는 다음 두 가지 방식 중 하나를 선택합니다.  
+일반적으로 다음 두 가지 방식 중 하나를 선택합니다.  
 
 ```text
 방식 1. DB 수정 후 Redis Hash 갱신
@@ -255,7 +259,7 @@ async updateUserProfile(
 - 마지막 접근 시간 갱신
 - 세션 전체 삭제
 
-### 🟦 사용하는 Redis 키
+로그인 세션 정보 Hash 키는 기존 `RedisKey` 유틸리티를 그대로 사용합니다.  
 
 ```typescript
 RedisKey.hash.userSession(sessionId);
@@ -267,10 +271,11 @@ RedisKey.hash.userSession(sessionId);
 hash:session:session-abc-123
 ```
 
-### 🟦 세션 생성
+로그인 세션 Hash의 생성·인증·접근 시간 갱신 흐름은 다음과 같습니다.  
 
-세션은 `hSet()`으로 저장합니다.  
-다음 코드는 `src/ch06/session-hash.service.ts`에서 세션 생성 부분을 발췌한 것입니다.  
+![Redis Hash 로그인 세션 생성·인증·접근 시간 갱신 흐름](/assets/images/nodejs/nodejs-redis/redis-hash-login-session-flow.png)
+
+### 🟦 세션 생성
 
 ```typescript
 // src/ch06/session-hash.service.ts
@@ -314,21 +319,21 @@ async createSession(
   // TTL이 없는 세션 Hash가 남아 자동으로 만료되지 않을 수 있습니다.
   // 이를 방지하려면 MULTI/EXEC 또는 Lua Script로 두 명령을 하나의 작업으로 묶어야 합니다.
 
-    await redis
-      .multi()
-      .hSet(key, {
-        sessionId: session.sessionId,
-        userId: String(session.userId),
-        email: session.email,
-        role: session.role,
-        issuedAt: session.issuedAt,
-        expiresAt: session.expiresAt,
-        lastAccessedAt: session.lastAccessedAt,
-        userAgent: session.userAgent,
-        ip: session.ip,
-      })
-      .expire(key, ttlSeconds)
-      .exec();
+  await redis
+    .multi()
+    .hSet(key, {
+      sessionId: session.sessionId,
+      userId: String(session.userId),
+      email: session.email,
+      role: session.role,
+      issuedAt: session.issuedAt,
+      expiresAt: session.expiresAt,
+      lastAccessedAt: session.lastAccessedAt,
+      userAgent: session.userAgent,
+      ip: session.ip,
+    })
+    .expire(key, ttlSeconds)
+    .exec();
 
   return session;
 }
@@ -349,11 +354,8 @@ userAgent      = "Chrome"
 ip             = "127.0.0.1"
 ```
 
-세션은 영구 데이터가 아니므로 TTL을 설정합니다.  
-
-```typescript
-await redis.expire(key, ttlSeconds);
-```
+세션은 영구 데이터가 아니므로 Hash를 저장할 때 `.expire(key, ttlSeconds)`로 TTL도 함께 설정합니다.  
+예시 코드에서는 `HSET`과 `EXPIRE`를 같은 Transaction 안에서 실행합니다.  
 
 ### 🟦 특정 필드만 조회하기
 
@@ -429,7 +431,8 @@ async touchSession(sessionId: string): Promise<void> {
 ```
 
 `HSET`은 키가 없으면 새로운 Hash를 만듭니다.  
-실습 코드에서는 Lua 스크립트의 `EXISTS`와 `HSET`을 한 번에 실행해 만료된 세션이 불완전한 Hash로 다시 생성되지 않도록 처리합니다.  
+예시 코드에서는 Lua 스크립트의 `EXISTS`와 `HSET`을 한 번에 실행해 만료된 세션이 불완전한 Hash로 다시 생성되지 않도록 처리합니다.  
+`HSET`은 기존 키의 TTL을 연장하지 않으므로 이 메서드는 `lastAccessedAt`만 바꾸고, 세션을 만들 때 정한 만료 시각은 그대로 유지합니다.  
 
 ## 3. 상품 재고 상태 캐싱하기 {#session-03}
 
@@ -450,7 +453,7 @@ reservedStock만 변경
 
 따라서 Redis Hash로 저장하면 필드 단위 수정 흐름을 자연스럽게 만들 수 있습니다.  
 
-### 🟦 사용하는 Redis 키
+상품 재고 상태 Hash 키는 기존 `RedisKey` 유틸리티를 그대로 사용합니다.  
 
 ```typescript
 RedisKey.hash.productStock(productId);
@@ -463,9 +466,11 @@ hash:product-stock:1
 hash:product-stock:2
 ```
 
-### 🟦 재고 상태 생성
+상품 재고 Hash 캐시의 생성과 예약 재고 증감 흐름은 다음과 같습니다.  
 
-다음 코드는 `src/ch06/product-hash.service.ts`에서 상품 생성과 Hash 저장 부분을 발췌한 것입니다.  
+![Redis Hash 상품 재고 캐시 생성·예약 재고 증감 흐름](/assets/images/nodejs/nodejs-redis/redis-hash-product-stock-flow.png)
+
+### 🟦 재고 상태 생성
 
 ```typescript
 // src/ch06/product-hash.service.ts
@@ -522,18 +527,20 @@ async saveProductStockToHash(
   // 예: hash:product-stock:1
   const key = RedisKey.hash.productStock(product.productId);
 
-  await redis.hSet(key, {
-    productId: String(product.productId),
-    name: product.name,
-    stock: String(product.stock),
-    reservedStock: String(product.reservedStock),
-    availableStock: String(product.availableStock),
-    status: product.status,
-    updatedAt: product.updatedAt,
-  });
-
-  // 기본 TTL은 300초입니다.
-  await redis.expire(key, ttlSeconds);
+  // HSET과 EXPIRE를 Transaction으로 묶어 Hash와 TTL을 함께 저장합니다.
+  await redis
+    .multi()
+    .hSet(key, {
+      productId: String(product.productId),
+      name: product.name,
+      stock: String(product.stock),
+      reservedStock: String(product.reservedStock),
+      availableStock: String(product.availableStock),
+      status: product.status,
+      updatedAt: product.updatedAt,
+    })
+    .expire(key, ttlSeconds)
+    .exec();
 }
 ```
 
@@ -552,47 +559,153 @@ updatedAt      = "2026-06-17T00:00:00.000Z"
 
 ### 🟦 예약 재고를 Hash에서 관리하기
 
+예약 재고는 동시에 여러 요청이 변경할 수 있습니다.  
+단순히 Hash를 읽은 뒤 계산해 다시 저장하면, 두 요청이 같은 값을 읽고 갱신하면서 한쪽의 변경이 사라질 수 있습니다.  
+에시 코드는 `WATCH`로 Hash의 변경을 감시하고, 충돌하면 최신 값을 다시 읽어 계산합니다.  
+
 ```typescript
-/** 예약 재고를 증가시킵니다. */
+// 파일 위쪽에서 WATCH 충돌을 구분할 오류 타입을 가져옵니다.
+import { WatchError } from 'redis';
+
+// 아래 코드는 ProductHashService 클래스 내부입니다.
+// WATCH 충돌이 계속될 때 무한히 반복하지 않도록 재시도 횟수를 제한합니다.
+private readonly reservationTransactionMaxRetries = 10;
+
+/** WATCH Transaction을 사용해 예약 재고를 증가시킵니다. */
 async increaseReservedStock(
   productId: number,
   quantity: number,
 ): Promise<ProductStockOutput> {
-  // 예약 수량은 0보다 큰 정수여야 합니다.
   this.validateQuantity(quantity);
 
-  const current = await this.getProductStock(productId);
-  const nextReservedStock = current.reservedStock + quantity;
-  const nextAvailableStock = current.stock - nextReservedStock;
+  return this.updateReservedStockWithTransaction(
+    productId,
+    quantity,
+    'increase',
+  );
+}
 
-  const updated: ProductStockOutput = {
-    ...current,
-    reservedStock: nextReservedStock,
-    availableStock: nextAvailableStock,
-    updatedAt: new Date().toISOString(),
-  };
+/** WATCH Transaction을 사용해 예약 재고를 감소시킵니다. */
+async decreaseReservedStock(
+  productId: number,
+  quantity: number,
+): Promise<ProductStockOutput> {
+  this.validateQuantity(quantity);
 
-  // 예약 재고는 Redis Hash에만 반영합니다.
-  await this.saveProductStockToHash(updated);
+  return this.updateReservedStockWithTransaction(
+    productId,
+    quantity,
+    'decrease',
+  );
+}
 
-  return updated;
+/** 예약 재고를 낙관적 잠금으로 증감시킵니다. */
+private async updateReservedStockWithTransaction(
+  productId: number,
+  quantity: number,
+  operation: 'increase' | 'decrease',
+): Promise<ProductStockOutput> {
+  const key = RedisKey.hash.productStock(productId);
+
+  // WATCH할 대상이 완전한 Hash가 되도록 캐시가 없으면 DB 값으로 생성합니다.
+  await this.getProductStock(productId);
+
+  // WATCH는 연결 단위로 동작하므로 공유 Client와 분리한 전용 연결을 만듭니다.
+  const transactionClient = redis.duplicate();
+  transactionClient.on('error', (error) => {
+    console.error('[Redis Transaction Error]', error);
+  });
+  await transactionClient.connect();
+
+  try {
+    for (
+      let attempt = 1;
+      attempt <= this.reservationTransactionMaxRetries;
+      attempt += 1
+    ) {
+      // WATCH 이후 EXEC 전에 다른 요청이 key를 바꾸면 Transaction이 중단됩니다.
+      await transactionClient.watch(key);
+
+      // WATCH한 뒤 읽은 값을 기준으로 다음 예약 재고를 계산합니다.
+      const hash = await transactionClient.hGetAll(key);
+      const current = parseProductStockHash(hash);
+
+      // 감시 직후 캐시가 사라졌거나 손상됐다면 복구한 뒤 다시 시도합니다.
+      if (!current) {
+        await transactionClient.unwatch();
+        await this.getProductStock(productId);
+        continue;
+      }
+
+      const nextReservedStock =
+        operation === 'increase'
+          ? current.reservedStock + quantity
+          : Math.max(current.reservedStock - quantity, 0);
+
+      const updated: ProductStockOutput = {
+        ...current,
+        reservedStock: nextReservedStock,
+        availableStock: current.stock - nextReservedStock,
+        updatedAt: new Date().toISOString(),
+      };
+
+      try {
+        // 감시한 값이 그대로일 때만 Hash 갱신과 TTL 설정을 함께 실행합니다.
+        await transactionClient
+          .multi()
+          .hSet(key, {
+            productId: String(updated.productId),
+            name: updated.name,
+            stock: String(updated.stock),
+            reservedStock: String(updated.reservedStock),
+            availableStock: String(updated.availableStock),
+            status: updated.status,
+            updatedAt: updated.updatedAt,
+          })
+          .expire(key, 300)
+          .exec();
+
+        return updated;
+      } catch (error) {
+        // 다른 요청이 key를 먼저 바꾸면 최신 값을 읽도록 반복문으로 돌아갑니다.
+        if (error instanceof WatchError) {
+          continue;
+        }
+
+        throw error;
+      }
+    }
+  } finally {
+    // 성공과 실패에 관계없이 전용 연결을 반드시 닫습니다.
+    await transactionClient.close();
+  }
+
+  throw new Error(
+    'Failed to update reserved stock due to concurrent modifications',
+  );
 }
 ```
+
+`parseProductStockHash()`는 `hGetAll()` 결과를 `ProductStockOutput`으로 변환하고, 필수 필드가 빠지거나 숫자가 손상된 Hash는 `null`로 판단하는 실습 코드의 보조 함수입니다.  
 
 흐름은 다음과 같습니다.  
 
 ```text
-현재 상품 재고 Hash 조회
+상품 재고 Hash가 없으면 DB 값으로 캐시 생성
   ↓
-reservedStock 증가
+전용 Redis 연결에서 Hash WATCH
   ↓
-availableStock 재계산
+WATCH 이후 현재 Hash 조회·검증
   ↓
-Redis Hash 다시 저장
+reservedStock 증감과 availableStock 재계산
+  ↓
+MULTI/EXEC으로 Hash·TTL 갱신
+  ↓
+충돌하면 최신 값으로 재시도
 ```
 
-실제 주문 시스템에서는 재고 정확성이 매우 중요하므로 초과 예약 검증, DB 트랜잭션, 락과 재고 차감 정책이 함께 필요합니다.  
-이번 실습에서는 Redis Hash의 필드 기반 구조를 이해하기 위한 단순 예제로 봅니다.  
+예시 코드는 `WATCH` 충돌을 최대 10번까지 재시도해 동시 요청에서 갱신이 사라지 않게 합니다.  
+다만 실제 주문 시스템에서는 재고 정확성이 매우 중요하므로 초과 예약 검증, DB 트랜잭션, 락과 재고 차감 정책이 함께 필요합니다.  
 
 ## 4. 사용자 설정 정보 관리하기 {#session-04}
 
@@ -614,7 +727,7 @@ Redis Hash 다시 저장
 
 따라서 JSON 문자열 전체를 다시 저장하는 것보다 Hash로 관리하는 것이 자연스럽습니다.  
 
-### 🟦 사용하는 Redis 키
+사용자 설정 정보 Hash 키는 기존 `RedisKey` 유틸리티를 그대로 사용합니다.  
 
 ```typescript
 RedisKey.hash.userSetting(userId);
@@ -627,9 +740,11 @@ hash:user-setting:1
 hash:user-setting:2
 ```
 
-### 🟦 사용자 설정 저장
+사용자 설정 Hash의 조회·복구·부분 수정 흐름은 다음과 같습니다.  
 
-다음 코드는 `src/ch06/user-setting-hash.service.ts`에서 Hash 저장 부분을 발췌한 것입니다.  
+![Redis Hash 사용자 설정 조회·복구·부분 수정 흐름](/assets/images/nodejs/nodejs-redis/redis-hash-user-setting-flow.png)
+
+### 🟦 사용자 설정 저장
 
 ```typescript
 // src/ch06/user-setting-hash.service.ts
@@ -670,7 +785,7 @@ marketingAgreed: String(setting.marketingAgreed),
 ```
 
 조회할 때는 다시 `boolean`으로 변환합니다.  
-실제 코드에서는 일부 필드가 누락된 Hash를 읽을 때 기존 기본값이 잘못된 `false`로 바뀌지 않도록 기본값도 함께 처리합니다.  
+예시 코드에서는 일부 필드가 누락된 Hash를 읽을 때 기존 기본값이 잘못된 `false`로 바뀌지 않도록 기본값도 함께 처리합니다.  
 
 ```typescript
 function parseBoolean(value: string | undefined): boolean {
@@ -688,6 +803,50 @@ function parseBooleanWithDefault(
   return parseBoolean(value);
 }
 ```
+
+설정 Hash가 아예 없으면 기본 설정을 새로 저장합니다.  
+일부 필드만 남아 있으면 기본값을 병합한 뒤, 누락된 필드가 있을 때만 완성된 설정을 다시 저장합니다.  
+
+```typescript
+// userId는 Redis 키에 포함되므로 Hash에는 아래 필드가 모두 있어야 합니다.
+const USER_SETTING_HASH_FIELDS = [
+  'theme',
+  'language',
+  'emailNotification',
+  'smsNotification',
+  'marketingAgreed',
+  'updatedAt',
+] as const;
+
+/** 사용자 설정을 조회하고 누락된 기본값을 보완합니다. */
+async getUserSetting(userId: number): Promise<UserSettingOutput> {
+  const key = RedisKey.hash.userSetting(userId);
+  const hash = await redis.hGetAll(key);
+  const setting = parseUserSettingHash(userId, hash);
+
+  if (setting) {
+    const hasMissingField = USER_SETTING_HASH_FIELDS.some(
+      (field) => hash[field] === undefined,
+    );
+
+    if (hasMissingField) {
+      // 기본값을 병합한 결과를 저장해 다음 조회부터 완전한 Hash를 사용합니다.
+      await this.saveUserSettingToHash(setting);
+    }
+
+    return setting;
+  }
+
+  const defaultSetting = defaultUserSetting(userId);
+
+  await this.saveUserSettingToHash(defaultSetting);
+
+  return defaultSetting;
+}
+```
+
+`parseUserSettingHash()`는 저장된 필드를 기본 설정과 병합하고, Hash가 비어 있으면 `null`을 반환합니다.  
+`defaultUserSetting()`은 `light` 테마, `ko` 언어와 기본 알림 동의 값을 포함한 새 설정을 만듭니다.  
 
 ### 🟦 일부 필드만 수정하기
 
