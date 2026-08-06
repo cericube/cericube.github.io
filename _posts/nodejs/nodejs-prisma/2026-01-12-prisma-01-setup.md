@@ -1,7 +1,7 @@
 ---
 layout: post
 title: "01. Prisma 개발 환경 구축과 프로젝트 초기화"
-description: "기존 nodejs-workbook은 변경하지 않고 독립된 prisma-basics 하위 프로젝트에서 Prisma 7과 PostgreSQL을 설정하여 첫 데이터를 생성하는 방법을 설명합니다."
+description: "nodejs-workbook 루트 workspace의 prisma-basics 하위 프로젝트에서 Prisma 7과 PostgreSQL을 설정하여 첫 데이터를 생성하는 방법을 설명합니다."
 category_id: nodejs-prisma
 categories: [nodejs, nodejs-prisma]
 series: prisma
@@ -31,12 +31,15 @@ Node.js와 TypeScript 개발 환경을 먼저 준비합니다.
 
 - [Node.js 기본 참조](/archives/nodejs/nodejs-environment/nodejs-3-typescript/){: target="_blank" rel="noopener noreferrer" }
 
-### 🟦 실습 폴더 구조
+### 🟦 루트 프로젝트와 하위 프로젝트 구조
 
-실습의 효율성을 위해 Prisma 전용 설정을 한곳에 모으고, 각 장에서 이를 참조하는 구조를 사용합니다.  
+`nodejs-workbook`은 workspace와 공통 개발 도구를 관리하는 루트 프로젝트입니다.  
+`prisma-basics`는 루트 workspace에 포함되지만, 자체 `package.json`과 Prisma 설정, 실습 코드를 가지는 하위 프로젝트입니다.  
+
+다음은 Prisma 실습과 관련된 핵심 구조만 간추린 것입니다.  
 
 ```text
-nodejs-workbook/                  # 상위 프로젝트
+nodejs-workbook/                  # 루트 프로젝트
 ├── prisma-basics/
 │   ├── prisma/
 │   │   ├── schema.prisma     # DB 설계도입니다.
@@ -47,18 +50,36 @@ nodejs-workbook/                  # 상위 프로젝트
 │   │   ├── shared/
 │   │   │   └── database.ts   # generated/prisma/client를 불러옵니다.
 │   │   └── ch01/
+│   ├── tests/                  # Prisma 예제 테스트입니다.
 │   ├── .env                  # 환경 변수를 관리합니다.
-│   ├── package-lock.json     # 설치한 의존성 버전을 고정합니다.
 │   ├── prisma.config.ts      # 프로젝트 단위 Prisma CLI 설정입니다.
-│   ├── package.json          # 서브 프로젝트 의존성을 관리합니다.
-│   └── tsconfig.json         # 서브 프로젝트 컴파일 설정을 관리합니다.
+│   ├── package.json          # 하위 프로젝트 전용 의존성을 관리합니다.
+│   ├── tsconfig.json         # 루트 TypeScript 설정을 확장합니다.
+│   └── vitest.config.ts      # Prisma 테스트 설정입니다.
+├── redis-basics/               # 다른 workspace 하위 프로젝트입니다.
 ├── src/                          # 기존 Node.js 실습 코드입니다.
 ├── tests/                        # 기존 테스트 코드입니다.
-├── package.json                  # 기존 상위 프로젝트 설정입니다.
-├── tsconfig.json                 # 기존 상위 프로젝트 설정입니다.
-├── eslint.config.mjs             # 기존 상위 프로젝트 설정입니다.
-└── .prettierrc                   # 기존 상위 프로젝트 설정입니다.
+├── package.json                  # workspace와 공통 의존성을 관리합니다.
+├── package-lock.json             # workspace 의존성 버전을 고정합니다.
+├── tsconfig.json                 # 공통 TypeScript 설정입니다.
+├── eslint.config.mjs             # 공통 ESLint 설정입니다.
+└── .prettierrc                   # 공통 Prettier 설정입니다.
 ```
+
+### 🟦 루트 workspace에 등록하기
+
+루트 `package.json`의 `workspaces`에는 `prisma-basics`가 등록되어 있습니다. 다음 코드는 workspace 부분만 나타낸 것이며, 루트 파일의 기존 설정은 그대로 유지합니다.  
+
+```json
+{
+  "workspaces": [
+    "prisma-basics",
+    "redis-basics"
+  ]
+}
+```
+
+TypeScript, tsx, `@types/node`, Vitest와 dotenv는 루트 프로젝트에서 공통으로 관리합니다. `prisma-basics`에는 Prisma와 PostgreSQL 실습에 직접 필요한 패키지만 등록합니다.  
 
 ### 🟦 의존성 설치 및 초기화
 
@@ -66,39 +87,46 @@ nodejs-workbook/                  # 상위 프로젝트
 # nodejs-workbook 프로젝트로 이동합니다.
 cd ~/blog-workspaces/nodejs-workbook
 
-# 독립된 Prisma 하위 프로젝트를 생성하고 이동합니다.
+# Prisma 하위 프로젝트를 생성하고 이동합니다.
 mkdir prisma-basics
 cd prisma-basics
 
 # Prisma 하위 프로젝트의 package.json을 생성합니다.
 npm init -y
 
-# TypeScript 실행 환경과 Prisma CLI를 설치합니다.
-npm install --save-dev typescript tsx @types/node prisma@7 @types/pg
+# workspace 외부에 단독으로 배포하지 않으며 ESM 문법을 사용하도록 설정합니다.
+# npm pkg set private=true --json
+# npm pkg set type=module
+
+# Prisma CLI와 PostgreSQL 타입 패키지를 개발 의존성으로 설치합니다.
+npm install --save-dev prisma@7 @types/pg
 
 # Prisma Client, PostgreSQL 드라이버와 어댑터를 설치합니다.
-npm install @prisma/client@7 pg @prisma/adapter-pg dotenv
+npm install @prisma/client@7 pg @prisma/adapter-pg
 
 # TypeScript 설정 파일을 생성합니다.
 npx tsc --init
 
-# 문서의 실행 명령어와 연결할 npm 스크립트를 추가(package.json)합니다.
-#
+# 하위 프로젝트에서 사용할 npm 스크립트를 추가합니다.
 # npm pkg set scripts.typecheck="tsc --noEmit"
-# npm pkg set scripts.start="tsx src/ch01/index.ts"
+# npm pkg set scripts.test="vitest run"
 ```
 
 - `@prisma/client`: 실제 애플리케이션 코드에서 불러와 사용하는 ORM 라이브러리입니다.  
 - `pg`(node-postgres): Node.js에서 PostgreSQL과 통신할 때 사용하는 드라이버입니다.  
 - `@prisma/adapter-pg`: Prisma Client와 `pg`를 연결하는 드라이버 어댑터입니다.  
 - `@types/pg`: `pg`의 TypeScript 타입 정의입니다.  
-- `dotenv`: `.env` 파일의 환경 변수를 불러오는 라이브러리입니다.  
+- `prisma`: 스키마 검증, 마이그레이션과 Client 생성을 담당하는 CLI입니다.  
 
-`prisma-basics`는 자체 `package.json`과 `package-lock.json`으로 의존성을 독립적으로 관리하는 하위 프로젝트입니다.  
+`prisma-basics/package.json`에는 하위 프로젝트가 직접 사용하는 패키지만 선언합니다.  
+설치 결과는 루트 workspace의 `package-lock.json`에서 함께 관리합니다.  
 Prisma CLI 실행과 타입 검사도 `prisma-basics` 디렉터리에서 수행합니다.  
 
 TypeScript 공통 설정은 상위 프로젝트의 `tsconfig.json`을 상속하고, 하위 프로젝트에 필요한 항목만 `prisma-basics/tsconfig.json`에서 재정의합니다.  
-상위 프로젝트의 경로 별칭은 사용하지 않으므로 `paths`를 초기화하고, 증분 빌드 정보는 하위 프로젝트의 `node_modules/.cache`에 별도로 저장합니다.  
+
+위 프로젝트에서는 상위 프로젝트의 경로 별칭을 사용하지 않도록 paths 설정을 비웁니다.  
+TypeScript가 이전 빌드 결과를 기억하는 캐시 파일은 각 하위 프로젝트의 node_modules/.cache 폴더에 따로 저장합니다.
+
 `npx tsc --init`으로 생성한 파일의 내용을 다음 설정으로 교체합니다.  
 
 ```json
@@ -108,24 +136,28 @@ TypeScript 공통 설정은 상위 프로젝트의 `tsconfig.json`을 상속하�
     "paths": {},
     "tsBuildInfoFile": "./node_modules/.cache/tsconfig.tsbuildinfo"
   },
-  "include": ["src/**/*.ts", "prisma/**/*.ts", "prisma.config.ts"],
+  "include": [
+    "src/**/*.ts",
+    "tests/**/*.ts",
+    "prisma/**/*.ts",
+    "prisma.config.ts",
+    "vitest.config.ts"
+  ],
   "exclude": ["node_modules", "dist", "coverage", "generated"]
 }
 ```
 
-설치된 패키지는 다음과 같이 확인할 수 있습니다.  
+루트 프로젝트에서 `npm list`를 실행하면 `prisma-basics`가 workspace 하위 프로젝트로 표시됩니다.  
 
-```text
-prisma-basics@1.0.0 /home/ubuntu/blog-workspaces/nodejs-workbook/prisma-basics
-├── @prisma/adapter-pg@7.9.1
-├── @prisma/client@7.9.1
-├── @types/node@26.1.2
-├── @types/pg@8.20.3
-├── dotenv@17.4.2
-├── pg@8.22.0
-├── prisma@7.9.1
-├── tsx@4.23.1
-└── typescript@7.0.2
+```console
+npm list
+nodejs-workbook@1.0.0 /home/ubuntu/blog-workspaces/nodejs-workbook
+└─┬ prisma-basics@1.0.0 -> ./prisma-basics
+  ├── @prisma/adapter-pg@7.9.1
+  ├── @prisma/client@7.9.1
+  ├── @types/pg@8.20.4
+  ├── pg@8.22.0
+  └── prisma@7.9.1
 ```
 
 `generated` 디렉터리는 Prisma가 자동으로 생성하는 Client 코드이므로 하위 프로젝트의 TypeScript 검사 대상에서 제외합니다.  

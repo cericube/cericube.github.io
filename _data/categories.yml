@@ -20,8 +20,8 @@
     - id: nodejs-typescript
       name: "JavaScript&TypeScript"
     - id: nodejs-prisma
-      name: "Prisma"
+      name: "Prisma 7"
     - id: nodejs-vitest
       name: "Vitest&TypeBox"
     - id: nodejs-redis
-      name: "Redis"
+      name: "Redis 7.2"
