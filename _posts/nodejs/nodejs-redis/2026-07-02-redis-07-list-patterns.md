@@ -35,6 +35,8 @@ Redis List는 다음과 같은 기능에 활용할 수 있습니다.
 - 간단한 작업 큐
 - 최근 로그 버퍼
 
+📂 **[[GitHub 코드 보러가기]](https://github.com/cericube/nodejs-workbook/tree/main/redis-basics){: target="_blank" rel="noopener noreferrer" }**
+
 ## 1. 최근 본 게시글 목록 만들기 {#session-01}
 
 최근 본 게시글은 Redis List를 사용하기 좋은 대표적인 예입니다.  

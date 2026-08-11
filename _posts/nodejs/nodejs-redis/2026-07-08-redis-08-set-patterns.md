@@ -22,6 +22,8 @@ toc:
 
 ![Redis Set을 활용한 좋아요, 방문자, 온라인 사용자와 중복 요청 관리 구조](/assets/images/nodejs/nodejs-redis/redis-set-use-cases.png)
 
+📂 **[[GitHub 코드 보러가기]](https://github.com/cericube/nodejs-workbook/tree/main/redis-basics){: target="_blank" rel="noopener noreferrer" }**
+
 ## 1. 게시글 좋아요 사용자 목록 관리하기 {#session-01}
 
 게시글 좋아요는 Redis Set을 설명하기 좋은 대표적인 예입니다.  

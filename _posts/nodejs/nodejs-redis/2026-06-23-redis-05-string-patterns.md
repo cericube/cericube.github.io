@@ -18,6 +18,8 @@ toc:
     title: "4. Rate Limiting 구현하기"
 ---
 
+📂 **[[GitHub 코드 보러가기]](https://github.com/cericube/nodejs-workbook/tree/main/redis-basics){: target="_blank" rel="noopener noreferrer" }**
+
 ## 1. 사용자 조회 결과 캐싱하기 {#session-01}
 
 ![Redis 사용자 조회 캐시 처리 흐름](/assets/images/nodejs/nodejs-redis/redis-user-cache-flow.png)

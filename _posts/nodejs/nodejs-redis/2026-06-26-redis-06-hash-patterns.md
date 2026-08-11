@@ -43,6 +43,8 @@ hash:user-profile:1
 
 Hash를 사용하면 객체 전체를 JSON 문자열로 다시 저장하지 않고 필요한 필드만 읽거나 수정할 수 있습니다.  
 
+📂 **[[GitHub 코드 보러가기]](https://github.com/cericube/nodejs-workbook/tree/main/redis-basics){: target="_blank" rel="noopener noreferrer" }**
+
 ## 1. 사용자 프로필 캐시 저장하기 {#session-01}
 
 사용자 프로필은 여러 API에서 자주 조회되는 데이터입니다.  

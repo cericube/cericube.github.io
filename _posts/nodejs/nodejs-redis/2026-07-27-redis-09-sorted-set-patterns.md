@@ -18,6 +18,8 @@ toc:
     title: "4. 우선순위 큐 구현하기"
 ---
 
+📂 **[[GitHub 코드 보러가기]](https://github.com/cericube/nodejs-workbook/tree/main/redis-basics){: target="_blank" rel="noopener noreferrer" }**
+
 ## 1. 인기 게시글 랭킹 만들기 {#session-01}
 
 ![Redis 인기 점수 누적부터 게시글 TOP N과 DB 상세 정보를 결합하는 흐름](/assets/images/nodejs/nodejs-redis/redis-sorted-set-post-ranking-flow.png)
