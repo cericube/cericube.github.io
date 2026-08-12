@@ -1,0 +1,65 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="1080" viewBox="0 0 1200 1080" role="img" aria-labelledby="title desc">
+  <title id="title">Redis Cluster에서 Key가 저장될 Primary 결정 흐름</title>
+  <desc id="desc">Key의 CRC16 해시값을 16384로 나눈 나머지로 Hash Slot을 구하고, 해당 Slot을 담당하는 Primary에 데이터를 저장하는 과정</desc>
+
+  <rect width="1200" height="1080" fill="#ffffff"/>
+
+  <g font-family="Pretendard, Noto Sans KR, Apple SD Gothic Neo, sans-serif">
+    <text x="600" y="72" fill="#111827" font-size="40" font-weight="700" text-anchor="middle">
+      Key가 저장될 Primary 결정 흐름
+    </text>
+    <text x="600" y="112" fill="#6b7280" font-size="22" text-anchor="middle">
+      Redis Cluster는 Key를 Hash Slot으로 변환해 저장할 노드를 찾습니다.
+    </text>
+
+    <g fill="#ffffff" stroke="#3b82f6" stroke-width="3">
+      <rect x="260" y="150" width="680" height="88" rx="16"/>
+      <rect x="260" y="272" width="680" height="88" rx="16"/>
+      <rect x="260" y="394" width="680" height="88" rx="16"/>
+      <rect x="260" y="516" width="680" height="88" rx="16"/>
+      <rect x="260" y="638" width="680" height="88" rx="16"/>
+      <rect x="260" y="760" width="680" height="88" rx="16"/>
+    </g>
+
+    <g fill="#2563eb">
+      <circle cx="310" cy="194" r="24"/>
+      <circle cx="310" cy="316" r="24"/>
+      <circle cx="310" cy="438" r="24"/>
+      <circle cx="310" cy="560" r="24"/>
+      <circle cx="310" cy="682" r="24"/>
+      <circle cx="310" cy="804" r="24"/>
+    </g>
+
+    <g fill="#ffffff" font-size="20" font-weight="700" text-anchor="middle">
+      <text x="310" y="201">1</text>
+      <text x="310" y="323">2</text>
+      <text x="310" y="445">3</text>
+      <text x="310" y="567">4</text>
+      <text x="310" y="689">5</text>
+      <text x="310" y="811">6</text>
+    </g>
+
+    <g fill="#111827" font-size="28" font-weight="600">
+      <text x="365" y="203">Key</text>
+      <text x="365" y="325">CRC16(Key) 계산</text>
+      <text x="365" y="447">CRC16(Key) mod 16384</text>
+      <text x="365" y="569">Hash Slot 결정</text>
+      <text x="365" y="691">해당 Slot을 담당하는 Primary 확인</text>
+      <text x="365" y="813">Primary에 데이터 저장</text>
+    </g>
+
+    <g stroke="#2563eb" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" fill="none">
+      <path d="M600 240v24m-10-10 10 10 10-10"/>
+      <path d="M600 362v24m-10-10 10 10 10-10"/>
+      <path d="M600 484v24m-10-10 10 10 10-10"/>
+      <path d="M600 606v24m-10-10 10 10 10-10"/>
+      <path d="M600 728v24m-10-10 10 10 10-10"/>
+    </g>
+
+    <rect x="100" y="900" width="1000" height="124" rx="18" fill="#eff6ff"/>
+    <text x="140" y="946" fill="#2563eb" font-size="22" font-weight="700">예시</text>
+    <text x="600" y="992" fill="#111827" font-size="27" font-weight="600" text-anchor="middle">
+      user:1  →  10778번 Slot  →  Slot 담당 Primary  →  데이터 저장
+    </text>
+  </g>
+</svg>

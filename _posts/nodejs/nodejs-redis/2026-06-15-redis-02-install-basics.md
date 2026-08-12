@@ -173,28 +173,55 @@ sudo docker compose down
 ### 🟦 redis.conf 주요 설정
 
 Redis 설정은 보통 `redis.conf` 파일에서 관리합니다.  
-대표적인 설정은 다음과 같습니다.  
+기본적인 메모리·보안 설정 외에도, 데이터 손실을 막기 위한 RDB 스냅샷과 AOF 백업 관련 설정을 함께 구성하는 것이 일반적입니다.  
 
 아래 `bind 127.0.0.1`은 Redis를 호스트에 직접 설치했을 때 로컬 연결만 허용하는 예시입니다.  
 Docker에서 설정 파일을 마운트하는 방법은 뒤에서 별도로 살펴봅니다.  
 
 ```conf
-bind 127.0.0.1
+# Redis가 바인딩할 네트워크 인터페이스 (0.0.0.0은 모든 인터페이스 허용)
+# ※ 호스트 직접 설치 시 로컬 접속만 허용하려면 bind 127.0.0.1 로 설정합니다.
+bind 0.0.0.0
+
+# Redis 서버 포트
 port 6379
-requirepass your_password
+
+# Redis 접속 비밀번호 (복잡하고 긴 문자열 권장)
+requirepass your_strong_password_123!
+
+# Redis가 사용할 최대 메모리
 maxmemory 256mb
+
+# 메모리가 부족할 때 모든 키를 대상으로 최근에 사용되지 않은 키부터 제거 (LRU)
 maxmemory-policy allkeys-lru
+
+# RDB 스냅샷 저장 조건 (900초 동안 1개 이상, 300초 동안 10개 이상 변경 시)
+save 900 1
+save 300 10
+
+# AOF Persistence 활성화 및 디스크 동기화 주기 (everysec: 1초마다)
 appendonly yes
+appendfsync everysec
+
+# RDB와 AOF의 장점을 결합한 혼합 영속성 사용 (Redis 4.0 이상)
+aof-use-rdb-preamble yes
+
+# RDB 및 AOF 파일이 저장될 디렉터리 경로
+dir /data
 ```
 
 | 설정 | 의미 |
-| --- | --- |
-| `bind` | Redis가 바인딩할 네트워크 인터페이스 |
-| `port` | Redis 서버 포트 |
-| `requirepass` | Redis 접속 비밀번호 |
-| `maxmemory` | Redis가 사용할 최대 메모리 |
-| `maxmemory-policy` | 메모리 초과 시 Key 제거 정책 |
-| `appendonly` | AOF Persistence 사용 여부 |
+| :--- | :--- |
+| `bind` | Redis가 접속을 허용할 네트워크 인터페이스 (`0.0.0.0`은 전체 허용, `127.0.0.1`은 로컬 전용) |
+| `port` | Redis 서버 포트 (기본값: `6379`) |
+| `requirepass` | Redis 접속 시 요구할 인증 비밀번호 |
+| `maxmemory` | Redis가 메모리 내에서 최대로 사용할 수 있는 용량 제한 |
+| `maxmemory-policy` | `maxmemory` 도달 시 기존 키를 삭제해 공간을 확보하는 정책 (예: `allkeys-lru`) |
+| `save` | RDB 스냅샷을 주기적으로 디스크에 저장하기 위한 조건 (`save <초> <변경_횟수>`) |
+| `appendonly` | 명령어를 로그로 기록하는 AOF Persistence 사용 여부 (`yes`/`no`) |
+| `appendfsync` | AOF 쓰기 작업을 디스크에 동기화할 주기 (`always`, `everysec`, `no`) |
+| `aof-use-rdb-preamble` | AOF 재작성 시 RDB 스냅샷과 AOF 로그를 결합하는 혼합 영속성(Hybrid) 사용 여부 |
+| `dir` | RDB(`dump.rdb`) 및 AOF(`appendonly.aof`) 영속화 파일이 저장되는 작업 디렉터리 |
 
 ### 🟦 비밀번호 설정과 접속 방법
 
@@ -404,8 +431,8 @@ my-project/
 bind 0.0.0.0
 port 6379
 
-# 비밀번호설정
-requirepass dnqnsxn
+# 비밀번호 설정 (복잡하고 긴 문자열 권장)
+requirepass dnqnsxn_your_strong_password_123!
 
 # Redis가 사용할 수 있는 최대 메모리
 maxmemory 256mb
@@ -413,11 +440,16 @@ maxmemory 256mb
 # 메모리가 부족할 때 모든 키를 대상으로 최근에 사용되지 않은 키부터 제거
 maxmemory-policy allkeys-lru
 
-# AOF 활성화
-appendonly yes
+# RDB 스냅샷 주기 설정 (예: 900초 동안 1개 이상 변경 시, 300초 동안 10개 이상 변경 시)
+save 900 1
+save 300 10
 
-# AOF 내용을 대략 1초 마다 디스크에 동기화 합니다.
+# AOF 활성화 및 동기화 주기
+appendonly yes
 appendfsync everysec
+
+# [추가 권장] RDB와 AOF의 장점을 결합한 혼합 영속성 사용 (Redis 4.0 이상 기본 활성화)
+aof-use-rdb-preamble yes
 
 # RDB와 AOF 같은 Redis 영속화 파일을 저장할 디렉터리입니다.
 dir /data
@@ -467,7 +499,7 @@ services:
     volumes:
       # 현재 디렉터리의 redis.conf 파일을 컨테이너 내부 설정 파일로 연결합니다.
       # :ro는 컨테이너에서 해당 파일을 수정할 수 없도록 읽기 전용으로 마운트한다는 의미입니다.
-      - ./redis.conf:/usr/local/etc/redis/redis.conf:ro
+      - ./redis/redis.conf:/usr/local/etc/redis/redis.conf:ro
 
       # Docker named volume인 redis_data를 컨테이너의 /data에 연결합니다.
       # Redis의 AOF, RDB 등 영속화 데이터가 이 볼륨에 저장됩니다.
