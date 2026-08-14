@@ -62,44 +62,58 @@ npm install fastify@5.6.2
 
 ### 🟦 3. Fastify 서버 기본 구조
 
-Fastify 인스턴스 생성을 별도의 빌더 함수로 분리합니다.  
-이렇게 하면 포트를 열지 않은 인스턴스를 테스트에서 생성하여 `inject()`로 요청할 수 있습니다.  
-
-> 실습 파일: `src/ch04/4-1-1.health-app.ts`
+Fastify 인스턴스를 별도의 빌더 함수로 분리합니다.  
+이 구조는 테스트에서 `inject()`로 요청을 처리하는 데 매우 중요합니다.  
 
 ```typescript
-// src/ch04/4-1-1.health-app.ts
+// fastify 패키지의 default export를 가져옵니다.
 import Fastify from 'fastify';
 
-// 테스트와 실제 서버 실행 코드가 함께 사용할 애플리케이션을 만듭니다.
+// 서버 인스턴스를 생성하는 팩토리 함수입니다.
 export function buildApp() {
-  // 이 단계에서는 포트를 열지 않고 Fastify 인스턴스만 생성합니다.
+  // 이 시점에서는 포트를 열지 않고 라우트와 플러그인만 등록합니다.
   const app = Fastify();
 
-  app.get('/health', () => {
-    // 반환한 객체는 Fastify가 JSON 응답으로 직렬화합니다.
+  // GET /health 엔드포인트를 등록합니다.
+  app.get('/health', async () => {
+    // Fastify는 반환값을 자동으로 JSON 응답으로 직렬화합니다.
     return { ok: true };
   });
 
+  // 구성을 마친 Fastify 인스턴스를 반환합니다.
   return app;
 }
 ```
 
-여러 Route를 다루는 `4-2-1.request-inputs-app.ts`에서는 등록 함수를 기능별로 나누고 `register()`로 조립합니다.  
+실무에서는 라우트를 `app.ts`에 직접 선언하기보다 각 API를 Fastify Plugin 형태의 모듈로 분리합니다.  
+그런 다음 `register()` 메서드로 각 모듈을 조립하는 방식을 일반적으로 사용합니다.  
+
+#### 1) 라우트 플러그인
 
 ```typescript
-// src/ch04/4-2-1.request-inputs-app.ts
+import type { FastifyPluginAsync } from 'fastify';
+
+// /health 라우트를 등록하는 Fastify Plugin입니다.
+export const healthRoute: FastifyPluginAsync = async (app) => {
+  app.get('/health', async () => {
+    return { ok: true };
+  });
+};
+```
+
+#### 2) 애플리케이션 구성
+
+```typescript
 import Fastify from 'fastify';
+import { healthRoute } from './routes/health.route';
 
 export function buildApp() {
-  const app = Fastify();
+  const app = Fastify({
+    logger: true,
+  });
 
-  // 기능별 등록 함수를 Fastify Plugin으로 조립합니다.
-  app.register(registerSearchRoute);
-  app.register(registerUsersRoute);
-  app.register(registerEchoRoute);
-  app.register(registerWhoamiRoute);
-  app.register(registerMultiInputRoute);
+  // 라우트 플러그인을 register()로 조립합니다.
+  app.register(healthRoute);
 
   return app;
 }
@@ -107,25 +121,40 @@ export function buildApp() {
 
 ### 🟦 4. app.route()와 JSON Schema 구조 이해
 
-`app.post()`와 같은 메서드는 `app.route()`를 간편하게 사용할 수 있도록 제공하는 단축 메서드입니다.  
-실습 코드에서는 `schema`로 실행 중의 입력값을 검증하고, 검증을 통과한 값을 TypeScript 타입으로 확인하여 사용합니다.  
+`app.route()`는 HTTP 메서드와 URL, JSON Schema, Handler를 하나의 설정 객체에 정의하는 메서드입니다.  
+아래 예제에서는 Query String, Body, Header의 검증 규칙과 200 응답의 직렬화 규칙을 `schema`에 함께 정의합니다.  
+라우트 제네릭 타입을 연결하여 검증된 요청값을 Handler에서 타입 안전하게 처리하는 구조도 확인합니다.  
 
 ```typescript
-import type { FastifyInstance, FastifyRequest } from 'fastify';
+import type { FastifyInstance } from 'fastify';
+
+// Handler에서 request의 각 입력값을 안전하게 사용하기 위한 라우트 타입입니다.
+type MultiInputRoute = {
+  Querystring: { verbose?: boolean };
+  Body: { title: string };
+  Headers: { 'x-request-id': string };
+};
 
 export function registerMultiInputRoute(app: FastifyInstance) {
-  app.route({
+  // app.route() 객체 하나에 HTTP 메서드, URL, Schema, Handler를 함께 정의합니다.
+  app.route<MultiInputRoute>({
+    // POST /multi 요청을 처리하는 라우트입니다.
     method: 'POST',
     url: '/multi',
 
-    // Query와 Body를 각각 JSON Schema로 검증합니다.
+    // schema는 Handler가 실행되기 전에 요청값을 검증하고,
+    // Handler가 반환한 값을 응답 규칙에 맞게 직렬화하는 기준입니다.
     schema: {
+      // URL의 ?verbose=true와 같은 Query String을 검증합니다.
+      // required에 포함하지 않았으므로 verbose는 선택 값입니다.
       querystring: {
         type: 'object',
         properties: {
           verbose: { type: 'boolean' },
         },
       },
+
+      // JSON Body는 객체여야 하며 title 문자열을 반드시 포함해야 합니다.
       body: {
         type: 'object',
         required: ['title'],
@@ -133,85 +162,106 @@ export function registerMultiInputRoute(app: FastifyInstance) {
           title: { type: 'string' },
         },
       },
+
+      // Header의 x-request-id를 필수 문자열로 검증합니다.
+      // additionalProperties: true로 기타 표준 Header도 함께 허용합니다.
+      headers: {
+        type: 'object',
+        required: ['x-request-id'],
+        properties: {
+          'x-request-id': { type: 'string' },
+        },
+        additionalProperties: true,
+      },
+
+      // 성공 응답은 message와 requestId 문자열을 반드시 포함해야 합니다.
+      response: {
+        200: {
+          type: 'object',
+          required: ['message', 'requestId'],
+          properties: {
+            message: { type: 'string' },
+            requestId: { type: 'string' },
+          },
+        },
+      },
     },
 
-    handler: (request: FastifyRequest) => {
-      const { verbose } = request.query as { verbose?: boolean };
-      const body = request.body as { title: string };
-
+    // 요청값이 위 JSON Schema 검증을 통과하면 Handler가 실행됩니다.
+    handler: async (request) => {
+      // verbose가 true이면 상세 메시지를 만들고, 그렇지 않으면 title만 반환합니다.
+      // 반환 객체는 위에 정의한 200 응답 Schema를 기준으로 직렬화됩니다.
       return {
-        message: verbose ? `Verbose: ${body.title}` : body.title,
+        message: request.query.verbose
+          ? `Verbose: ${request.body.title}`
+          : request.body.title,
+
+        requestId: request.headers['x-request-id'],
       };
     },
   });
 }
 ```
 
-`tests/ch04/4-2-1.request-inputs.test.ts`에서는 `verbose` 값에 따라 응답이 달라지는지도 확인합니다.  
+> 📌 **TypeBox 참고**  
+> TypeBox를 Fastify Type Provider와 함께 사용하면 하나의 정의로 JSON Schema와 TypeScript 타입을 동시에 생성할 수 있습니다.  
+> 이 방식은 스키마와 타입을 중복 작성하지 않아도 되어 Fastify 프로젝트에서 많이 사용합니다.  
 
 ```typescript
-it('verbose=true이면 상세 메시지를 반환합니다', async () => {
-  const response = await app.inject({
-    method: 'POST',
-    url: '/multi?verbose=true',
-    body: { title: 'Test' },
-  });
+import { Type } from '@sinclair/typebox';
 
-  expect(response.statusCode).toBe(200);
-  expect(response.json()).toEqual({ message: 'Verbose: Test' });
+// 스키마와 타입의 기준을 하나의 정의로 만듭니다.
+const BodySchema = Type.Object({
+  title: Type.String(),
 });
 
-it('verbose=false이면 제목만 반환합니다', async () => {
-  const response = await app.inject({
-    method: 'POST',
-    url: '/multi?verbose=false',
-    body: { title: 'Test' },
-  });
-
-  expect(response.statusCode).toBe(200);
-  expect(response.json()).toEqual({ message: 'Test' });
-});
+// Fastify Type Provider를 설정하면 Handler에서 타입을 자동으로 추론합니다.
+// const title = request.body.title;
 ```
-
-TypeScript 타입은 컴파일 과정에서만 확인하므로 외부 요청의 실제 값까지 검증하지는 못합니다.  
-실습 코드처럼 JSON Schema와 TypeScript 타입을 함께 사용하면 런타임 검증과 타입 검사를 나누어 처리할 수 있습니다.  
 
 ### 🟦 5. 테스트 기본 템플릿
 
 Fastify 인스턴스는 테스트를 시작할 때 생성하고 모든 테스트가 끝나면 종료합니다.  
 
-> 실습 파일: `tests/ch04/4-1-1.health.test.ts`
-
 ```typescript
-// tests/ch04/4-1-1.health.test.ts
-import type { FastifyInstance } from 'fastify';
+// /tests/ch04/4-1-1.health.test.ts
+// 실제 포트를 열지 않고 inject()로 Fastify API를 호출하는 테스트입니다.
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { buildApp } from '../../src/ch04/4-1-1.health-app';
+import type { FastifyInstance } from 'fastify';
 
+// describe 블록의 모든 테스트가 공유할 Fastify 인스턴스입니다.
 let app: FastifyInstance;
 
-describe('API 테스트', () => {
+describe('API Tests', () => {
+  // 모든 테스트를 실행하기 전에 Fastify 인스턴스를 한 번 생성합니다.
   beforeAll(async () => {
     app = buildApp();
 
     // 등록한 Plugin과 Route가 모두 준비될 때까지 기다립니다.
+    // ready()를 호출하면 Hook과 Decorator를 포함한 초기화가 끝난 뒤 테스트를 시작합니다.
     await app.ready();
   });
 
+  // 모든 테스트가 끝나면 Fastify 인스턴스를 정리합니다.
   afterAll(async () => {
-    // 테스트가 끝난 뒤 타이머와 연결 같은 리소스를 정리합니다.
     await app.close();
   });
 
-  it('GET /health가 정상 응답을 반환합니다', async () => {
-    // 실제 포트를 열지 않고 Fastify 내부에 요청을 주입합니다.
+  it('GET /health should work', async () => {
+    // 네트워크 포트를 사용하지 않고 Fastify 내부 라우터에 요청을 주입합니다.
     const response = await app.inject({
       method: 'GET',
       url: '/health',
     });
 
+    // HTTP 상태 코드가 200 OK인지 확인합니다.
     expect(response.statusCode).toBe(200);
+
+    // charset 같은 추가 값이 붙을 수 있으므로 정규식으로 JSON Content-Type을 확인합니다.
     expect(response.headers['content-type']).toMatch(/application\/json/);
+
+    // 응답 Body를 JSON으로 파싱한 결과를 기대값과 비교합니다.
     expect(response.json()).toEqual({ ok: true });
   });
 });
@@ -259,7 +309,6 @@ export function registerSearchRoute(app: FastifyInstance) {
     },
     handler: (request: FastifyRequest, reply: FastifyReply) => {
       const query = request.query as { q: string };
-
       return reply.send({ result: query.q });
     },
   });
@@ -295,7 +344,6 @@ export function registerUsersRoute(app: FastifyInstance) {
     },
     handler: (request: FastifyRequest) => {
       const params = request.params as { id: string };
-
       return { id: params.id };
     },
   });
@@ -341,7 +389,6 @@ export function registerEchoRoute(app: FastifyInstance) {
     },
     handler: (request: FastifyRequest) => {
       const body = request.body as { name: string; age?: number };
-
       return body;
     },
   });
@@ -407,9 +454,6 @@ it('사용자 정의 Header를 읽어 결과를 반환합니다', async () => {
 });
 ```
 
-Query·Path, JSON Body와 Header를 더 자세히 연습하는 코드는 각각 `4-2-2`, `4-2-3`, `4-2-4` 파일로 분리되어 있습니다.  
-이 파일들은 필터링과 페이지네이션, 게시글 입력 검증, ETag와 조건부 요청 같은 확장 사례를 다룹니다.  
-
 ## 3. 인증·인가 API 테스트 예시 {#session-03}
 
 ### 🟦 preHandler란 무엇인가요?
@@ -420,15 +464,13 @@ Fastify에서는 인증과 인가, 로깅 또는 요청 전처리 등에 활용�
 ```text
 onRequest
   → preParsing
-  → preValidation
+  → preValidation  ← 인증/인가 위치
   → preHandler
   → handler
   → response
 ```
 
 다음 예제는 Authorization Header가 있는지와 Token이 올바른지를 `preHandler`에서 확인합니다.  
-
-> 실습 파일: `src/ch04/4-3-1.authentication-and-authorization-app.ts`, `tests/ch04/4-3-1.authentication-and-authorization.test.ts`
 
 ```typescript
 import type {
@@ -529,40 +571,6 @@ it('올바른 Token이면 사용자 정보를 반환합니다', async () => {
 });
 ```
 
-같은 실습 파일의 `/admin` Route는 인증 여부뿐 아니라 관리자 권한도 확인합니다.  
-일반 사용자 Token은 403을 반환하고 관리자 Token은 정상 응답을 반환합니다.  
-
-```typescript
-it('일반 사용자 Token이면 관리자 접근을 거부합니다', async () => {
-  const response = await app.inject({
-    method: 'GET',
-    url: '/admin',
-    headers: { authorization: 'Bearer user-token' },
-  });
-
-  expect(response.statusCode).toBe(403);
-  expect(response.json()).toEqual({
-    code: 'FORBIDDEN',
-    message: '관리자 전용입니다.',
-  });
-});
-
-it('관리자 Token이면 접근을 허용합니다', async () => {
-  const response = await app.inject({
-    method: 'GET',
-    url: '/admin',
-    headers: { authorization: 'Bearer admin-token' },
-  });
-
-  expect(response.statusCode).toBe(200);
-  expect(response.json()).toEqual({
-    status: '관리자 접근 성공',
-  });
-});
-```
-
-권한과 역할을 더 세분화한 연습 코드는 `4-3-2.access-control-app.ts`와 대응하는 테스트 파일에 분리되어 있습니다.  
-
 ## 4. 에러 응답 및 예외 상황 테스트 예시 {#session-04}
 
 ### 🟦 1. 공통 에러 응답 형식 설계
@@ -581,8 +589,6 @@ API의 에러 응답 형식을 일정하게 정하면 클라이언트와 테스�
 ### 🟦 2. 공통 비즈니스 에러 클래스 정의
 
 비즈니스 로직에서 발생하는 에러는 공통 `AppError` 클래스를 기준으로 정의합니다.  
-
-> 실습 파일: `src/ch04/4-4-1.app-errors.ts`
 
 ```typescript
 export class AppError extends Error {
@@ -636,8 +642,6 @@ export class NotFoundError extends AppError {
 
 Fastify의 전역 Error Handler를 사용하면 처리 중 발생한 예외를 한곳에서 응답으로 변환할 수 있습니다.  
 존재하지 않는 Route에 대한 응답은 `setNotFoundHandler()`로 따로 처리할 수 있습니다.  
-
-> 실습 파일: `src/ch04/4-4-1.error-handler.ts`, `src/ch04/4-4-1.orders-app.ts`
 
 ```typescript
 export function buildApp() {
@@ -699,32 +703,5 @@ return reply.code(500).send({
   error: 'InternalServerError',
   code: 'INTERNAL_SERVER_ERROR',
   message: '서버 내부 오류가 발생했습니다',
-});
-```
-
-### 🟦 5. 테스트 코드 예시
-
-수량이 허용 범위를 벗어났을 때 상태 코드와 에러 응답의 상세 정보를 함께 확인합니다.  
-
-> 실습 파일: `tests/ch04/4-4-1.order-errors.test.ts`
-
-```typescript
-it('quantity가 0 이하면 400을 반환합니다', async () => {
-  const response = await app.inject({
-    method: 'POST',
-    url: '/api/orders',
-    payload: {
-      productId: 'prod-1',
-      quantity: 0,
-      userId: 'user-1',
-    },
-  });
-
-  expect(response.statusCode).toBe(400);
-
-  const body = response.json();
-  expect(body.message).toContain('1 이상');
-  expect(body.details.field).toBe('quantity');
-  expect(body.details.constraint).toContain('min: 1');
 });
 ```

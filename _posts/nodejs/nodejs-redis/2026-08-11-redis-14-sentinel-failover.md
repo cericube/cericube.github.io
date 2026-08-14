@@ -623,6 +623,8 @@ ls -l sentinel*/sentinel.conf
 
 Docker Compose를 실행하고 컨테이너 상태를 확인합니다.  
 
+{% raw %}
+
 ```bash
 # Redis 3개와 Sentinel 3개를 백그라운드에서 실행합니다.
 sudo docker compose up -d
@@ -646,6 +648,8 @@ for c in redis-master redis-replica1 redis-replica2 redis-sentinel1 redis-sentin
   printf "%-22s %s\n" "${ip}:${port}" "$c"
 done
 ```
+
+{% endraw %}
 
 Sentinel이 시작하지 못했다면 로그와 설정 디렉터리 권한을 먼저 확인합니다.  
 
