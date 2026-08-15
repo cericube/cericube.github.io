@@ -18,6 +18,8 @@ toc:
     title: "4. 첫 테스트 작성 및 실행"
 ---
 
+📂 **[[GitHub 코드 보러가기]](https://github.com/cericube/nodejs-workbook/tree/main/vitest-basics){: target="_blank" rel="noopener noreferrer" }**
+
 ## 1. Vitest 개요와 실습 환경 이해 {#session-01}
 
 Vitest는 Vite를 기반으로 동작하는 테스트 러너입니다.  

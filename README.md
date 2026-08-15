@@ -1,4 +1,4 @@
-# Cericube Jekyll Blog
+# Cericube Blog
 
 Jekyll과 GitHub Pages를 이용해 운영하는 개인 기술 블로그입니다.
 

@@ -18,6 +18,8 @@ toc:
     title: "4. Undici를 이용한 테스트(성능 및 표준 중심)"
 ---
 
+📂 **[[GitHub 코드 보러가기]](https://github.com/cericube/nodejs-workbook/tree/main/vitest-basics){: target="_blank" rel="noopener noreferrer" }**
+
 ## 1. 외부 API 테스트 실습 준비 {#session-01}
 
 실습에서는 별도로 실행한 Fastify 서버를 외부 API처럼 호출합니다.  

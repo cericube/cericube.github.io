@@ -16,6 +16,8 @@ toc:
     title: "3. 테스트 실행 제어 API"
 ---
 
+📂 **[[GitHub 코드 보러가기]](https://github.com/cericube/nodejs-workbook/tree/main/vitest-basics){: target="_blank" rel="noopener noreferrer" }**
+
 ## 1. Lifecycle Hook API {#session-01}
 
 Lifecycle Hook은 테스트를 실행하기 전이나 실행한 후에 특정 작업을 처리하는 API입니다.  

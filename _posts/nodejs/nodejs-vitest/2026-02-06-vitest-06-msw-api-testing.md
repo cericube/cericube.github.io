@@ -18,6 +18,8 @@ toc:
     title: "4. Fastify 서버와 MSW 통합 테스트 예시"
 ---
 
+📂 **[[GitHub 코드 보러가기]](https://github.com/cericube/nodejs-workbook/tree/main/vitest-basics){: target="_blank" rel="noopener noreferrer" }**
+
 ## 1. 테스트에서 네트워크 흐름을 제어하는 MSW의 역할 {#session-01}
 
 MSW(Mock Service Worker)는 이름 때문에 흔히 "가짜 API 서버를 띄워 주는 도구"로 오해받곤 합니다.  

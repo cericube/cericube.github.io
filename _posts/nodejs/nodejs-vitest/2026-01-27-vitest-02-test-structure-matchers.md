@@ -16,6 +16,8 @@ toc:
     title: "3. 주요 Matcher API 이해하기: 값, 구조, 행위 검증"
 ---
 
+📂 **[[GitHub 코드 보러가기]](https://github.com/cericube/nodejs-workbook/tree/main/vitest-basics){: target="_blank" rel="noopener noreferrer" }**
+
 ## 1. 테스트 선언 API: 테스트 구조 설계 이해하기 {#session-01}
 
 ### 🟦 테스트 계층 구조: describe와 it 또는 test

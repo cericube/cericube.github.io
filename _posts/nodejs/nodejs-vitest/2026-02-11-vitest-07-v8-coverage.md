@@ -18,6 +18,8 @@ toc:
     title: "4. 커버리지 리포트 확인"
 ---
 
+📂 **[[GitHub 코드 보러가기]](https://github.com/cericube/nodejs-workbook/tree/main/vitest-basics){: target="_blank" rel="noopener noreferrer" }**
+
 ## 1. 테스트 커버리지는 왜 중요한가? {#session-01}
 
 ### 🟦 1. 테스트 커버리지란?

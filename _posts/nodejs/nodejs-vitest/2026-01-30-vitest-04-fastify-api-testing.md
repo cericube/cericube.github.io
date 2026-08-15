@@ -18,6 +18,8 @@ toc:
     title: "4. 에러 응답 및 예외 상황 테스트 예시"
 ---
 
+📂 **[[GitHub 코드 보러가기]](https://github.com/cericube/nodejs-workbook/tree/main/vitest-basics){: target="_blank" rel="noopener noreferrer" }**
+
 ## 1. Fastify 5.6과 Vitest 기본 구조 이해하기 {#session-01}
 
 ### 🟦 1. Fastify 설치

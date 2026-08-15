@@ -22,6 +22,8 @@
     - id: nodejs-prisma
       name: "Prisma 7"
     - id: nodejs-vitest
-      name: "Vitest&TypeBox"
+      name: "Vitest"
     - id: nodejs-redis
       name: "Redis 7.2"
+    - id: nodejs-fastify
+      name: "Fastify 6"  
