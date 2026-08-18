@@ -184,7 +184,6 @@ body.is-resizing {
 .list-toolbar h1 { margin: 0; font-size: 21px; }
 .list-toolbar small { font-size: 15px; }
 .list-icon { color: var(--blue); margin-right: 8px; }
-.list-toolbar select { border: 1px solid var(--line); border-radius: 8px; background: #fff; padding: 9px 34px 9px 12px; }
 .post-list {
   display: grid;
   grid-auto-rows: auto;

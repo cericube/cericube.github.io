@@ -233,7 +233,6 @@
   const title = document.getElementById('listTitle');
   const count = document.getElementById('postCount');
   const empty = document.getElementById('emptyMessage');
-  const sort = document.getElementById('sortPosts');
 
   const params = new URLSearchParams(window.location.search);
   let selected = params.get('category') || 'all';
@@ -245,9 +244,7 @@
   }
 
   function render() {
-    let visible = cards.filter((card) => selected === 'all' || card.dataset.category === selected);
-    const direction = sort.value === 'oldest' ? 1 : -1;
-    visible.sort((a, b) => (Number(a.dataset.date) - Number(b.dataset.date)) * direction);
+    const visible = cards.filter((card) => selected === 'all' || card.dataset.category === selected);
 
     cards.forEach((card) => { card.hidden = true; });
     visible.forEach((card) => {
@@ -283,6 +280,5 @@
     });
   });
 
-  sort.addEventListener('change', render);
   render();
 })();

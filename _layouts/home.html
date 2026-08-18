@@ -2,15 +2,12 @@
 layout: default
 ---
 <section class="list-page">
+  {% assign recent_posts = site.posts | slice: 0, 100 %}
   <div class="list-toolbar">
-    <h1><span class="list-icon">☷</span> <span id="listTitle">전체 글 목록</span> <small id="postCount">({{ site.posts.size }})</small></h1>
-    <select id="sortPosts" aria-label="글 정렬">
-      <option value="newest">최신순</option>
-      <option value="oldest">오래된순</option>
-    </select>
+    <h1><span class="list-icon">☷</span> <span id="listTitle">최신 글 목록</span> <small id="postCount">({{ recent_posts.size }})</small></h1>
   </div>
   <div id="postList" class="post-list">
-    {% for post in site.posts %}
+    {% for post in recent_posts %}
       {% include post-card.html post=post %}
     {% endfor %}
   </div>
