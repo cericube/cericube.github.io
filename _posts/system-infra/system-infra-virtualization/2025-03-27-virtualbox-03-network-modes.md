@@ -39,57 +39,64 @@ VirtualBox에서 가상 머신 네트워크를 구성할 때 어떤 어댑터를
 
 ## 2. NAT (Network Address Translation) {#session-02}
 
-- 기본 설정으로 자주 사용하는 네트워크 모드입니다.
-- 가상 머신은 VirtualBox의 가상 라우터를 통해 인터넷에 접근할 수 있습니다.
-- 첫 번째 NAT 어댑터를 사용하는 가상 머신의 IP 주소는 일반적으로 `10.0.2.15`로 자동 설정됩니다.
-- 호스트나 외부 네트워크에서 가상 머신으로 접근하려면 포트 포워딩 설정이 필요합니다.
-- 주 용도는 인터넷은 사용하지만 외부 접근이나 가상 머신 간 통신이 필요하지 않은 환경입니다.
+- 기본 설정으로 자주 사용하는 네트워크 모드입니다.  
+- 가상 머신은 VirtualBox의 가상 라우터를 통해 인터넷에 접근할 수 있습니다.  
+- 첫 번째 NAT 어댑터를 사용하는 가상 머신의 IP 주소는 일반적으로 `10.0.2.15`로 자동 설정됩니다.  
+- 호스트나 외부 네트워크에서 가상 머신으로 접근하려면 포트 포워딩 설정이 필요합니다.  
+- 주 용도는 인터넷은 사용하지만 외부 접근이나 가상 머신 간 통신이 필요하지 않은 환경입니다.  
 
 ![VirtualBox NAT 모드의 통신 범위](/assets/images/system-infra/system-infra-virtualization/virtualbox-nat-mode-diagram.png)
 
 ## 3. NAT 네트워크(NAT Network) {#session-03}
 
-- NAT Network를 사용하려면 먼저 VirtualBox에서 NAT Network를 생성합니다.
+- NAT Network를 사용하려면 먼저 VirtualBox에서 NAT Network를 생성합니다.  
 
 ![VirtualBox 네트워크 관리자의 NAT Network 탭](/assets/images/system-infra/system-infra-virtualization/virtualbox-nat-network-manager.png)
 
 ![VirtualBox NAT Network 생성 및 IPv4 접두사 설정](/assets/images/system-infra/system-infra-virtualization/virtualbox-create-nat-network.png)
 
-- NAT의 확장 형태로, 여러 가상 머신이 같은 가상 네트워크를 공유합니다.
-- VirtualBox에서 NAT Network를 별도로 생성한 뒤 가상 머신을 해당 네트워크에 연결해야 합니다.
-- DHCP를 활성화하면 설정한 IPv4 접두사 범위에서 IP 주소가 자동으로 할당되며 가상 머신끼리 통신할 수 있습니다.
-- 호스트에서 가상 머신으로 접근하려면 포트 포워딩 설정이 필요합니다.
-- 주 용도는 가상 머신 간 통신과 외부 인터넷 접속이 모두 필요한 테스트 환경입니다.
+- NAT의 확장 형태로, 여러 가상 머신이 같은 가상 네트워크를 공유합니다.  
+- VirtualBox에서 NAT Network를 별도로 생성한 뒤 가상 머신을 해당 네트워크에 연결해야 합니다.  
+- DHCP를 활성화하면 설정한 IPv4 접두사 범위에서 IP 주소가 자동으로 할당되며 가상 머신끼리 통신할 수 있습니다.  
+- NAT Network를 `192.168.112.0/24`로 설정하면 기본 게이트웨이는 일반적으로 `192.168.112.1`이 됩니다.  
+- 이 구성에서는 가상 머신에서 `curl http://192.168.112.1:8080`을 실행해 호스트의 8080 포트에서 실행 중인 웹 서비스에 접근할 수 있습니다.  
+- `192.168.112.1`은 호스트의 물리 네트워크 어댑터에 부여된 주소가 아니라 VirtualBox NAT 서비스가 제공하는 게이트웨이 주소입니다.  
+- 주 용도는 가상 머신 간 통신과 외부 인터넷 접속이 모두 필요한 테스트 환경입니다.  
+
+![alt text](/assets/images/system-infra/system-infra-virtualization/image-2025-03-27.png)
 
 ![VirtualBox NAT Network의 통신 범위](/assets/images/system-infra/system-infra-virtualization/virtualbox-nat-network-diagram.png)
 
 ## 4. 브리지 어댑터(Bridged Adapter) {#session-04}
 
-- 가상 머신이 호스트의 물리 네트워크에 직접 연결된 것처럼 동작합니다.
-- 공유기 등과 같은 네트워크에 연결되며, 해당 네트워크에 DHCP 서버가 있으면 IP 주소를 자동으로 할당받을 수 있습니다.
-- 물리 네트워크와 게스트 운영체제의 방화벽이 허용하면 다른 PC나 서버에서 가상 머신으로 접근할 수 있습니다.
-- 주 용도는 개발 서버나 운영 서버처럼 외부 장치의 접근이 필요한 환경입니다.
+- 가상 머신이 호스트의 물리 네트워크에 직접 연결된 것처럼 동작합니다.  
+- 공유기 등과 같은 네트워크에 연결되며, 해당 네트워크에 DHCP 서버가 있으면 IP 주소를 자동으로 할당받을 수 있습니다.  
+- 물리 네트워크와 게스트 운영체제의 방화벽이 허용하면 다른 PC나 서버에서 가상 머신으로 접근할 수 있습니다.  
+- 주 용도는 개발 서버나 운영 서버처럼 외부 장치의 접근이 필요한 환경입니다.  
 
 ![VirtualBox 브리지 어댑터의 통신 범위](/assets/images/system-infra/system-infra-virtualization/virtualbox-bridged-network-diagram.png)
 
 ## 5. 호스트 전용 어댑터(Host-Only Adapter) {#session-05}
 
-- 호스트와 가상 머신뿐만 아니라 같은 Host-Only 네트워크에 연결된 가상 머신끼리도 통신할 수 있습니다.
-- 사용할 Host-Only 네트워크가 없다면 VirtualBox 네트워크 관리자에서 생성해야 합니다.
-- 예를 들어 호스트 어댑터 주소가 `192.168.56.1`이면 가상 머신에서 해당 주소로 호스트에 접근할 수 있습니다.
-- DHCP 서버 사용 여부를 선택할 수 있으며 IP 주소를 수동으로 설정할 수도 있습니다.
-- 주 용도는 외부 네트워크와 격리된 개발 및 테스트 환경입니다.
+- 호스트 전용 네트워크를 사용하면 호스트와 가상 머신이 통신할 수 있으며, 같은 네트워크에 연결된 가상 머신끼리도 통신할 수 있습니다.  
+- 사용할 호스트 전용 네트워크가 없다면 VirtualBox 네트워크 관리자에서 새로 생성합니다.  
+- 호스트 어댑터 주소가 `192.168.56.1`이면 가상 머신에서 해당 주소로 호스트에 접근할 수 있습니다.  
+- 가상 머신의 IP 주소는 DHCP로 자동 할당하거나 직접 설정할 수 있습니다.  
+- 처음에는 DHCP를 활성화해 네트워크가 정상적으로 동작하는지 확인한 뒤 수동 IP 설정을 시험하는 것을 권장합니다.  
+- 주로 외부 네트워크와 격리된 개발 및 테스트 환경에 사용합니다.  
 
 ![VirtualBox Host-Only 네트워크 어댑터 설정](/assets/images/system-infra/system-infra-virtualization/virtualbox-host-only-network-settings.png)
+
+![alt text](/assets/images/system-infra/system-infra-virtualization/image-2025-03-27-2.png)
 
 ![VirtualBox Host-Only 네트워크의 통신 범위](/assets/images/system-infra/system-infra-virtualization/virtualbox-host-only-network-diagram.png)
 
 ## 6. 내부 네트워크(Internal Network) {#session-06}
 
-- 같은 내부 네트워크에 연결된 VirtualBox 가상 머신끼리만 통신할 수 있는 독립 네트워크입니다.
-- 호스트와 외부 네트워크에서는 내부 네트워크에 직접 접근할 수 없습니다.
-- 기본적으로 IP 주소가 자동 할당되지 않으므로 수동으로 설정하며, 필요한 경우 VirtualBox의 DHCP 서버를 별도로 구성할 수 있습니다.
-- 주 용도는 보안이 중요한 독립 환경, 가상 클러스터와 테스트 네트워크 구성입니다.
+- 같은 내부 네트워크에 연결된 VirtualBox 가상 머신끼리만 통신할 수 있는 독립 네트워크입니다.  
+- 호스트와 외부 네트워크에서는 내부 네트워크에 직접 접근할 수 없습니다.  
+- 기본적으로 IP 주소가 자동 할당되지 않으므로 수동으로 설정하며, 필요한 경우 VirtualBox의 DHCP 서버를 별도로 구성할 수 있습니다.  
+- 주 용도는 보안이 중요한 독립 환경, 가상 클러스터와 테스트 네트워크 구성입니다.  
 
 다음 그림의 `DHCP(X)` 표시는 DHCP 서버를 별도로 구성하지 않은 기본 상태를 나타냅니다.  
 

@@ -1,7 +1,7 @@
 ---
 layout: post
-title: "[Docker]3편. Docker와 방화벽(UFW, firewalld) 설정 시 주의사항과 해결 방법"
-description: "Linux에서 Docker가 UFW와 firewalld의 방화벽 규칙에 미치는 영향을 살펴보고, DOCKER-USER 체인으로 컨테이너 트래픽을 제어하는 방법을 알아봅니다."
+title: "[Docker]3편. Docker 포트 게시와 UFW·firewalld 동작 방식"
+description: "Linux에서 Docker가 컨테이너 포트를 게시할 때 UFW와 firewalld의 규칙이 어떻게 처리되는지 살펴보고, 서비스 공개 범위를 확인할 때 주의할 점을 정리합니다."
 category_id: system-infra-virtualization
 categories: [system-infra, system-infra-virtualization]
 series: docker
@@ -9,94 +9,102 @@ series_order: 03
 ai_assisted: true
 toc:
   - id: session-01
-    title: "1. Docker와 방화벽이 충돌하는 이유"
+    title: "1. Docker가 방화벽 규칙을 추가하는 이유"
   - id: session-02
-    title: "2. Docker와 UFW 호환성 문제"
+    title: "2. Docker 포트 게시와 UFW"
   - id: session-03
-    title: "3. UFW 우회 문제 해결 방법(DOCKER-USER 체인 사용)"
-  - id: session-04
-    title: "4. Docker와 firewalld의 동작 방식"
+    title: "3. Docker와 firewalld의 동작 방식"
 ---
 
-Docker를 Ubuntu 또는 CentOS 같은 Linux 시스템에서 사용할 때 UFW 또는 firewalld의 방화벽 설정이 예상대로 적용되지 않을 수 있습니다.  
-이 글에서는 그 원인과 해결 방법을 설명합니다.  
+Docker의 기본 방화벽 설정에서 컨테이너 포트를 게시하면 UFW나 firewalld에서 해당 포트를 따로 허용하지 않아도 외부에서 접근할 수 있습니다.  
+이 글에서는 Docker의 포트 게시와 Linux 방화벽 규칙이 어떤 관계인지 알아봅니다.  
 
-## 1. Docker와 방화벽이 충돌하는 이유 {#session-01}
+## 1. Docker가 방화벽 규칙을 추가하는 이유 {#session-01}
 
-Docker는 기본적으로 Linux 커널의 `iptables`를 사용해 포트 포워딩과 네트워크 연결에 필요한 규칙을 설정합니다.  
-Ubuntu의 UFW, CentOS와 RHEL의 firewalld 같은 방화벽 도구도 `iptables` 또는 nftables 규칙을 관리하므로 Docker가 추가한 규칙과 함께 사용할 때 예상과 다르게 동작할 수 있습니다.  
-특히 Docker가 포트 게시를 위해 패킷을 전달하면 다른 방화벽 도구에서 설정한 규칙을 우회하는 것처럼 보일 수 있습니다.  
+Docker는 컨테이너의 브리지 네트워크와 포트 게시 기능을 구현하기 위해 Linux의 `iptables` 또는 nftables에 필요한 규칙을 추가합니다.  
+`-p` 옵션은 `호스트_포트:컨테이너_포트` 형식으로 사용하며, 두 포트는 같거나 다를 수 있습니다.  
+예를 들어 다음 명령은 호스트의 8080 포트로 들어온 요청을 컨테이너의 80 포트로 전달합니다.  
 
-### 🟦 iptables의 두 가지 방식
+```bash
+# 호스트의 모든 네트워크 인터페이스에서 8080 포트를 게시합니다.
+docker run -d -p 8080:80 nginx
+```
 
-- **iptables-nft**: nftables를 백엔드로 사용하는 `iptables` 호환 방식이며, 최신 Linux 배포판에서 주로 사용합니다.
-- **iptables-legacy**: 기존 xtables 기반의 전통적인 `iptables` 방식입니다.
+호스트 IP를 생략하고 `-p 8080:80`처럼 지정하면 기본적으로 모든 호스트 네트워크 인터페이스에 포트가 게시됩니다.  
+외부 요청은 Docker가 추가한 DNAT와 전달 규칙을 거쳐 컨테이너로 이동합니다.  
 
-Docker의 `iptables` 방화벽 백엔드는 `iptables-nft`와 `iptables-legacy`를 모두 지원하므로 `iptables-legacy`가 항상 더 호환성이 높은 것은 아닙니다.  
+UFW와 firewalld도 같은 netfilter 체계에 규칙을 추가하지만, Docker와 사용하는 체인과 처리 경로가 다를 수 있습니다.  
+이 차이 때문에 일반적인 호스트 방화벽 규칙이 게시된 컨테이너 포트에 기대한 대로 적용되지 않을 수 있습니다.  
 
-## 2. Docker와 UFW 호환성 문제 {#session-02}
+외부 공개가 필요하지 않다면 포트를 게시하지 않거나 다음과 같이 호스트의 루프백 주소에만 연결할 수 있습니다.  
+
+```bash
+# 호스트 자신만 8080 포트에 접근할 수 있도록 게시 주소를 제한합니다.
+docker run -d -p 127.0.0.1:8080:80 nginx
+```
+
+## 2. Docker 포트 게시와 UFW {#session-02}
 
 UFW(Uncomplicated Firewall)는 Ubuntu에서 제공하는 간단한 방화벽 관리 도구입니다.  
-그러나 Docker와 UFW는 방화벽 규칙을 처리하는 방식이 달라 UFW 규칙이 Docker에서 게시한 포트에 적용되지 않을 수 있습니다.  
-예를 들어 다음과 같이 UFW에서 8080 포트를 차단합니다.  
+UFW는 호스트로 직접 들어오는 트래픽을 주로 `INPUT` 체인에서 제어하지만, Docker 게시 포트의 트래픽은 다른 경로로 처리됩니다.  
+다음 그림의 위쪽은 일반 호스트 서비스로 들어오는 요청을, 아래쪽은 Docker 컨테이너로 전달되는 요청을 보여 줍니다.  
+
+![UFW와 Docker가 사용하는 netfilter 처리 경로 비교](/assets/images/system-infra/system-infra-virtualization/image-2026-08-17.png)
+
+### 🟦 일반 호스트 서비스의 처리 경로
+
+- 외부 요청이 호스트에서 직접 실행 중인 서비스의 포트에 도착합니다.  
+- 요청이 `INPUT` 체인을 거치므로 UFW의 허용 또는 차단 규칙이 적용됩니다.  
+
+### 🟦 Docker 게시 포트의 처리 경로
+
+- 외부 요청이 호스트의 게시 포트에 도착합니다.  
+- Docker의 NAT 규칙이 DNAT를 수행해 요청의 목적지를 컨테이너 IP와 포트로 변경합니다.  
+- 변경된 요청이 일반적인 `INPUT` 경로가 아니라 `FORWARD`와 Docker 관련 체인을 거쳐 컨테이너로 전달됩니다.  
+
+이처럼 두 요청은 처리 경로가 다르므로 UFW의 일반적인 포트 차단 규칙이 Docker에서 게시한 컨테이너 포트에 바로 적용되지 않을 수 있습니다.  
+
+예를 들어 다음과 같이 UFW에서 8080 포트를 차단해도 Docker가 같은 포트를 게시하면 외부에서 계속 접근할 수 있습니다.  
 
 ```bash
 # UFW에서 8080 포트로 들어오는 연결을 차단합니다.
 sudo ufw deny 8080
 ```
 
-Docker 컨테이너가 호스트의 8080 포트를 게시하고 있다면 외부에서 해당 포트에 계속 접근할 수 있습니다.  
+다음 그림은 UFW의 8080 차단 규칙과 Docker의 컨테이너 포트 허용 규칙이 함께 존재하는 상황을 단순화해 보여 줍니다.  
+UFW의 차단 규칙이 있더라도 요청이 Docker의 전달 경로를 사용하면 컨테이너의 게시 포트에 접근할 수 있습니다.  
 
-### 🟦 외부에서 접근할 수 있는 이유
+![UFW의 8080 차단 규칙과 Docker의 컨테이너 포트 허용 규칙 비교](/assets/images/system-infra/system-infra-virtualization/docker-ufw-iptables-flow.png)
 
-- UFW는 주로 `INPUT`과 `OUTPUT` 체인을 통해 호스트의 포트 접근을 제어합니다.
-- Docker는 `nat` 테이블과 `FORWARD`, `DOCKER` 등의 체인을 사용해 게시된 포트의 트래픽을 컨테이너로 전달합니다.
-- 컨테이너 트래픽은 UFW의 `INPUT`과 `OUTPUT` 체인에 도달하기 전에 전달될 수 있어 UFW 설정이 적용되지 않는 것처럼 보입니다.
+이 동작은 Docker가 UFW를 고장 내는 것이 아니라 게시된 포트를 컨테이너로 전달하는 과정에서 발생합니다.  
+외부에 서비스를 공개하려고 포트를 게시했다면 정상적인 동작이지만, UFW의 차단 규칙만 보고 접근이 제한됐다고 판단해서는 안 됩니다.  
 
-### 🟦 동작 예시
-
-- UFW는 `INPUT` 체인에서 8080 포트를 차단합니다.
-- Docker는 `DOCKER` 체인을 통해 호스트의 8080 포트를 컨테이너 내부 IP(예: `172.17.0.2`)와 포트로 전달합니다.
-- 이 과정에서 외부 연결이 UFW의 차단 규칙을 거치지 않아 접속할 수 있습니다.
-
-![Docker 포트 전달과 UFW 규칙의 처리 흐름](/assets/images/system-infra/system-infra-virtualization/docker-ufw-iptables-flow.png)
-
-## 3. UFW 우회 문제 해결 방법(DOCKER-USER 체인 사용) {#session-03}
-
-이 방법은 UFW 대신 `iptables` 명령으로 Docker 컨테이너의 전달 트래픽을 제어합니다.  
-Docker의 `iptables` 방화벽 백엔드를 사용할 때는 `DOCKER-USER` 체인에 사용자 규칙을 추가할 수 있습니다.  
-이 체인의 규칙은 Docker가 만든 전달 규칙보다 먼저 처리됩니다.  
-
-> Docker의 실험적인 nftables 방화벽 백엔드에는 `DOCKER-USER` 체인이 없으므로 이 방법을 그대로 사용할 수 없습니다.
-
-### 🟦 예: 컨테이너의 8080 포트 차단
-
-```bash
-# DNAT 이후 목적지 포트가 8080인 컨테이너 전달 트래픽을 차단합니다.
-sudo iptables -I DOCKER-USER -p tcp --dport 8080 -j DROP
-```
-
-이 명령은 `DOCKER-USER` 체인의 가장 앞에 TCP 목적지 포트 8080을 차단하는 규칙을 추가합니다.  
-`DOCKER-USER` 체인에 도달한 패킷은 이미 DNAT 처리를 거쳤으므로 `--dport 8080`은 컨테이너 내부의 목적지 포트가 8080일 때 일치합니다.  
-호스트의 게시 포트와 컨테이너 포트가 다르면 원래 게시 포트를 기준으로 필터링하기 위해 `conntrack` 조건이 필요합니다.  
-이 규칙은 포트 8080으로 전달되는 다른 트래픽에도 영향을 줄 수 있으므로 실제 환경에서는 외부 인터페이스와 출발지 등 조건을 함께 검토해야 합니다.  
-또한 이 명령으로 추가한 규칙은 일반적으로 재부팅 후 유지되지 않으므로 계속 사용하려면 운영체제에 맞는 방식으로 방화벽 규칙을 저장해야 합니다.  
-
-## 4. Docker와 firewalld의 동작 방식 {#session-04}
+## 3. Docker와 firewalld의 동작 방식 {#session-03}
 
 firewalld는 RHEL, CentOS와 Fedora 등에서 주로 사용하는 동적 방화벽 관리 도구입니다.  
-Docker는 firewalld가 활성화된 환경에서 다음과 같은 방식으로 네트워크 규칙을 구성합니다.  
+Docker의 방화벽 규칙 생성이 기본값으로 활성화되어 있고 firewalld가 실행 중이면, Docker가 컨테이너 통신에 필요한 존과 전달 정책을 자동으로 구성합니다.  
+다음 그림의 위쪽은 firewalld에 추가되는 설정을, 아래쪽은 게시된 포트의 요청이 컨테이너까지 전달되는 경로를 보여 줍니다.  
 
-### 🟦 동작 방식 요약
+![Docker 포트 게시와 firewalld의 처리 흐름](/assets/images/system-infra/system-infra-virtualization/docker-firewalld-publish-flow.png)
 
-- Docker는 자동으로 `docker`라는 존(zone)을 만들고 대상(target)을 `ACCEPT`로 설정합니다.
-- `docker0`, `br-xxxx` 등 Docker가 만든 브리지 네트워크 인터페이스는 `docker` 존에 포함됩니다.
-- Docker는 모든 존에서 `docker` 존으로의 전달을 허용하는 `docker-forwarding` 정책을 만듭니다.
-- 외부에서 접근할 수 있는 범위는 컨테이너의 포트 게시 설정과 Docker가 생성한 방화벽 규칙에도 영향을 받습니다.
+### 🟦 firewalld에 자동 추가되는 설정
 
-firewalld를 사용하는 환경에서는 Docker가 네트워크 규칙을 자동으로 설정하지만, 보안 요구 사항에 따라 `docker` 존과 전달 정책을 확인하고 조정해야 할 수 있습니다.  
+- Docker는 `docker` 존(zone)을 생성하고 대상(target)을 `ACCEPT`로 설정합니다.  
+- `docker0`, `br-xxxx` 같은 Docker 브리지 인터페이스를 `docker` 존에 포함합니다.  
+- `docker-forwarding` 정책을 생성해 다른 존에서 `docker` 존으로 트래픽이 전달되도록 허용합니다.  
 
-Docker는 컨테이너 네트워크를 자동으로 설정해 주는 편리한 도구입니다.  
-하지만 UFW 또는 firewalld와 함께 사용할 때는 Docker가 게시한 포트의 트래픽이 기존 방화벽 정책과 다르게 처리될 수 있습니다.  
-UFW 환경에서 게시된 컨테이너 포트를 제한해야 한다면 `DOCKER-USER` 체인 등을 이용해 전달 트래픽을 별도로 제어할 수 있습니다.  
-firewalld 환경에서는 Docker가 만든 존과 포워딩 정책을 확인하는 것이 좋습니다.  
+### 🟦 게시 포트 트래픽의 전달 과정
+
+`-p 8080:8080`처럼 포트를 게시하면 Docker가 호스트의 8080 포트와 컨테이너의 8080 포트를 연결합니다.  
+
+- 외부 요청이 호스트의 게시 포트에 도착합니다.  
+- Docker의 NAT 규칙이 요청의 목적지를 컨테이너 IP와 포트로 변경합니다.  
+- 변경된 요청이 `FORWARD`와 Docker 관련 체인을 거쳐 컨테이너로 전달됩니다.  
+
+따라서 외부 클라이언트가 호스트에 접근할 수 있고 다른 네트워크 보안 정책이 요청을 차단하지 않는다면, 별도의 `firewall-cmd --add-port` 설정 없이도 게시된 컨테이너 포트에 접근할 수 있습니다.  
+
+다만 `docker` 존의 대상이 `ACCEPT`라고 해서 컨테이너의 모든 포트가 자동으로 외부에 공개되는 것은 아닙니다.  
+외부에서는 `-p` 또는 `--publish` 옵션으로 게시한 포트에 접근할 수 있습니다.  
+
+핵심은 UFW나 firewalld의 호스트 포트 설정만 확인해서는 안 된다는 점입니다.  
+컨테이너를 실행할 때는 Docker에서 게시한 주소와 포트가 의도한 공개 범위와 일치하는지도 함께 확인해야 합니다.  
