@@ -16,6 +16,8 @@ toc:
     title: "3. 스키마 기반 검증(Schema-first): preValidation 이후 수행"
 ---
 
+📂 **[[GitHub 코드 보러가기]](https://github.com/cericube/nodejs-workbook/tree/main/fastify-basics){: target="_blank" rel="noopener noreferrer" }**
+
 ## 1. 가장 단순한 Fastify 서버(Hello World) {#session-01}
 
 Fastify는 Node.js를 위한 빠른 웹 프레임워크로, 낮은 오버헤드와 강력한 플러그인 시스템이 특징입니다.  

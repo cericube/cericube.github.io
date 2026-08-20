@@ -1,7 +1,7 @@
 ---
 layout: post
 title: "[Fastify] 02. 플러그인 활용, 애플리케이션 구조와 로깅"
-description: "Fastify 플러그인으로 공통 기능을 재사용하고 라우트와 서버 실행 코드를 분리하는 방법, 전역 에러 처리와 Pino 파일 로깅 구성을 알아봅니다."
+description: "Fastify 플러그인으로 공통 기능을 재사용하고 라우트와 서버 실행 코드를 분리합니다. 전역 에러 처리와 Pino 다중 전송 및 로그 회전 구성도 알아봅니다."
 category_id: nodejs-fastify
 categories: [nodejs, nodejs-fastify]
 series: fastify
@@ -15,6 +15,8 @@ toc:
   - id: session-03
     title: "3. 전역 에러 핸들링 및 파일 로깅"
 ---
+
+📂 **[[GitHub 코드 보러가기]](https://github.com/cericube/nodejs-workbook/tree/main/fastify-basics){: target="_blank" rel="noopener noreferrer" }**  
 
 ## 1. Fastify 플러그인 활용 {#session-01}
 
@@ -339,8 +341,8 @@ fastify.setErrorHandler((error, request, reply) => {
 
 ### 🟦 2. 파일 로깅
 
-Fastify는 Pino를 기본 로거로 사용합니다.  
-Fastify 인스턴스를 생성할 때 `logger: true` 또는 로거 설정 객체를 전달하면 로깅을 사용할 수 있습니다.  
+Fastify의 Pino 로깅은 기본적으로 비활성화되어 있으므로, 인스턴스를 생성할 때 `logger: true`나 로거 설정 객체를 전달해 활성화해야 합니다.  
+별도의 출력 대상을 지정하지 않으면 Pino는 JSON 로그를 표준 출력(`stdout`)으로 보냅니다.  
 
 가장 간단한 설정은 다음과 같습니다.  
 
@@ -350,7 +352,6 @@ const fastify = Fastify({
 });
 ```
 
-이 경우 로그는 기본적으로 콘솔의 표준 출력(`stdout`)에 기록됩니다.  
 운영 로그를 나중에 확인할 수 있도록 다음과 같이 별도의 파일에 저장할 수도 있습니다.  
 
 ```typescript
@@ -425,11 +426,66 @@ const fastify = Fastify({
 });
 ```
 
-각 전송 대상의 역할은 다음과 같습니다.  
+Pino에서 사용할 수 있는 대표적인 전송 대상은 다음과 같습니다.  
 
 | `target` 값 | 패키지 | 용도 |
 | --- | --- | --- |
 | `pino-pretty` | `pino-pretty` | 콘솔에서 로그를 사람이 읽기 좋은 형식으로 출력합니다. |
-| `pino/file` | Pino 내장 | JSON 형식의 로그를 파일에 저장합니다. |
+| `pino/file` | `pino` 내장 | JSON 로그를 파일이나 표준 출력·표준 오류 같은 파일 디스크립터로 전송합니다. |
+| `pino-roll` | `pino-roll` | 날짜나 파일 크기를 기준으로 로그 파일을 회전합니다. |
+| `pino-loki` | `pino-loki` | Pino 로그를 Grafana Loki로 전송합니다. |
+| `pino-elasticsearch` | `pino-elasticsearch` | Pino 로그를 Elasticsearch에 저장합니다. |
 
-개발 환경에서는 `pino-pretty`로 로그를 빠르게 확인하고, 운영 환경에서는 JSON 로그를 파일이나 별도의 로그 수집 시스템으로 전달할 수 있습니다.  
+`pino/file`은 Pino에 내장되어 있지만, 나머지 전송 대상은 별도 패키지를 설치해야 합니다.  
+Grafana Loki나 Elasticsearch로 전송할 때는 해당 패키지 문서에서 연결 주소와 인증 정보 같은 필수 옵션도 확인해야 합니다.  
+
+### 🟦 3. 로그 회전(Log Rotation)
+
+하나의 로그 파일에 계속 기록하면 파일 크기가 지나치게 커져 보관과 검색이 어려워질 수 있습니다.  
+로그 회전은 날짜나 파일 크기를 기준으로 기존 파일을 나누고 새 파일에 이어서 기록하는 방식입니다.  
+
+Pino의 서드파티 전송 대상인 `pino-roll`은 시간과 크기 조건을 함께 지정할 수 있습니다.  
+먼저 패키지를 설치합니다.  
+
+```bash
+# 날짜 또는 크기를 기준으로 로그 파일을 회전하는 전송 대상을 설치합니다.
+npm install pino-roll
+```
+
+다음 예제는 하루가 지나거나 활성 로그 파일이 10MB에 도달하면 새 파일로 교체합니다.  
+
+```typescript
+import Fastify from 'fastify';
+import { join } from 'node:path';
+
+// 로그 파일이 날짜 또는 크기 조건에 도달하면 자동으로 회전합니다.
+const fastify = Fastify({
+  logger: {
+    level: 'info',
+    transport: {
+      target: 'pino-roll',
+      options: {
+        // 애플리케이션 실행 위치를 기준으로 로그 파일 경로를 만듭니다.
+        file: join(process.cwd(), 'logs/app.log'),
+
+        // 하루가 지나거나 파일 크기가 10MB에 도달하면 회전합니다.
+        frequency: 'daily',
+        size: '10m',
+
+        // 활성 파일과 별도로 회전된 로그 파일을 최대 7개 보관합니다.
+        limit: { count: 7 },
+
+        // logs 디렉터리가 없으면 자동으로 생성합니다.
+        mkdir: true,
+      },
+    },
+  },
+});
+```
+
+`frequency`와 `size`를 함께 설정하면 둘 중 먼저 충족한 조건을 기준으로 파일을 회전합니다.  
+`frequency: 'daily'`는 매일, `size: '10m'`은 파일이 10MB에 도달했을 때 회전한다는 뜻입니다.  
+
+`limit.count`는 활성 파일을 제외하고 보관할 회전 파일의 최대 개수입니다.  
+따라서 `count: 7`이면 회전 파일 7개와 현재 기록 중인 활성 파일 1개를 합쳐 최대 8개가 남습니다.  
+오래된 로그가 자동으로 삭제될 수 있으므로 감사나 장애 분석을 위해 장기 보관이 필요하다면 별도의 로그 저장소로 전송하는 방법도 함께 고려해야 합니다.  
