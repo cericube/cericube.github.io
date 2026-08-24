@@ -103,7 +103,6 @@ cd ~/blog-workspaces/nodejs-workbook/fastify-basics
 npm install -D pino-pretty
 ```
 
-
 ```typescript
 // src/app.ts
 // 개발 환경: 설정된 로그 레벨 이상의 메시지만 보기 좋게 출력합니다.
