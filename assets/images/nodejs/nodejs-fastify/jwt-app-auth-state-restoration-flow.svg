@@ -1,0 +1,83 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1500" height="760" viewBox="0 0 1500 760" role="img" aria-labelledby="title desc">
+  <title id="title">앱 시작 시 로그인 상태 복원 흐름</title>
+  <desc id="desc">앱을 시작했을 때 메모리에 Access Token이 없으면 Refresh Token 쿠키로 재발급을 요청하고, 성공하면 로그인 상태를 복원하며 실패하면 로그인 화면을 표시하는 흐름</desc>
+  <defs>
+    <filter id="soft" x="-10%" y="-10%" width="120%" height="120%"><feDropShadow dy="2" stdDeviation="3" flood-color="#69758a" flood-opacity=".13"/></filter>
+    <linearGradient id="blue" x2="1" y2="1"><stop stop-color="#fff"/><stop offset="1" stop-color="#eef5ff"/></linearGradient>
+    <linearGradient id="cyan" x2="1" y2="1"><stop stop-color="#fff"/><stop offset="1" stop-color="#effbfc"/></linearGradient>
+    <linearGradient id="green" x2="1" y2="1"><stop stop-color="#fff"/><stop offset="1" stop-color="#effaf3"/></linearGradient>
+    <linearGradient id="orange" x2="1" y2="1"><stop stop-color="#fff"/><stop offset="1" stop-color="#fff6ef"/></linearGradient>
+    <marker id="arrow" viewBox="0 0 12 12" refX="10" refY="6" markerWidth="10" markerHeight="10" orient="auto"><path d="M1 1l10 5-10 5z" fill="#465566"/></marker>
+    <marker id="greenArrow" viewBox="0 0 12 12" refX="10" refY="6" markerWidth="9" markerHeight="9" orient="auto"><path d="M1 1l10 5-10 5z" fill="#209447"/></marker>
+    <marker id="orangeArrow" viewBox="0 0 12 12" refX="10" refY="6" markerWidth="9" markerHeight="9" orient="auto"><path d="M1 1l10 5-10 5z" fill="#e67b17"/></marker>
+    <style>
+      text{font-family:Pretendard,"Noto Sans KR","Apple SD Gothic Neo",sans-serif;fill:#101a35}.heading{font-size:37px;font-weight:800}.subheading{font-size:21px;font-weight:500;fill:#45566e}.title{font-size:25px;font-weight:800}.body{font-size:19px;font-weight:500;fill:#2b405d}.small{font-size:17px;font-weight:600;fill:#43566e}.tag{font-size:17px;font-weight:700}.arrow{fill:none;stroke:#465566;stroke-width:5;stroke-linecap:round;stroke-linejoin:round;marker-end:url(#arrow)}
+    </style>
+  </defs>
+  <rect width="1500" height="760" fill="#fff"/>
+
+  <text x="65" y="60" class="heading">앱을 열면 로그인 상태를 어떻게 복원할까요?</text>
+  <text x="65" y="96" class="subheading">Access Token은 메모리에서 사라져도, 유효한 Refresh Token 쿠키가 있으면 다시 로그인할 필요가 없습니다.</text>
+
+  <!-- 앱 시작 -->
+  <g filter="url(#soft)">
+    <rect x="55" y="155" width="310" height="400" rx="24" fill="url(#blue)" stroke="#4387ea" stroke-width="3"/>
+    <rect x="111" y="190" width="198" height="238" rx="15" fill="#fff" stroke="#377ddb" stroke-width="4"/>
+    <rect x="111" y="190" width="198" height="37" rx="13" fill="#eaf3ff"/><circle cx="132" cy="209" r="5" fill="#ff7b75"/><circle cx="150" cy="209" r="5" fill="#f5c64d"/><circle cx="168" cy="209" r="5" fill="#4ecb83"/>
+    <circle cx="210" cy="286" r="34" fill="#e5efff"/><circle cx="210" cy="275" r="13" fill="#3479da"/><path d="M186 309c2-22 46-22 48 0z" fill="#3479da"/>
+    <rect x="147" y="337" width="126" height="40" rx="20" fill="#f1f5fa" stroke="#c2cbd8"/><text x="210" y="363" text-anchor="middle" class="tag" fill="#66758a">확인 중…</text>
+    <path d="M146 450h128" stroke="#b8cdea" stroke-width="2"/>
+    <text x="210" y="489" text-anchor="middle" class="title">앱 시작 · 새로고침</text>
+    <text x="210" y="523" text-anchor="middle" class="body">메모리에 Access Token 없음</text>
+  </g>
+
+  <!-- 요청 화살표 -->
+  <path d="M372 350h105" class="arrow"/>
+  <rect x="379" y="282" width="91" height="42" rx="17" fill="#f2f6fb" stroke="#a9b6c8"/><text x="425" y="309" text-anchor="middle" class="tag" fill="#4c5c71">자동 시도</text>
+
+  <!-- 재발급 요청 -->
+  <g filter="url(#soft)">
+    <rect x="488" y="155" width="405" height="400" rx="24" fill="url(#cyan)" stroke="#0d98aa" stroke-width="3"/>
+    <!-- 쿠키와 서버 -->
+    <path d="M565 212a37 37 0 1047 50c-22 1-33-18-25-36-10 2-18-4-22-14z" fill="none" stroke="#0b8797" stroke-width="4"/><circle cx="567" cy="254" r="4" fill="#0b8797"/><circle cx="584" cy="271" r="4" fill="#0b8797"/><circle cx="554" cy="272" r="4" fill="#0b8797"/>
+    <path d="M643 247h55" fill="none" stroke="#506174" stroke-width="4" marker-end="url(#arrow)"/>
+    <rect x="711" y="203" width="104" height="102" rx="10" fill="#fff" stroke="#0b8797" stroke-width="4"/><path d="M731 229h64m-64 25h64m-64 25h64" stroke="#80cbd4" stroke-width="4"/><circle cx="783" cy="229" r="5" fill="#0b8797"/><circle cx="783" cy="254" r="5" fill="#0b8797"/><circle cx="783" cy="279" r="5" fill="#0b8797"/>
+    <text x="690" y="349" text-anchor="middle" class="title">POST /api/auth/refresh</text>
+    <rect x="538" y="377" width="305" height="49" rx="20" fill="#fff" stroke="#8ed2da"/><text x="690" y="408" text-anchor="middle" class="tag" fill="#087986">HttpOnly 쿠키 자동 전송</text>
+    <text x="690" y="465" text-anchor="middle" class="body">서버가 Session 레코드와</text>
+    <text x="690" y="495" text-anchor="middle" class="body">사용자 상태를 검증</text>
+    <text x="690" y="531" text-anchor="middle" class="small">JavaScript는 쿠키를 직접 읽지 않음</text>
+  </g>
+
+  <!-- 분기 -->
+  <path d="M900 350h79v-113h82" fill="none" stroke="#209447" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#greenArrow)"/>
+  <path d="M900 350h79v198h82" fill="none" stroke="#e67b17" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#orangeArrow)"/>
+  <rect x="924" y="268" width="82" height="39" rx="17" fill="#effaf3" stroke="#8bcf9f"/><text x="965" y="294" text-anchor="middle" class="tag" fill="#287c43">성공</text>
+  <rect x="924" y="453" width="82" height="39" rx="17" fill="#fff5ed" stroke="#efb070"/><text x="965" y="479" text-anchor="middle" class="tag" fill="#a45b21">실패</text>
+
+  <!-- 성공 -->
+  <g filter="url(#soft)">
+    <rect x="1072" y="132" width="373" height="238" rx="24" fill="url(#green)" stroke="#23964a" stroke-width="3"/>
+    <circle cx="1120" cy="181" r="26" fill="#25a453"/><path d="M1107 181l9 9 18-22" fill="none" stroke="#fff" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+    <text x="1166" y="189" class="title" fill="#19763a">로그인 복원 성공</text>
+    <rect x="1110" y="218" width="297" height="53" rx="18" fill="#fff" stroke="#96d4a7"/><text x="1258" y="251" text-anchor="middle" class="tag" fill="#23733d">새 Access Token + 사용자 정보</text>
+    <circle cx="1162" cy="312" r="21" fill="#dff3e5"/><circle cx="1162" cy="305" r="8" fill="#26904a"/><path d="M1147 327c1-15 29-15 30 0z" fill="#26904a"/>
+    <text x="1200" y="320" class="body">원래 화면 표시</text>
+  </g>
+
+  <!-- 실패 -->
+  <g filter="url(#soft)">
+    <rect x="1072" y="432" width="373" height="238" rx="24" fill="url(#orange)" stroke="#e7801d" stroke-width="3"/>
+    <circle cx="1120" cy="481" r="26" fill="#eb8320"/><path d="M1120 466v18m0 9v1" stroke="#fff" stroke-width="5" stroke-linecap="round"/>
+    <text x="1166" y="489" class="title" fill="#a95617">로그인이 필요함</text>
+    <rect x="1110" y="518" width="297" height="53" rx="18" fill="#fff" stroke="#efbd8f"/><text x="1258" y="551" text-anchor="middle" class="tag" fill="#98531e">쿠키 없음 · 만료 · 폐기</text>
+    <path d="M1141 605h41m-31-18h21v35h-21z" fill="none" stroke="#d9781c" stroke-width="3"/><path d="M1161 595l11 10-11 10" fill="none" stroke="#d9781c" stroke-width="3"/>
+    <text x="1200" y="620" class="body">로그인 화면 표시</text>
+  </g>
+
+  <!-- 하단 요약 -->
+  <g filter="url(#soft)">
+    <rect x="55" y="697" width="1390" height="52" rx="18" fill="#f8f6ff" stroke="#c3b5e4" stroke-width="2"/>
+    <text x="750" y="731" text-anchor="middle" class="body">복원 요청이 끝날 때까지 인증 상태를 “확인 중”으로 유지하면 화면 깜빡임을 막을 수 있습니다.</text>
+  </g>
+</svg>

@@ -1,0 +1,116 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900" role="img" aria-labelledby="title desc">
+  <title id="title">Refresh Token 검증과 두 토큰 교체 흐름</title>
+  <desc id="desc">브라우저가 Refresh Token 쿠키를 보내면 서버가 해시로 Session을 조회하고 만료 시각과 사용자 상태를 검증한 뒤 두 토큰을 새로 발급하는 과정</desc>
+  <defs>
+    <filter id="soft" x="-10%" y="-10%" width="120%" height="120%"><feDropShadow dy="2" stdDeviation="3" flood-color="#69758a" flood-opacity=".13"/></filter>
+    <linearGradient id="blue" x2="1" y2="1"><stop stop-color="#fff"/><stop offset="1" stop-color="#eef5ff"/></linearGradient>
+    <linearGradient id="cyan" x2="1" y2="1"><stop stop-color="#fff"/><stop offset="1" stop-color="#eefbfc"/></linearGradient>
+    <linearGradient id="green" x2="1" y2="1"><stop stop-color="#fff"/><stop offset="1" stop-color="#effaf4"/></linearGradient>
+    <linearGradient id="orange" x2="1" y2="1"><stop stop-color="#fff"/><stop offset="1" stop-color="#fff7ee"/></linearGradient>
+    <linearGradient id="purple" x2="1" y2="1"><stop stop-color="#fff"/><stop offset="1" stop-color="#f6f2ff"/></linearGradient>
+    <marker id="arrow" viewBox="0 0 12 12" refX="10" refY="6" markerWidth="10" markerHeight="10" orient="auto"><path d="M1 1l10 5-10 5z" fill="#465566"/></marker>
+    <style>
+      text{font-family:Pretendard,"Noto Sans KR","Apple SD Gothic Neo",sans-serif;fill:#101a35}.heading{font-size:38px;font-weight:800}.subheading{font-size:22px;font-weight:500;fill:#44546c}.num{font-size:21px;font-weight:800;fill:#fff}.card-title{font-size:25px;font-weight:800}.body{font-size:19px;font-weight:500;fill:#2c405d}.small{font-size:17px;font-weight:600;fill:#40536c}.label{font-size:18px;font-weight:700}.arrow{fill:none;stroke:#465566;stroke-width:5;stroke-linecap:round;stroke-linejoin:round;marker-end:url(#arrow)}
+    </style>
+  </defs>
+  <rect width="1600" height="900" fill="#fff"/>
+
+  <text x="70" y="66" class="heading">Refresh Token 검증과 두 토큰 교체</text>
+  <text x="70" y="103" class="subheading">쿠키의 원문은 응답에만 사용하고, DB에는 SHA-256 해시만 저장합니다.</text>
+
+  <!-- 1. 재발급 요청 -->
+  <g filter="url(#soft)">
+    <rect x="55" y="150" width="310" height="245" rx="22" fill="url(#blue)" stroke="#3a86ed" stroke-width="3"/>
+    <circle cx="91" cy="187" r="21" fill="#2477db"/><text x="91" y="195" text-anchor="middle" class="num">1</text>
+    <rect x="151" y="181" width="118" height="76" rx="7" fill="none" stroke="#2477db" stroke-width="4"/><path d="M168 273h84m-42-16v16" stroke="#2477db" stroke-width="4" stroke-linecap="round"/>
+    <text x="210" y="313" text-anchor="middle" class="card-title">재발급 요청</text>
+    <text x="210" y="348" text-anchor="middle" class="body">POST /api/auth/refresh</text>
+    <text x="210" y="377" text-anchor="middle" class="small">Access Token은 보내지 않음</text>
+  </g>
+  <path d="M370 272h50" class="arrow"/>
+
+  <!-- 2. 쿠키와 해시 -->
+  <g filter="url(#soft)">
+    <rect x="430" y="150" width="310" height="245" rx="22" fill="url(#cyan)" stroke="#0a9caf" stroke-width="3"/>
+    <circle cx="466" cy="187" r="21" fill="#0798ad"/><text x="466" y="195" text-anchor="middle" class="num">2</text>
+    <path d="M546 183a38 38 0 1048 51c-23 1-34-19-26-38-10 2-19-4-22-13z" fill="none" stroke="#078b9e" stroke-width="4"/><circle cx="548" cy="226" r="4" fill="#078b9e"/><circle cx="565" cy="244" r="4" fill="#078b9e"/><circle cx="535" cy="245" r="4" fill="#078b9e"/>
+    <text x="585" y="294" text-anchor="middle" class="card-title">쿠키 원문 읽기</text>
+    <text x="585" y="330" text-anchor="middle" class="body">refreshToken 원문</text>
+    <path d="M513 349h144" stroke="#96d7df" stroke-width="2"/>
+    <text x="585" y="378" text-anchor="middle" class="label" fill="#087f8f">SHA-256 해시 생성</text>
+  </g>
+  <path d="M745 272h50" class="arrow"/>
+
+  <!-- 3. Session 조회 -->
+  <g filter="url(#soft)">
+    <rect x="805" y="150" width="310" height="245" rx="22" fill="url(#green)" stroke="#1e9b51" stroke-width="3"/>
+    <circle cx="841" cy="187" r="21" fill="#19974b"/><text x="841" y="195" text-anchor="middle" class="num">3</text>
+    <ellipse cx="960" cy="197" rx="37" ry="14" fill="none" stroke="#188c47" stroke-width="4"/><path d="M923 197v58c0 19 74 19 74 0v-58m-74 20c0 19 74 19 74 0m-74 20c0 19 74 19 74 0" fill="none" stroke="#188c47" stroke-width="4"/>
+    <text x="960" y="308" text-anchor="middle" class="card-title">Session 조회</text>
+    <text x="960" y="344" text-anchor="middle" class="body">sessions.tokenHash 비교</text>
+    <text x="960" y="375" text-anchor="middle" class="small">Session + 사용자 함께 조회</text>
+  </g>
+  <path d="M1120 272h50" class="arrow"/>
+
+  <!-- 4. 유효성 검증 -->
+  <g filter="url(#soft)">
+    <rect x="1180" y="150" width="365" height="245" rx="22" fill="url(#green)" stroke="#21a343" stroke-width="3"/>
+    <circle cx="1216" cy="187" r="21" fill="#20a044"/><text x="1216" y="195" text-anchor="middle" class="num">4</text>
+    <path d="M1330 185c24 14 42 12 65 0v36c0 25-14 42-32 51-20-9-33-26-33-51z" fill="none" stroke="#209940" stroke-width="4"/><path d="M1346 226l13 13 23-31" fill="none" stroke="#209940" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+    <text x="1362" y="310" text-anchor="middle" class="card-title">유효성 검증</text>
+    <rect x="1215" y="330" width="141" height="42" rx="20" fill="#fff" stroke="#82d197"/><text x="1285" y="357" text-anchor="middle" class="label" fill="#197b39">expiresAt</text>
+    <rect x="1370" y="330" width="141" height="42" rx="20" fill="#fff" stroke="#82d197"/><text x="1440" y="357" text-anchor="middle" class="label" fill="#197b39">ACTIVE 사용자</text>
+  </g>
+
+  <!-- 아래쪽으로 연결 -->
+  <path d="M1362 400v60h-36" class="arrow"/>
+
+  <!-- 5. 새 토큰 생성 -->
+  <g filter="url(#soft)">
+    <rect x="1180" y="470" width="365" height="240" rx="22" fill="url(#orange)" stroke="#ef8516" stroke-width="3"/>
+    <circle cx="1216" cy="507" r="21" fill="#ed8214"/><text x="1216" y="515" text-anchor="middle" class="num">5</text>
+    <path d="M1314 536h97m-72-31h97" stroke="#e37d17" stroke-width="4" stroke-linecap="round"/><circle cx="1322" cy="536" r="13" fill="#fff" stroke="#e37d17" stroke-width="4"/><circle cx="1428" cy="505" r="13" fill="#fff" stroke="#e37d17" stroke-width="4"/>
+    <text x="1362" y="590" text-anchor="middle" class="card-title">두 토큰 새로 생성</text>
+    <text x="1362" y="625" text-anchor="middle" class="body">Access JWT + Refresh Token</text>
+    <text x="1362" y="660" text-anchor="middle" class="small">새 Refresh Token도 해시 생성</text>
+  </g>
+  <path d="M1175 590h-50" class="arrow"/>
+
+  <!-- 6. 조건부 교체 -->
+  <g filter="url(#soft)">
+    <rect x="805" y="470" width="310" height="240" rx="22" fill="url(#purple)" stroke="#8062d1" stroke-width="3"/>
+    <circle cx="841" cy="507" r="21" fill="#7655c8"/><text x="841" y="515" text-anchor="middle" class="num">6</text>
+    <ellipse cx="960" cy="512" rx="32" ry="12" fill="none" stroke="#7255bc" stroke-width="4"/><path d="M928 512v48c0 17 64 17 64 0v-48m-64 17c0 17 64 17 64 0m-64 16c0 17 64 17 64 0" fill="none" stroke="#7255bc" stroke-width="4"/><path d="M1007 532l13 13 24-31" fill="none" stroke="#7255bc" stroke-width="4" stroke-linecap="round"/>
+    <text x="960" y="602" text-anchor="middle" class="card-title">Session 조건부 교체</text>
+    <text x="960" y="638" text-anchor="middle" class="body">기존 tokenHash가 같을 때만</text>
+    <text x="960" y="671" text-anchor="middle" class="small">새 해시 + 새 expiresAt 저장</text>
+  </g>
+  <path d="M800 590h-50" class="arrow"/>
+
+  <!-- 7. 응답 -->
+  <g filter="url(#soft)">
+    <rect x="430" y="470" width="310" height="240" rx="22" fill="url(#blue)" stroke="#397fe1" stroke-width="3"/>
+    <circle cx="466" cy="507" r="21" fill="#3175d5"/><text x="466" y="515" text-anchor="middle" class="num">7</text>
+    <text x="585" y="545" text-anchor="middle" class="card-title">클라이언트로 응답</text>
+    <rect x="462" y="571" width="246" height="48" rx="17" fill="#eef5ff" stroke="#8ab5f4"/><text x="585" y="602" text-anchor="middle" class="label" fill="#225eae">Access Token → JSON</text>
+    <rect x="462" y="633" width="246" height="48" rx="17" fill="#effaf6" stroke="#84d1b1"/><text x="585" y="664" text-anchor="middle" class="label" fill="#16775a">Refresh Token → 쿠키</text>
+  </g>
+  <path d="M425 590h-50" class="arrow"/>
+
+  <!-- 8. 교체 완료 -->
+  <g filter="url(#soft)">
+    <rect x="55" y="470" width="310" height="240" rx="22" fill="url(#cyan)" stroke="#119aa2" stroke-width="3"/>
+    <circle cx="91" cy="507" r="21" fill="#0d949c"/><text x="91" y="515" text-anchor="middle" class="num">8</text>
+    <path d="M178 521a43 43 0 1032 72" fill="none" stroke="#0d8b93" stroke-width="5"/><path d="M208 566l4 29-29-4" fill="none" stroke="#0d8b93" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/><path d="M173 537l61 61" stroke="#e34a42" stroke-width="5" stroke-linecap="round"/>
+    <text x="210" y="626" text-anchor="middle" class="card-title">이전 토큰 폐기</text>
+    <text x="210" y="662" text-anchor="middle" class="body">다시 사용하면</text>
+    <text x="210" y="690" text-anchor="middle" class="label" fill="#b52c28">401 TOKEN_REVOKED</text>
+  </g>
+
+  <!-- 핵심 요약 -->
+  <g filter="url(#soft)">
+    <rect x="55" y="768" width="1490" height="83" rx="20" fill="#faf8ff" stroke="#c2b1e8" stroke-width="2"/>
+    <path d="M103 790c14 8 24 7 38 0v21c0 15-8 25-19 31-12-6-19-16-19-31z" fill="none" stroke="#6747b5" stroke-width="3"/><path d="M112 813l8 8 13-18" fill="none" stroke="#6747b5" stroke-width="3"/>
+    <text x="162" y="820" class="card-title">핵심: 기존 해시가 일치하는 한 요청만 교체에 성공하므로 같은 Refresh Token은 다시 사용할 수 없습니다.</text>
+  </g>
+</svg>

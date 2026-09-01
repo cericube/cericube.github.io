@@ -1,0 +1,108 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1324" height="786" viewBox="0 0 1324 786" role="img" aria-labelledby="title desc">
+  <title id="title">Fastify 인증과 인가 흐름</title>
+  <desc id="desc">Access Token으로 authenticate를 수행하고 request.user를 저장한 뒤 인가 Guard를 거쳐 Controller와 Service를 실행하는 과정</desc>
+  <defs>
+    <filter id="soft" x="-10%" y="-10%" width="120%" height="120%"><feDropShadow dy="1" stdDeviation="2" flood-color="#8490a6" flood-opacity=".11"/></filter>
+    <linearGradient id="blue" x2="1" y2="1"><stop stop-color="#fff"/><stop offset="1" stop-color="#f1f7ff"/></linearGradient>
+    <linearGradient id="cyan" x2="1" y2="1"><stop stop-color="#fff"/><stop offset="1" stop-color="#f0fbfc"/></linearGradient>
+    <linearGradient id="green" x2="1" y2="1"><stop stop-color="#fff"/><stop offset="1" stop-color="#f1fbf3"/></linearGradient>
+    <linearGradient id="orange" x2="1" y2="1"><stop stop-color="#fff"/><stop offset="1" stop-color="#fff8ef"/></linearGradient>
+    <linearGradient id="purple" x2="1" y2="1"><stop stop-color="#fff"/><stop offset="1" stop-color="#faf7ff"/></linearGradient>
+    <marker id="arrow" viewBox="0 0 12 12" refX="10" refY="6" markerWidth="10" markerHeight="10" orient="auto"><path d="M1 1l10 5-10 5z" fill="#465566"/></marker>
+    <marker id="orangeArrow" viewBox="0 0 12 12" refX="10" refY="6" markerWidth="9" markerHeight="9" orient="auto"><path d="M1 1l10 5-10 5z" fill="#ff8311"/></marker>
+    <style>
+      text{font-family:Pretendard,"Noto Sans KR","Apple SD Gothic Neo",sans-serif;fill:#101a35}.notice{font-size:20px;font-weight:700}.notice2{font-size:18px;font-weight:500;fill:#273b58}.num{font-size:21px;font-weight:800;fill:#fff}.title{font-size:22px;font-weight:800}.body{font-size:18px;font-weight:500;fill:#283b58}.small{font-size:16px;font-weight:600}.pill{font-size:16px;font-weight:500;fill:#3b2b24}.err{font-size:19px;font-weight:800;fill:#9d1b19}.arr{fill:none;stroke:#465566;stroke-width:5;marker-end:url(#arrow)}
+    </style>
+  </defs>
+  <rect width="1324" height="786" fill="#fff"/>
+
+  <!-- 상단 안내 -->
+  <g filter="url(#soft)">
+    <rect x="145" y="10" width="539" height="104" rx="12" fill="url(#purple)" stroke="#baa0f2" stroke-width="2"/>
+    <path d="M178 34c19 8 32 4 50-5v25c0 19-10 31-25 38-15-7-25-19-25-38z" fill="none" stroke="#7442d3" stroke-width="3"/>
+    <path d="M177 31l54 59" stroke="#7442d3" stroke-width="3" stroke-linecap="round"/>
+    <text x="257" y="53" class="notice">Refresh Token은 보호 API 요청에 사용되지 않음</text>
+    <text x="257" y="85" class="notice2">쿠키 경로가 다르므로 이 요청에는 전송되지 않음</text>
+  </g>
+  <g filter="url(#soft)">
+    <rect x="755" y="11" width="434" height="103" rx="12" fill="url(#blue)" stroke="#71acf3" stroke-width="2"/>
+    <ellipse cx="807" cy="42" rx="21" ry="9" fill="none" stroke="#2d6db6" stroke-width="3"/><path d="M786 42v43c0 12 42 12 42 0V42m-42 15c0 12 42 12 42 0m-42 14c0 12 42 12 42 0" fill="none" stroke="#2d6db6" stroke-width="3"/>
+    <text x="855" y="53" class="notice">일반적인 Access Token 검증 시</text>
+    <text x="855" y="86" class="notice">sessions DB 조회 안 함</text>
+  </g>
+
+  <!-- 1 클라이언트 요청 -->
+  <g filter="url(#soft)">
+    <rect x="24" y="155" width="213" height="300" rx="13" fill="url(#blue)" stroke="#2c80e9" stroke-width="2"/>
+    <circle cx="54" cy="188" r="17" fill="#2277d4"/><text x="54" y="195" text-anchor="middle" class="num">1</text>
+    <rect x="102" y="198" width="55" height="40" rx="3" fill="none" stroke="#176bd2" stroke-width="3"/><path d="M111 250h37m-19-12v12" stroke="#176bd2" stroke-width="3" stroke-linecap="round"/>
+    <text x="130" y="294" text-anchor="middle" class="title">클라이언트 요청</text>
+    <path d="M40 317h181" stroke="#b8d6f6" stroke-width="2"/>
+    <text x="130" y="351" text-anchor="middle" class="body">Authorization:</text><text x="130" y="382" text-anchor="middle" class="body">Bearer ACCESS_TOKEN</text>
+  </g>
+  <path d="M240 273h42" class="arr"/>
+
+  <!-- 2 authenticate -->
+  <g filter="url(#soft)">
+    <rect x="286" y="155" width="215" height="300" rx="13" fill="url(#cyan)" stroke="#069bb1" stroke-width="2"/>
+    <circle cx="317" cy="188" r="17" fill="#0a9aaf"/><text x="317" y="195" text-anchor="middle" class="num">2</text>
+    <path d="M370 201c18 10 31 9 48 0v27c0 18-10 31-24 38-15-7-24-20-24-38z" fill="none" stroke="#089caf" stroke-width="3"/><path d="M383 230l9 9 15-20" fill="none" stroke="#089caf" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+    <text x="394" y="290" text-anchor="middle" class="title">authenticate</text>
+    <path d="M302 312h183" stroke="#a8dce3" stroke-width="2"/>
+    <text x="302" y="349" class="body">•  request.jwtVerify()</text><text x="302" y="382" class="body">•  서명 · exp 검증</text><text x="302" y="415" class="body">•  type = access 확인</text>
+  </g>
+  <path d="M504 273h42" class="arr"/>
+
+  <!-- 3 request.user -->
+  <g filter="url(#soft)">
+    <rect x="552" y="155" width="214" height="300" rx="13" fill="url(#green)" stroke="#1ca13f" stroke-width="2"/>
+    <circle cx="582" cy="188" r="17" fill="#24a746"/><text x="582" y="195" text-anchor="middle" class="num">3</text>
+    <circle cx="659" cy="208" r="14" fill="none" stroke="#23a544" stroke-width="3"/><path d="M636 252c1-26 45-26 46 0z" fill="none" stroke="#23a544" stroke-width="3"/>
+    <text x="659" y="290" text-anchor="middle" class="title">request.user 저장</text>
+    <path d="M568 313h182" stroke="#b8e4c2" stroke-width="2"/>
+    <text x="659" y="351" text-anchor="middle" class="body">sub · email · role · type</text>
+  </g>
+  <path d="M769 273h42" class="arr"/>
+
+  <!-- 4 인가 Guard -->
+  <g filter="url(#soft)">
+    <rect x="822" y="155" width="214" height="300" rx="13" fill="url(#orange)" stroke="#ff7810" stroke-width="2"/>
+    <circle cx="852" cy="188" r="17" fill="#f57a11"/><text x="852" y="195" text-anchor="middle" class="num">4</text>
+    <rect x="908" y="207" width="41" height="37" rx="6" fill="none" stroke="#f57a11" stroke-width="3"/><path d="M914 207v-8a15 15 0 0130 0v8" fill="none" stroke="#f57a11" stroke-width="3"/><path d="M929 221v10" stroke="#f57a11" stroke-width="4" stroke-linecap="round"/>
+    <text x="929" y="285" text-anchor="middle" class="title">인가 Guard</text>
+    <rect x="845" y="305" width="168" height="39" rx="20" fill="#fffdf7" stroke="#ff9617"/><text x="929" y="331" text-anchor="middle" class="pill">requireSelf</text>
+    <rect x="845" y="354" width="168" height="39" rx="20" fill="#fffdf7" stroke="#ff9617"/><text x="929" y="380" text-anchor="middle" class="pill">requireAdmin</text>
+    <rect x="841" y="403" width="176" height="39" rx="20" fill="#fffdf7" stroke="#ff9617"/><text x="929" y="429" text-anchor="middle" class="pill">requireSelfOrAdmin</text>
+  </g>
+  <path d="M1039 273h42" class="arr"/>
+
+  <!-- 5 Controller Service -->
+  <g filter="url(#soft)">
+    <rect x="1093" y="155" width="217" height="300" rx="13" fill="url(#green)" stroke="#1ca13f" stroke-width="2"/>
+    <circle cx="1124" cy="188" r="17" fill="#24a746"/><text x="1124" y="195" text-anchor="middle" class="num">5</text>
+    <g fill="none" stroke="#21a13f" stroke-width="3"><circle cx="1189" cy="234" r="13"/><circle cx="1217" cy="210" r="13"/><path d="M1189 214v8m0 24v8m-20-20h8m24 0h8m-34-14l7 7m14 14l7 7m0-28l-7 7m-14 14l-7 7M1217 190v8m0 24v8m-20-20h8m24 0h8m-34-14l7 7m14 14l7 7m0-28l-7 7"/></g>
+    <text x="1201" y="298" text-anchor="middle" class="title">Controller → Service</text>
+    <path d="M1109 321h185" stroke="#b8e4c2" stroke-width="2"/>
+    <text x="1201" y="360" text-anchor="middle" class="body">사용자 조회 / 상태 변경</text>
+  </g>
+
+  <!-- 401 분기 -->
+  <path d="M394 456v28h61v24" fill="none" stroke="#f04a40" stroke-width="3"/>
+  <g filter="url(#soft)"><rect x="298" y="508" width="259" height="81" rx="13" fill="#fff9f8" stroke="#f04a40" stroke-width="2"/><path d="M323 555l13-28 13 28z" fill="#e53b35"/><path d="M336 535v10m0 5v1" stroke="#fff" stroke-width="3" stroke-linecap="round"/><text x="369" y="544" class="err">401 Unauthorized</text><text x="369" y="572" class="small" fill="#87302f">토큰 없음 / 형식 오류</text></g>
+  <path d="M455 589v24" stroke="#f04a40" stroke-width="3"/>
+  <g filter="url(#soft)"><rect x="298" y="613" width="264" height="81" rx="13" fill="#fff9f8" stroke="#f04a40" stroke-width="2"/><path d="M323 660l13-28 13 28z" fill="#e53b35"/><path d="M336 640v10m0 5v1" stroke="#fff" stroke-width="3" stroke-linecap="round"/><text x="368" y="649" class="err">401 TOKEN_EXPIRED</text><text x="368" y="678" class="small" fill="#87302f">Access Token 만료</text></g>
+
+  <!-- 403 분기 -->
+  <path d="M929 456v51" fill="none" stroke="#ff8311" stroke-width="3" marker-end="url(#orangeArrow)"/>
+  <g filter="url(#soft)"><rect x="805" y="508" width="238" height="81" rx="13" fill="#fffaf4" stroke="#ff8311" stroke-width="2"/><path d="M827 555l13-28 13 28z" fill="#f47b0f"/><path d="M840 535v10m0 5v1" stroke="#fff" stroke-width="3" stroke-linecap="round"/><text x="883" y="544" class="err" fill="#8c241b">403 Forbidden</text><text x="883" y="572" class="small" fill="#753f28">권한 부족</text></g>
+
+  <!-- Guard 범례 -->
+  <g filter="url(#soft)">
+    <rect x="987" y="610" width="323" height="170" rx="12" fill="#fffdf8" stroke="#efb841" stroke-width="2"/>
+    <path d="M1018 623c9 5 15 4 23 0v13c0 9-5 15-11 19-7-4-12-10-12-19z" fill="none" stroke="#ff9415" stroke-width="2"/><path d="M1024 637l5 5 7-10" fill="none" stroke="#ff9415" stroke-width="2"/>
+    <text x="1056" y="646" class="title">Guard 의미</text>
+    <rect x="1006" y="662" width="141" height="28" rx="14" fill="#fff" stroke="#efb841"/><text x="1077" y="682" text-anchor="middle" class="small">requireSelf</text><text x="1161" y="683" class="small">: 본인만</text>
+    <rect x="1006" y="699" width="141" height="28" rx="14" fill="#fff" stroke="#efb841"/><text x="1077" y="719" text-anchor="middle" class="small">requireAdmin</text><text x="1161" y="720" class="small">: 관리자만</text>
+    <rect x="1006" y="736" width="141" height="28" rx="14" fill="#fff" stroke="#efb841"/><text x="1077" y="756" text-anchor="middle" class="small">requireSelfOrAdmin</text><text x="1161" y="757" class="small">: 본인 또는 관리자</text>
+  </g>
+</svg>

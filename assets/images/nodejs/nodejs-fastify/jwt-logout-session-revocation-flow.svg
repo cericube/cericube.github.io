@@ -1,0 +1,104 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900" role="img" aria-labelledby="title desc">
+  <title id="title">현재 기기 로그아웃과 전체 로그아웃 비교</title>
+  <desc id="desc">현재 기기 로그아웃은 Refresh Token으로 Session 하나를 삭제하고, 전체 로그아웃은 Access Token의 사용자 ID로 모든 Session을 삭제하는 흐름</desc>
+  <defs>
+    <filter id="soft" x="-10%" y="-10%" width="120%" height="120%"><feDropShadow dy="2" stdDeviation="3" flood-color="#69758a" flood-opacity=".13"/></filter>
+    <linearGradient id="blue" x2="1" y2="1"><stop stop-color="#fff"/><stop offset="1" stop-color="#eef6ff"/></linearGradient>
+    <linearGradient id="purple" x2="1" y2="1"><stop stop-color="#fff"/><stop offset="1" stop-color="#f6f2ff"/></linearGradient>
+    <linearGradient id="green" x2="1" y2="1"><stop stop-color="#fff"/><stop offset="1" stop-color="#effaf4"/></linearGradient>
+    <marker id="arrow" viewBox="0 0 12 12" refX="10" refY="6" markerWidth="9" markerHeight="9" orient="auto"><path d="M1 1l10 5-10 5z" fill="#465566"/></marker>
+    <style>
+      text{font-family:Pretendard,"Noto Sans KR","Apple SD Gothic Neo",sans-serif;fill:#101a35}.heading{font-size:37px;font-weight:800}.subheading{font-size:21px;font-weight:500;fill:#45566e}.panel-title{font-size:31px;font-weight:800}.api{font-size:22px;font-weight:700}.step-title{font-size:22px;font-weight:800}.body{font-size:18px;font-weight:500;fill:#2b405d}.small{font-size:16px;font-weight:600;fill:#465972}.label{font-size:17px;font-weight:700}.num{font-size:19px;font-weight:800;fill:#fff}.arrow{fill:none;stroke:#465566;stroke-width:4;stroke-linecap:round;stroke-linejoin:round;marker-end:url(#arrow)}
+    </style>
+  </defs>
+  <rect width="1600" height="900" fill="#fff"/>
+  <text x="65" y="60" class="heading">현재 기기 로그아웃과 전체 로그아웃은 무엇이 다를까요?</text>
+  <text x="65" y="96" class="subheading">두 API 모두 Refresh Session을 폐기하지만, 사용자를 식별하는 토큰과 DB에서 삭제하는 범위가 다릅니다.</text>
+
+  <!-- 현재 기기 로그아웃 -->
+  <g filter="url(#soft)">
+    <rect x="55" y="135" width="720" height="570" rx="25" fill="url(#blue)" stroke="#3884e8" stroke-width="3"/>
+    <circle cx="103" cy="185" r="25" fill="#307bdd"/><text x="103" y="193" text-anchor="middle" class="num">1</text>
+    <text x="145" y="195" class="panel-title" fill="#2267bf">현재 기기 로그아웃</text>
+    <rect x="480" y="160" width="252" height="52" rx="19" fill="#fff" stroke="#86b5f2"/><text x="606" y="193" text-anchor="middle" class="api" fill="#225fae">POST /api/auth/logout</text>
+
+    <!-- 입력 -->
+    <rect x="91" y="248" width="185" height="170" rx="19" fill="#fff" stroke="#8ab8f1" stroke-width="2"/>
+    <circle cx="118" cy="276" r="17" fill="#3d84df"/><text x="118" y="282" text-anchor="middle" class="num">1</text>
+    <path d="M154 283a27 27 0 1034 36c-16 1-24-13-18-26-8 1-14-3-16-10z" fill="none" stroke="#2874d0" stroke-width="3"/><circle cx="156" cy="314" r="3" fill="#2874d0"/><circle cx="169" cy="326" r="3" fill="#2874d0"/>
+    <text x="184" y="354" text-anchor="middle" class="step-title">Refresh Token</text>
+    <text x="184" y="384" text-anchor="middle" class="body">쿠키 원문</text>
+    <text x="184" y="408" text-anchor="middle" class="small">Access Token 불필요</text>
+    <path d="M284 333h54" class="arrow"/>
+
+    <!-- 해시 -->
+    <rect x="349" y="248" width="155" height="170" rx="19" fill="#fff" stroke="#8ab8f1" stroke-width="2"/>
+    <circle cx="376" cy="276" r="17" fill="#3d84df"/><text x="376" y="282" text-anchor="middle" class="num">2</text>
+    <path d="M408 293c-14 0-21 11-18 23m18-14c-8 0-11 7-9 15m9-25c16 0 23 15 16 30m-16-20c9 0 10 10 6 18m-17 14c7-4 9-8 8-15" fill="none" stroke="#2874d0" stroke-width="3" stroke-linecap="round"/>
+    <text x="426" y="354" text-anchor="middle" class="step-title">SHA-256</text>
+    <text x="426" y="384" text-anchor="middle" class="body">tokenHash 생성</text>
+    <path d="M512 333h54" class="arrow"/>
+
+    <!-- DB 한 개 삭제 -->
+    <rect x="577" y="248" width="160" height="170" rx="19" fill="#fff" stroke="#8ab8f1" stroke-width="2"/>
+    <circle cx="604" cy="276" r="17" fill="#3d84df"/><text x="604" y="282" text-anchor="middle" class="num">3</text>
+    <ellipse cx="657" cy="293" rx="26" ry="9" fill="none" stroke="#2874d0" stroke-width="3"/><path d="M631 293v46c0 13 52 13 52 0v-46m-52 15c0 13 52 13 52 0m-52 15c0 13 52 13 52 0" fill="none" stroke="#2874d0" stroke-width="3"/><path d="M692 301l24 24m0-24l-24 24" stroke="#e04c43" stroke-width="4" stroke-linecap="round"/>
+    <text x="657" y="365" text-anchor="middle" class="step-title">Session 1개</text>
+    <text x="657" y="395" text-anchor="middle" class="body">현재 토큰만 삭제</text>
+
+    <path d="M660 426v44h-235" class="arrow"/>
+    <rect x="116" y="482" width="546" height="76" rx="19" fill="#f3f8ff" stroke="#a8c8f2" stroke-width="2"/>
+    <path d="M151 505a20 20 0 1026 26c-13 1-19-10-14-20-6 1-11-3-12-6z" fill="none" stroke="#2d76ce" stroke-width="3"/><path d="M144 498l38 42" stroke="#dc4f47" stroke-width="3"/>
+    <text x="205" y="516" class="step-title">현재 브라우저 쿠키 만료</text>
+    <text x="205" y="544" class="body">다른 기기의 Session은 유지</text>
+    <rect x="255" y="589" width="320" height="65" rx="22" fill="#fff" stroke="#69a2e7" stroke-width="2"/><text x="415" y="630" text-anchor="middle" class="step-title" fill="#225fae">204 No Content</text>
+  </g>
+
+  <!-- 전체 로그아웃 -->
+  <g filter="url(#soft)">
+    <rect x="825" y="135" width="720" height="570" rx="25" fill="url(#purple)" stroke="#7756c9" stroke-width="3"/>
+    <circle cx="873" cy="185" r="25" fill="#7453c4"/><text x="873" y="193" text-anchor="middle" class="num">2</text>
+    <text x="915" y="195" class="panel-title" fill="#6544b0">전체 로그아웃</text>
+    <rect x="1242" y="160" width="260" height="52" rx="19" fill="#fff" stroke="#b39ce7"/><text x="1372" y="193" text-anchor="middle" class="api" fill="#6143a4">POST /api/auth/logout-all</text>
+
+    <!-- 입력 -->
+    <rect x="861" y="248" width="185" height="170" rx="19" fill="#fff" stroke="#b7a1e9" stroke-width="2"/>
+    <circle cx="888" cy="276" r="17" fill="#7656c8"/><text x="888" y="282" text-anchor="middle" class="num">1</text>
+    <path d="M930 284h49l12 12v38h-61z" fill="none" stroke="#694ab6" stroke-width="3"/><path d="M979 284v13h12m-46 13h31m-31 11h24" stroke="#694ab6" stroke-width="3"/>
+    <text x="954" y="354" text-anchor="middle" class="step-title">Access Token</text>
+    <text x="954" y="384" text-anchor="middle" class="body">Bearer JWT</text>
+    <text x="954" y="408" text-anchor="middle" class="small">유효한 토큰 필요</text>
+    <path d="M1054 333h54" class="arrow"/>
+
+    <!-- authenticate -->
+    <rect x="1119" y="248" width="155" height="170" rx="19" fill="#fff" stroke="#b7a1e9" stroke-width="2"/>
+    <circle cx="1146" cy="276" r="17" fill="#7656c8"/><text x="1146" y="282" text-anchor="middle" class="num">2</text>
+    <path d="M1172 285c15 9 26 8 40 0v23c0 15-8 26-20 32-12-6-20-17-20-32z" fill="none" stroke="#694ab6" stroke-width="3"/><path d="M1182 309l8 8 13-18" fill="none" stroke="#694ab6" stroke-width="3"/>
+    <text x="1196" y="359" text-anchor="middle" class="step-title">authenticate</text>
+    <text x="1196" y="390" text-anchor="middle" class="body">payload.sub 읽기</text>
+    <path d="M1282 333h54" class="arrow"/>
+
+    <!-- DB 전체 삭제 -->
+    <rect x="1347" y="248" width="160" height="170" rx="19" fill="#fff" stroke="#b7a1e9" stroke-width="2"/>
+    <circle cx="1374" cy="276" r="17" fill="#7656c8"/><text x="1374" y="282" text-anchor="middle" class="num">3</text>
+    <ellipse cx="1427" cy="293" rx="26" ry="9" fill="none" stroke="#694ab6" stroke-width="3"/><path d="M1401 293v46c0 13 52 13 52 0v-46m-52 15c0 13 52 13 52 0m-52 15c0 13 52 13 52 0" fill="none" stroke="#694ab6" stroke-width="3"/><path d="M1462 301l24 24m0-24l-24 24" stroke="#e04c43" stroke-width="4" stroke-linecap="round"/>
+    <text x="1427" y="365" text-anchor="middle" class="step-title">Session 전체</text>
+    <text x="1427" y="395" text-anchor="middle" class="body">사용자 기준 모두 삭제</text>
+
+    <path d="M1430 426v44h-235" class="arrow"/>
+    <rect x="886" y="482" width="546" height="76" rx="19" fill="#f8f5ff" stroke="#c1afe9" stroke-width="2"/>
+    <g fill="none" stroke="#6748b2" stroke-width="3"><rect x="920" y="502" width="28" height="39" rx="3"/><rect x="958" y="502" width="28" height="39" rx="3"/><rect x="996" y="502" width="28" height="39" rx="3"/></g><path d="M916 497l113 49" stroke="#dc4f47" stroke-width="4"/>
+    <text x="1060" y="516" class="step-title">모든 기기의 재발급 차단</text>
+    <text x="1060" y="544" class="body">다른 기기 쿠키가 남아도 사용할 수 없음</text>
+    <rect x="1025" y="589" width="320" height="65" rx="22" fill="#fff" stroke="#9b7fd9" stroke-width="2"/><text x="1185" y="630" text-anchor="middle" class="step-title" fill="#6041a3">204 No Content</text>
+  </g>
+
+  <!-- 핵심 비교 -->
+  <g filter="url(#soft)">
+    <rect x="55" y="744" width="1490" height="111" rx="22" fill="url(#green)" stroke="#8bcda3" stroke-width="2"/>
+    <text x="90" y="781" class="label" fill="#25733e">핵심 차이</text>
+    <path d="M200 760v78" stroke="#bbd9c5" stroke-width="2"/>
+    <text x="235" y="784" class="step-title" fill="#23643a">logout</text><text x="335" y="784" class="body">Refresh Token 해시로 현재 Session 하나 삭제</text>
+    <text x="235" y="825" class="step-title" fill="#6041a3">logout-all</text><text x="370" y="825" class="body">Access Token의 sub로 사용자 Session 전체 삭제</text>
+  </g>
+</svg>
