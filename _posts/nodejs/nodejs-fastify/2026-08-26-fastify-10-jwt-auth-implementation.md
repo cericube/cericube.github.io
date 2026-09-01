@@ -20,6 +20,8 @@ toc:
     title: "5. 로그아웃과 전체 흐름 확인"
 ---
 
+📂 **[[GitHub 코드 보러가기]](https://github.com/cericube/nodejs-workbook/tree/main/fastify-basics){: target="_blank" rel="noopener noreferrer" }**  
+
 ## 1. JWT 인증 구현 준비 {#session-01}
 
  `fastify-basics` 프로젝트에서 구현한 인증 api 흐름은 다음과 같습니다.  

@@ -20,6 +20,8 @@ toc:
     title: "5. 로그아웃 API에서 Refresh Session 폐기"
 ---
 
+📂 **[[GitHub 코드 보러가기]](https://github.com/cericube/nodejs-workbook/tree/main/fastify-basics){: target="_blank" rel="noopener noreferrer" }**  
+
 ## 1. JWT 인증에 사용하는 두 토큰 이해 {#session-01}
 
 다양한 클라이언트가 공통 API를 사용할 때 활용할 수 있는 JWT 인증과 인가 흐름을 알아봅니다.  

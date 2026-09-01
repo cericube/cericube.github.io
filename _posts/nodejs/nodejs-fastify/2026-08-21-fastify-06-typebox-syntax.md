@@ -20,6 +20,8 @@ toc:
     title: "5. TypeScript 타입 추출(Static)"
 ---
 
+📂 **[[GitHub 코드 보러가기]](https://github.com/cericube/nodejs-workbook/tree/main/fastify-basics){: target="_blank" rel="noopener noreferrer" }**  
+
 ## 1. 기본 타입과 Object 스키마 {#session-01}
 
 가장 기본이 되는 원시 타입과 데이터의 뼈대가 되는 Object 구조를 정의합니다.  

@@ -18,6 +18,8 @@ toc:
     title: "4. 운영 환경 구성과 JWT 방식 선택"
 ---
 
+📂 **[[GitHub 코드 보러가기]](https://github.com/cericube/nodejs-workbook/tree/main/fastify-basics){: target="_blank" rel="noopener noreferrer" }**  
+
 ## 1. Server Session과 HttpOnly Cookie 이해 {#session-01}
 
 웹 서비스의 로그인 상태는 Server Session이나 JWT 같은 여러 방식으로 관리할 수 있습니다.  

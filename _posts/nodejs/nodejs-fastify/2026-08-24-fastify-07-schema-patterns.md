@@ -18,6 +18,8 @@ toc:
     title: "4. 오류 응답 표준화 & Route 스키마 조합"
 ---
 
+📂 **[[GitHub 코드 보러가기]](https://github.com/cericube/nodejs-workbook/tree/main/fastify-basics){: target="_blank" rel="noopener noreferrer" }**  
+
 ## 1. Prisma 모델과 기본 유효성 검증 패턴 {#session-01}
 
 현재 Prisma 스키마에는 `User`, `Session`, `Post`, `PostAttachment`, `PostLike` 모델이 정의되어 있습니다.  
