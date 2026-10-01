@@ -274,7 +274,7 @@ name: redis-cluster
 services:
   redis-node1:
     # 같은 실습 환경을 재현할 수 있도록 Redis 7.2 패치 버전을 고정합니다.
-    image: redis:7.2.15
+    image: redis:7.2
     container_name: redis-node1
     restart: unless-stopped
 
@@ -289,7 +289,7 @@ services:
         ipv4_address: 172.28.0.11
 
   redis-node2:
-    image: redis:7.2.15
+    image: redis:7.2
     container_name: redis-node2
     restart: unless-stopped
 
@@ -304,7 +304,7 @@ services:
         ipv4_address: 172.28.0.12
 
   redis-node3:
-    image: redis:7.2.15
+    image: redis:7.2
     container_name: redis-node3
     restart: unless-stopped
 
@@ -319,7 +319,7 @@ services:
         ipv4_address: 172.28.0.13
 
   redis-node4:
-    image: redis:7.2.15
+    image: redis:7.2
     container_name: redis-node4
     restart: unless-stopped
 
@@ -334,7 +334,7 @@ services:
         ipv4_address: 172.28.0.14
 
   redis-node5:
-    image: redis:7.2.15
+    image: redis:7.2
     container_name: redis-node5
     restart: unless-stopped
 
@@ -349,7 +349,7 @@ services:
         ipv4_address: 172.28.0.15
 
   redis-node6:
-    image: redis:7.2.15
+    image: redis:7.2
     container_name: redis-node6
     restart: unless-stopped
 
@@ -430,12 +430,12 @@ sudo docker compose ps
 
 ```text
 NAME          IMAGE          STATUS
-redis-node1   redis:7.2.15   Up
-redis-node2   redis:7.2.15   Up
-redis-node3   redis:7.2.15   Up
-redis-node4   redis:7.2.15   Up
-redis-node5   redis:7.2.15   Up
-redis-node6   redis:7.2.15   Up
+redis-node1   redis:7.2   Up
+redis-node2   redis:7.2   Up
+redis-node3   redis:7.2   Up
+redis-node4   redis:7.2   Up
+redis-node5   redis:7.2   Up
+redis-node6   redis:7.2   Up
 ```
 
 각 Redis 프로세스와 Cluster 설정을 확인합니다.  

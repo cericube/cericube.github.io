@@ -390,7 +390,7 @@ name: redis-sentinel
 services:
   redis-master:
     # 같은 실습 환경을 재현할 수 있도록 패치 버전까지 고정합니다.
-    image: redis:7.2.15
+    image: redis:7.2
 
     # 컨테이너 이름을 고정하고 사용자가 중지하지 않는 한 장애나 재부팅 후 다시 시작합니다.
     container_name: redis-master
@@ -415,7 +415,7 @@ services:
 
   # 두 Replica는 Primary와 같은 이미지와 실행 옵션을 사용하고 포트, 설정, 데이터 Volume과 IP만 구분합니다.
   redis-replica1:
-    image: redis:7.2.15
+    image: redis:7.2
     container_name: redis-replica1
     restart: unless-stopped
 
@@ -437,7 +437,7 @@ services:
       - redis-master
 
   redis-replica2:
-    image: redis:7.2.15
+    image: redis:7.2
     container_name: redis-replica2
     restart: unless-stopped
 
@@ -459,7 +459,7 @@ services:
 
   sentinel1:
     # Redis 이미지에 포함된 Sentinel 실행 파일을 사용합니다.
-    image: redis:7.2.15
+    image: redis:7.2
     container_name: redis-sentinel1
     restart: unless-stopped
 
@@ -482,7 +482,7 @@ services:
       - redis-replica2
 
   sentinel2:
-    image: redis:7.2.15
+    image: redis:7.2
     container_name: redis-sentinel2
     restart: unless-stopped
 
@@ -501,7 +501,7 @@ services:
       - redis-replica2
 
   sentinel3:
-    image: redis:7.2.15
+    image: redis:7.2
     container_name: redis-sentinel3
     restart: unless-stopped
 
@@ -535,7 +535,7 @@ volumes:
 ```
 
 Redis 설정 파일은 읽기 전용으로 연결하고 Sentinel 설정 디렉터리는 쓰기 가능하게 연결합니다.  
-Redis 7.2.15의 Sentinel은 역할을 바꿀 Redis에 `REPLICAOF`와 `CONFIG REWRITE`를 함께 요청합니다.  
+Redis 7.2의 Sentinel은 역할을 바꿀 Redis에 `REPLICAOF`와 `CONFIG REWRITE`를 함께 요청합니다.  
 이 구성에서는 `REPLICAOF`에 따른 역할 변경은 실행 중인 Redis에 적용되지만, `CONFIG REWRITE`는 읽기 전용 `redis.conf`를 갱신하지 못합니다.  
 
 Redis 컨테이너가 재시작되면 설정 파일에 작성된 초기 역할로 먼저 실행될 수 있습니다.  

@@ -1,0 +1,116 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="540" height="470" viewBox="0 0 540 470" role="img" aria-labelledby="title desc">
+<title id="title">100개 API 요청의 응답 시간 백분위수</title>
+<desc id="desc">응답 시간순으로 정렬한 100개 요청입니다. 앞의 50개는 80밀리초 이내, 다음 45개는 80밀리초 초과 320밀리초 이내, 다음 4개는 320밀리초 초과 1.8초 이내, 마지막 1개는 1.8초를 초과합니다.</desc>
+<rect width="540" height="470" rx="20" fill="#f8fafc"/>
+<text x="270" y="33" text-anchor="middle" font-size="19" font-weight="700" fill="#0f172a" font-family="sans-serif">응답 시간순으로 정렬한 요청 100개</text>
+<text x="125" y="59" font-size="14" fill="#475569" font-family="sans-serif">빠름 ↘</text>
+<text x="415" y="353" text-anchor="end" font-size="14" fill="#475569" font-family="sans-serif">↘ 느림</text>
+<rect x="125" y="66" width="24" height="24" rx="5" fill="#2563eb"/>
+<rect x="154" y="66" width="24" height="24" rx="5" fill="#2563eb"/>
+<rect x="183" y="66" width="24" height="24" rx="5" fill="#2563eb"/>
+<rect x="212" y="66" width="24" height="24" rx="5" fill="#2563eb"/>
+<rect x="241" y="66" width="24" height="24" rx="5" fill="#2563eb"/>
+<rect x="270" y="66" width="24" height="24" rx="5" fill="#2563eb"/>
+<rect x="299" y="66" width="24" height="24" rx="5" fill="#2563eb"/>
+<rect x="328" y="66" width="24" height="24" rx="5" fill="#2563eb"/>
+<rect x="357" y="66" width="24" height="24" rx="5" fill="#2563eb"/>
+<rect x="386" y="66" width="24" height="24" rx="5" fill="#2563eb"/>
+<rect x="125" y="95" width="24" height="24" rx="5" fill="#2563eb"/>
+<rect x="154" y="95" width="24" height="24" rx="5" fill="#2563eb"/>
+<rect x="183" y="95" width="24" height="24" rx="5" fill="#2563eb"/>
+<rect x="212" y="95" width="24" height="24" rx="5" fill="#2563eb"/>
+<rect x="241" y="95" width="24" height="24" rx="5" fill="#2563eb"/>
+<rect x="270" y="95" width="24" height="24" rx="5" fill="#2563eb"/>
+<rect x="299" y="95" width="24" height="24" rx="5" fill="#2563eb"/>
+<rect x="328" y="95" width="24" height="24" rx="5" fill="#2563eb"/>
+<rect x="357" y="95" width="24" height="24" rx="5" fill="#2563eb"/>
+<rect x="386" y="95" width="24" height="24" rx="5" fill="#2563eb"/>
+<rect x="125" y="124" width="24" height="24" rx="5" fill="#2563eb"/>
+<rect x="154" y="124" width="24" height="24" rx="5" fill="#2563eb"/>
+<rect x="183" y="124" width="24" height="24" rx="5" fill="#2563eb"/>
+<rect x="212" y="124" width="24" height="24" rx="5" fill="#2563eb"/>
+<rect x="241" y="124" width="24" height="24" rx="5" fill="#2563eb"/>
+<rect x="270" y="124" width="24" height="24" rx="5" fill="#2563eb"/>
+<rect x="299" y="124" width="24" height="24" rx="5" fill="#2563eb"/>
+<rect x="328" y="124" width="24" height="24" rx="5" fill="#2563eb"/>
+<rect x="357" y="124" width="24" height="24" rx="5" fill="#2563eb"/>
+<rect x="386" y="124" width="24" height="24" rx="5" fill="#2563eb"/>
+<rect x="125" y="153" width="24" height="24" rx="5" fill="#2563eb"/>
+<rect x="154" y="153" width="24" height="24" rx="5" fill="#2563eb"/>
+<rect x="183" y="153" width="24" height="24" rx="5" fill="#2563eb"/>
+<rect x="212" y="153" width="24" height="24" rx="5" fill="#2563eb"/>
+<rect x="241" y="153" width="24" height="24" rx="5" fill="#2563eb"/>
+<rect x="270" y="153" width="24" height="24" rx="5" fill="#2563eb"/>
+<rect x="299" y="153" width="24" height="24" rx="5" fill="#2563eb"/>
+<rect x="328" y="153" width="24" height="24" rx="5" fill="#2563eb"/>
+<rect x="357" y="153" width="24" height="24" rx="5" fill="#2563eb"/>
+<rect x="386" y="153" width="24" height="24" rx="5" fill="#2563eb"/>
+<rect x="125" y="182" width="24" height="24" rx="5" fill="#2563eb"/>
+<rect x="154" y="182" width="24" height="24" rx="5" fill="#2563eb"/>
+<rect x="183" y="182" width="24" height="24" rx="5" fill="#2563eb"/>
+<rect x="212" y="182" width="24" height="24" rx="5" fill="#2563eb"/>
+<rect x="241" y="182" width="24" height="24" rx="5" fill="#2563eb"/>
+<rect x="270" y="182" width="24" height="24" rx="5" fill="#2563eb"/>
+<rect x="299" y="182" width="24" height="24" rx="5" fill="#2563eb"/>
+<rect x="328" y="182" width="24" height="24" rx="5" fill="#2563eb"/>
+<rect x="357" y="182" width="24" height="24" rx="5" fill="#2563eb"/>
+<rect x="386" y="182" width="24" height="24" rx="5" fill="#2563eb"/>
+<rect x="125" y="211" width="24" height="24" rx="5" fill="#0d9488"/>
+<rect x="154" y="211" width="24" height="24" rx="5" fill="#0d9488"/>
+<rect x="183" y="211" width="24" height="24" rx="5" fill="#0d9488"/>
+<rect x="212" y="211" width="24" height="24" rx="5" fill="#0d9488"/>
+<rect x="241" y="211" width="24" height="24" rx="5" fill="#0d9488"/>
+<rect x="270" y="211" width="24" height="24" rx="5" fill="#0d9488"/>
+<rect x="299" y="211" width="24" height="24" rx="5" fill="#0d9488"/>
+<rect x="328" y="211" width="24" height="24" rx="5" fill="#0d9488"/>
+<rect x="357" y="211" width="24" height="24" rx="5" fill="#0d9488"/>
+<rect x="386" y="211" width="24" height="24" rx="5" fill="#0d9488"/>
+<rect x="125" y="240" width="24" height="24" rx="5" fill="#0d9488"/>
+<rect x="154" y="240" width="24" height="24" rx="5" fill="#0d9488"/>
+<rect x="183" y="240" width="24" height="24" rx="5" fill="#0d9488"/>
+<rect x="212" y="240" width="24" height="24" rx="5" fill="#0d9488"/>
+<rect x="241" y="240" width="24" height="24" rx="5" fill="#0d9488"/>
+<rect x="270" y="240" width="24" height="24" rx="5" fill="#0d9488"/>
+<rect x="299" y="240" width="24" height="24" rx="5" fill="#0d9488"/>
+<rect x="328" y="240" width="24" height="24" rx="5" fill="#0d9488"/>
+<rect x="357" y="240" width="24" height="24" rx="5" fill="#0d9488"/>
+<rect x="386" y="240" width="24" height="24" rx="5" fill="#0d9488"/>
+<rect x="125" y="269" width="24" height="24" rx="5" fill="#0d9488"/>
+<rect x="154" y="269" width="24" height="24" rx="5" fill="#0d9488"/>
+<rect x="183" y="269" width="24" height="24" rx="5" fill="#0d9488"/>
+<rect x="212" y="269" width="24" height="24" rx="5" fill="#0d9488"/>
+<rect x="241" y="269" width="24" height="24" rx="5" fill="#0d9488"/>
+<rect x="270" y="269" width="24" height="24" rx="5" fill="#0d9488"/>
+<rect x="299" y="269" width="24" height="24" rx="5" fill="#0d9488"/>
+<rect x="328" y="269" width="24" height="24" rx="5" fill="#0d9488"/>
+<rect x="357" y="269" width="24" height="24" rx="5" fill="#0d9488"/>
+<rect x="386" y="269" width="24" height="24" rx="5" fill="#0d9488"/>
+<rect x="125" y="298" width="24" height="24" rx="5" fill="#0d9488"/>
+<rect x="154" y="298" width="24" height="24" rx="5" fill="#0d9488"/>
+<rect x="183" y="298" width="24" height="24" rx="5" fill="#0d9488"/>
+<rect x="212" y="298" width="24" height="24" rx="5" fill="#0d9488"/>
+<rect x="241" y="298" width="24" height="24" rx="5" fill="#0d9488"/>
+<rect x="270" y="298" width="24" height="24" rx="5" fill="#0d9488"/>
+<rect x="299" y="298" width="24" height="24" rx="5" fill="#0d9488"/>
+<rect x="328" y="298" width="24" height="24" rx="5" fill="#0d9488"/>
+<rect x="357" y="298" width="24" height="24" rx="5" fill="#0d9488"/>
+<rect x="386" y="298" width="24" height="24" rx="5" fill="#0d9488"/>
+<rect x="125" y="327" width="24" height="24" rx="5" fill="#0d9488"/>
+<rect x="154" y="327" width="24" height="24" rx="5" fill="#0d9488"/>
+<rect x="183" y="327" width="24" height="24" rx="5" fill="#0d9488"/>
+<rect x="212" y="327" width="24" height="24" rx="5" fill="#0d9488"/>
+<rect x="241" y="327" width="24" height="24" rx="5" fill="#0d9488"/>
+<rect x="270" y="327" width="24" height="24" rx="5" fill="#f59e0b"/>
+<rect x="299" y="327" width="24" height="24" rx="5" fill="#f59e0b"/>
+<rect x="328" y="327" width="24" height="24" rx="5" fill="#f59e0b"/>
+<rect x="357" y="327" width="24" height="24" rx="5" fill="#f59e0b"/>
+<rect x="386" y="327" width="24" height="24" rx="5" fill="#e11d48"/>
+<rect x="32" y="383" width="20" height="20" rx="4" fill="#2563eb"/>
+<text x="61" y="399" font-size="16" fill="#1e293b" font-family="sans-serif">50개 · 80ms 이내</text>
+<rect x="280" y="383" width="20" height="20" rx="4" fill="#0d9488"/>
+<text x="309" y="399" font-size="16" fill="#1e293b" font-family="sans-serif">45개 · 80~320ms</text>
+<rect x="32" y="426" width="20" height="20" rx="4" fill="#f59e0b"/>
+<text x="61" y="442" font-size="16" fill="#1e293b" font-family="sans-serif">4개 · 320ms~1.8s</text>
+<rect x="280" y="426" width="20" height="20" rx="4" fill="#e11d48"/>
+<text x="309" y="442" font-size="16" fill="#1e293b" font-family="sans-serif">1개 · 1.8s 초과</text>
+</svg>

@@ -80,7 +80,7 @@ cd /home/ubuntu/blog-workspaces/nodejs-workbook/fastify-basics
 npm install fastify@5.6.2 fastify-plugin@6.0.0
 
 # prisma 로 미리 설치합니다.
- npm install -D @types/better-sqlite
+ npm install -D @types/better-sqlite3
  npm install @prisma/adapter-better-sqlite3@7 better-sqlite3
 
  npm install -D prisma@7
