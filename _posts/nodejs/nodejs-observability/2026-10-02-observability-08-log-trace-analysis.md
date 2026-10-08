@@ -18,6 +18,8 @@ toc:
     title: "4. Grafana Explore에서 Trace 기반 장애 분석"
 ---
 
+📂 **[[GitHub 코드 보러가기]](https://github.com/cericube/nodejs-workbook/tree/main/observability-basics){: target="_blank" rel="noopener noreferrer" }**  
+
 앞선 실습에서는 OpenTelemetry와 Jaeger로 Trace를 분석하고, Prometheus와 Grafana로 HTTP·Runtime Metrics를 관찰했습니다.  
 이번에는 이 환경에 Log 수집 파이프라인을 추가하고 Grafana를 세 가지 관측 신호의 공통 분석 화면으로 사용합니다.  
 

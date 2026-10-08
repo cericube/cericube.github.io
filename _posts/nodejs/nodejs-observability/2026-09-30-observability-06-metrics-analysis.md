@@ -22,6 +22,8 @@ toc:
     title: "6. HTTP와 Runtime Metrics 연계 분석"
 ---
 
+📂 **[[GitHub 코드 보러가기]](https://github.com/cericube/nodejs-workbook/tree/main/observability-basics){: target="_blank" rel="noopener noreferrer" }**  
+
 이번 글에서는 Prometheus가 값을 정상적으로 수집하는지 확인하고, PromQL을 이용해 서비스 상태를 분석합니다.  
 실무에서는 Metric 하나만 보고 문제의 원인을 판단하지 않습니다.  
 먼저 HTTP Request Rate, Error Rate와 응답 시간을 확인하고, 같은 시간대의 CPU, Memory, GC와 Event Loop 상태를 함께 비교합니다.  

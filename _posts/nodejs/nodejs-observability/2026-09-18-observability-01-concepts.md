@@ -18,6 +18,8 @@ toc:
     title: "4. 장애 감지와 원인 추적의 차이"
 ---
 
+📂 **[[GitHub 코드 보러가기]](https://github.com/cericube/nodejs-workbook/tree/main/observability-basics){: target="_blank" rel="noopener noreferrer" }**  
+
 ## 1. Observability란 무엇인가 {#session-01}
 
 웹 서비스를 운영하다 보면 개발 환경에서는 발견하지 못했던 문제가 발생합니다.  

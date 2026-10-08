@@ -18,6 +18,8 @@ toc:
     title: "4. Node.js Runtime Metrics 수집 구현"
 ---
 
+📂 **[[GitHub 코드 보러가기]](https://github.com/cericube/nodejs-workbook/tree/main/observability-basics){: target="_blank" rel="noopener noreferrer" }**  
+
 Trace가 요청 한 건의 내부 실행 흐름을 보여 준다면 Metrics는 여러 요청과 Runtime 상태를 시간의 흐름에 따라 집계해서 보여 줍니다.  
 이번 글에서는 Fastify 요청의 수와 응답 시간을 직접 기록하고, Node.js Process와 Runtime 상태를 함께 수집합니다.  
 수집한 값을 Prometheus가 읽을 수 있도록 `/metrics` endpoint에 노출하는 과정까지 살펴봅니다.  

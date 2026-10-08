@@ -18,6 +18,8 @@ toc:
     title: "4. 데이터를 분석하는 Jaeger와 Grafana"
 ---
 
+📂 **[[GitHub 코드 보러가기]](https://github.com/cericube/nodejs-workbook/tree/main/observability-basics){: target="_blank" rel="noopener noreferrer" }**  
+
 ## 1. Observability 데이터의 흐름 {#session-01}
 
 Observability를 구성하려면 애플리케이션에서 발생하는 **Logs, Metrics, Traces를 수집하고 저장한 뒤 조회할 수 있는 구조**가 필요합니다.  

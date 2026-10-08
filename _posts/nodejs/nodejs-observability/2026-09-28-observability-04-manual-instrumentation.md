@@ -18,6 +18,8 @@ toc:
     title: "4. 여러 Query의 실행 흐름과 N+1 구분"
 ---
 
+📂 **[[GitHub 코드 보러가기]](https://github.com/cericube/nodejs-workbook/tree/main/observability-basics){: target="_blank" rel="noopener noreferrer" }**  
+
 `HttpInstrumentation`, `FastifyOtelInstrumentation`, `PrismaInstrumentation`을 사용해 HTTP 요청부터 DB 작업까지 자동으로 계측할 수 있습니다.  
 자동 계측만으로도 요청 시간, Route 처리 구간, Prisma operation과 실제 DB Query를 확인할 수 있습니다.  
 

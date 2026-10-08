@@ -18,6 +18,8 @@ toc:
     title: "4. PrismaInstrumentation으로 DB 구간 계측과 Trace 확인"
 ---
 
+📂 **[[GitHub 코드 보러가기]](https://github.com/cericube/nodejs-workbook/tree/main/observability-basics){: target="_blank" rel="noopener noreferrer" }**  
+
 웹 API의 응답이 느려졌을 때 전체 응답 시간만 확인해서는 어느 구간에서 시간이 오래 걸렸는지 알기 어렵습니다.  
 HTTP 요청을 받은 구간, Fastify가 Route를 실행한 구간, Prisma가 데이터베이스 작업을 수행한 구간을 함께 살펴봐야 원인을 좁힐 수 있습니다.  
 

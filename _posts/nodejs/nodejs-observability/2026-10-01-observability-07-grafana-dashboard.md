@@ -20,6 +20,8 @@ toc:
     title: "5. Dashboard 운영과 장애 조사"
 ---
 
+📂 **[[GitHub 코드 보러가기]](https://github.com/cericube/nodejs-workbook/tree/main/observability-basics){: target="_blank" rel="noopener noreferrer" }**  
+
 6편에서 검증한 HTTP와 Node.js Runtime PromQL을 Grafana Panel에 배치해 운영 Dashboard를 구성합니다.  
 장애가 발생하면 다음 질문에 따라 서비스 영향과 원인을 위에서 아래로 좁혀 갑니다.  
 
