@@ -26,6 +26,6 @@
     - id: nodejs-redis
       name: "Redis 7.2"
     - id: nodejs-fastify
-      name: "Fastify 6" 
+      name: "Fastify 5" 
     - id: nodejs-observability
       name: "Observability"    
