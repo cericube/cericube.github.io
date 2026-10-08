@@ -22,7 +22,7 @@ Trace가 요청 한 건의 내부 실행 흐름을 보여 준다면 Metrics는 �
 이번 글에서는 Fastify 요청의 수와 응답 시간을 직접 기록하고, Node.js Process와 Runtime 상태를 함께 수집합니다.  
 수집한 값을 Prometheus가 읽을 수 있도록 `/metrics` endpoint에 노출하는 과정까지 살펴봅니다.  
 
-PromQL로 요청률과 Percentile을 계산하고 Grafana Dashboard에서 시각화하는 방법은 다음 6편에서 이어서 다룹니다.  
+PromQL로 요청률과 Percentile을 계산하는 방법은 다음 6편에서, Grafana Dashboard로 시각화하는 방법은 7편에서 이어서 다룹니다.  
 
 ## 1. 수집할 Metrics와 전체 흐름 {#session-01}
 
@@ -233,7 +233,7 @@ OTEL_SERVICE_NAME=observability-basics
 ```
 
 여기까지 구성하면 애플리케이션에서 HTTP와 Runtime Metrics를 수집해 `/metrics` endpoint로 노출할 준비가 끝납니다.  
-Prometheus, Grafana와 Jaeger 실행 환경을 구성하고 수집 결과를 분석하는 과정은 다음 6편에서 이어서 살펴봅니다.  
+Prometheus에서 수집 결과를 분석하는 과정은 다음 6편에서, Grafana로 시각화하고 Jaeger 조사로 이어 가는 과정은 7편에서 살펴봅니다.  
 
 ## 3. HTTP Metrics 수집 구현 {#session-03}
 
@@ -266,6 +266,10 @@ export const httpRequests = meter.createCounter('http_requests', {
 
 Counter는 요청이 완료될 때마다 `1`을 더합니다.  
 Prometheus 형식에서는 Counter 이름에 `_total` suffix가 붙으므로 `http_requests_total`로 조회합니다.  
+
+```text
+http_requests_total   //완료된 HTTP 요청의 전체 개수
+```
 
 ### 🟦 http_request_duration_seconds Histogram 정의
 
@@ -550,7 +554,7 @@ let previousCpuSample = takeCpuSample();
 // ObservableGauge는 값을 미리 쌓아 두지 않고 Metric을 읽을 때 콜백 함수로 현재 값을 가져옵니다.
 // 단위 `1`은 0.2처럼 별도의 단위가 없는 비율이라는 뜻입니다.
 const cpuUtilization = meter.createObservableGauge(
-  'process_cpu_utilization',
+  ' ',
   {
     description: 'Process CPU utilization since the previous observation',
     unit: '1',
@@ -699,4 +703,5 @@ OpenTelemetry의 점(`.`)은 Prometheus 형식에서 밑줄(`_`)로 바뀝니다
 | `nodejs_eventloop_*` | Event Loop 사용률과 Delay |
 
 이제 애플리케이션은 HTTP 요청과 Node.js Runtime 상태를 함께 노출합니다.  
-다음 6편에서는 Prometheus가 이 값을 정상적으로 수집하는지 확인하고, PromQL과 Grafana로 요청 Latency와 Runtime 변화를 같은 시간축에서 분석합니다.  
+다음 6편에서는 Prometheus가 이 값을 정상적으로 수집하는지 확인하고 PromQL로 요청 Latency와 Runtime 변화를 분석합니다.  
+7편에서는 같은 Query를 Grafana Dashboard에 배치해 HTTP와 Runtime Metrics를 같은 시간축에서 비교합니다.  

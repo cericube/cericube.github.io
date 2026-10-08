@@ -1,7 +1,7 @@
 ---
 layout: post
-title: "06. Prometheus와 Grafana로 Node.js Metrics 분석"
-description: "Prometheus에서 HTTP 요청률·에러율·Latency와 Node.js Runtime Metrics를 조회합니다. Grafana Dashboard에서 CPU·Memory·Heap·GC·Event Loop를 함께 시각화하고 이상 구간을 Jaeger Trace 분석으로 연결합니다."
+title: "06. Prometheus와 PromQL로 Node.js Metrics 분석"
+description: "OpenTelemetry로 수집한 HTTP와 Node.js Runtime Metrics를 Prometheus에서 검증하고 PromQL로 분석합니다. 요청률·에러율·응답 시간과 CPU·Memory·Heap·GC·Event Loop를 함께 살펴보고, 이상 징후를 발견했을 때 원인을 좁히고 대응하는 방법을 알아봅니다."
 category_id: nodejs-observability
 categories: [nodejs, nodejs-observability]
 series: observability
@@ -9,18 +9,33 @@ series_order: 06
 ai_assisted: true
 toc:
   - id: session-01
-    title: "1. Prometheus에서 Metrics 조회와 기본 분석"
+    title: "1. Prometheus 수집 상태와 Metric 확인"
   - id: session-02
-    title: "2. Histogram과 Request Latency 분석"
+    title: "2. HTTP Request Rate와 Error 분석"
   - id: session-03
-    title: "3. Grafana Dashboard 구성"
+    title: "3. HTTP Latency와 Percentile 분석"
   - id: session-04
-    title: "4. Metrics 종합 분석과 Trace 연계"
+    title: "4. Process CPU와 Memory 분석"
+  - id: session-05
+    title: "5. GC와 Event Loop 분석"
+  - id: session-06
+    title: "6. HTTP와 Runtime Metrics 연계 분석"
 ---
 
-5편에서는 Fastify HTTP 요청과 Node.js Runtime 상태를 OpenTelemetry Metrics로 수집하고 `/metrics` endpoint에 노출했습니다.  
-이번 글에서는 Prometheus로 수집 상태를 확인하고 PromQL로 요청률, 에러율과 Latency를 계산합니다.  
-Grafana에서는 HTTP와 Runtime Metrics를 같은 시간축에 배치하고, 이상 징후가 나타난 구간을 Jaeger Trace 분석으로 연결합니다.  
+이번 글에서는 Prometheus가 값을 정상적으로 수집하는지 확인하고, PromQL을 이용해 서비스 상태를 분석합니다.  
+실무에서는 Metric 하나만 보고 문제의 원인을 판단하지 않습니다.  
+먼저 HTTP Request Rate, Error Rate와 응답 시간을 확인하고, 같은 시간대의 CPU, Memory, GC와 Event Loop 상태를 함께 비교합니다.  
+
+이렇게 여러 Metric의 움직임을 연결해서 보면 문제가 다음 중 어디에 가까운지 범위를 좁힐 수 있습니다.  
+
+- 갑작스러운 트래픽 증가
+- 특정 API의 오류
+- Node.js Process 내부의 CPU 작업
+- Memory와 GC 문제
+- Event Loop 지연
+- DB 또는 외부 API 지연
+
+전체 분석 흐름은 다음과 같습니다.  
 
 ```text
 OpenTelemetry /metrics
@@ -29,17 +44,36 @@ OpenTelemetry /metrics
 Prometheus
         │ PromQL
         ▼
-Grafana Dashboard
-        │ 이상 시간대와 Route 확인
+HTTP Metrics 확인
+Request Rate → Error Rate → Latency
+        │
         ▼
-Jaeger Trace
+Route / Instance로 범위 좁히기
+        │
+        ▼
+Node.js Runtime Metrics 확인
+CPU → Memory → GC → Event Loop
+        │
+        ▼
+원인 가설
+        │
+        ▼
+Trace · Profile · Log로 확인
 ```
 
-## 1. Prometheus에서 Metrics 조회와 기본 분석 {#session-01}
+Prometheus Metrics는 **문제가 언제 발생했고 어느 영역과 관련 있는지 범위를 좁히는 데 사용하는 관측 정보**라고 생각하면 이해하기 쉽습니다.  
+Metric에서 이상 패턴을 찾은 뒤 실제 원인은 Trace, CPU Profile, Heap Snapshot과 Log를 이용해 확인합니다.  
+Grafana에 이번 글의 Query를 배치해 Dashboard를 구성하는 방법은 다음 7편에서 이어서 살펴봅니다.  
 
-### 🟦 Prometheus, Grafana와 Jaeger 실행 환경
+## 1. Prometheus 수집 상태와 Metric 확인 {#session-01}
 
-Node.js 애플리케이션은 Host에서 실행하고 Prometheus, Grafana와 Jaeger는 Docker Compose로 실행합니다.  
+PromQL 분석을 시작하기 전에 먼저 Prometheus가 Metrics를 정상적으로 수집하고 있는지 확인해야 합니다.  
+Query 결과가 없다고 해서 바로 애플리케이션 문제라고 판단하면 안 됩니다.  
+실제로는 Target 설정, Network 또는 Metric 이름이 잘못된 단순한 설정 문제일 수도 있기 때문입니다.  
+
+### 🟦 Prometheus 수집 환경
+
+이번 실습에서는 Node.js 애플리케이션은 Host에서 실행하고 Prometheus는 Docker Container에서 실행합니다.  
 
 ```text
 Host
@@ -47,45 +81,14 @@ Host
 └─ OpenTelemetry     :9464/metrics
 
 Docker Compose
-├─ Prometheus        :9090
-├─ Grafana           :3001
-└─ Jaeger            :16686, :4317, :4318
+└─ Prometheus        :9090
 ```
 
-`/home/ubuntu/runtimes/observability/docker-compose.metrics.yml`에 세 서비스를 구성합니다.  
-
-```yaml
-services:
-  prometheus:
-    image: prom/prometheus:v3.15.0
-    ports:
-      - '9090:9090'
-    volumes:
-      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
-    extra_hosts:
-      # Linux Container에서 Host의 :9464 endpoint에 접근합니다.
-      - 'host.docker.internal:host-gateway'
-
-  grafana:
-    image: grafana/grafana:13.2.2
-    ports:
-      - '3001:3000'
-    depends_on:
-      - prometheus
-      - jaeger
-
-  jaeger:
-    image: jaegertracing/jaeger:2.21.0
-    ports:
-      - '16686:16686'
-      - '4317:4317'
-      - '4318:4318'
-```
-
-Prometheus는 5초마다 Host의 Metrics endpoint를 읽습니다.  
+Prometheus는 5초마다 OpenTelemetry의 `/metrics` endpoint를 읽습니다.  
 
 ```yaml
 # /home/ubuntu/runtimes/observability/prometheus/prometheus.yml
+
 global:
   scrape_interval: 5s
 
@@ -93,72 +96,169 @@ scrape_configs:
   - job_name: observability-basics
     static_configs:
       - targets:
+          # Prometheus가 Host의 9464 포트에 접속해서 Metrics를 수집
           - host.docker.internal:9464
 ```
 
-`host.docker.internal`은 Container에서 Host를 가리키는 이름입니다.  
-Compose의 `extra_hosts`는 Linux 환경에서도 이 이름을 Docker Host의 Gateway 주소로 해석할 수 있게 합니다.  
+Linux에서 `host.docker.internal`을 사용하려면 Prometheus Container에 Host Gateway를 연결합니다.  
 
-### 🟦 서비스와 애플리케이션 실행
+```yaml
+# /home/ubuntu/runtimes/observability/docker-compose.metrics.yml
 
-Prometheus, Grafana와 Jaeger를 Docker Compose로 실행합니다.  
+services:
+  prometheus:
+    image: prom/prometheus:v3.15.0
+    ports:
+      - '9090:9090'
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus-data:/prometheus
+    # Linux에서도 컨테이너가 Host의 :9464 Metrics endpoint에 접근할 수 있게 합니다.
+    extra_hosts:
+      - 'host.docker.internal:host-gateway'
+    # restart: unless-stopped
+
+  grafana:
+    image: grafana/grafana:13.2.2
+    ports:
+      - '3001:3000'
+    volumes:
+      # Grafana의 Data Source, Dashboard, 사용자 설정 등을 유지합니다.
+      - grafana-data:/var/lib/grafana
+    depends_on:
+      - prometheus
+      - jaeger
+    # restart: unless-stopped
+
+  jaeger:
+    image: jaegertracing/jaeger:2.21.0
+    ports:
+      - '16686:16686' # Jaeger UI
+      - '4317:4317'   # OpenTelemetry OTLP gRPC
+      - '4318:4318'   # OpenTelemetry OTLP HTTP
+    # restart: unless-stopped
+
+volumes:
+  prometheus-data:
+  grafana-data:
+```
+
+Prometheus와 Node.js 애플리케이션을 각각 실행합니다.  
 
 ```bash
 cd /home/ubuntu/runtimes/observability
+
 docker compose -f docker-compose.metrics.yml up -d
-docker compose -f docker-compose.metrics.yml ps
 ```
-
-세 서비스의 기본 접속 주소는 다음과 같습니다.  
-
-| 도구 | 주소 | 역할 |
-| --- | --- | --- |
-| Prometheus | `http://localhost:9090` | Metrics 수집과 PromQL 조회 |
-| Grafana | `http://localhost:3001` | Metrics Dashboard 구성 |
-| Jaeger | `http://localhost:16686` | 요청별 Trace 조회 |
-
-애플리케이션도 별도 Terminal에서 실행합니다.  
 
 ```bash
 cd /home/ubuntu/blog-workspaces/nodejs-workbook/observability-basics
+
 npm run dev
 ```
 
-### 🟦 Prometheus Target과 수집 상태 확인
+### 🟦 `up`으로 Target 상태 확인
 
-Prometheus의 **Status → Target health** 화면에서 `observability-basics` Target을 확인합니다.  
-상태가 `UP`이면 Prometheus가 `host.docker.internal:9464/metrics`를 정상적으로 읽고 있다는 뜻입니다.  
-
+Prometheus의 **Status → Target health**에서 `observability-basics` Target이 `UP`인지 먼저 확인합니다.  
 ![Prometheus Target 상태 화면](/assets/images/nodejs/nodejs-observability/image-2026-09-29.png)
-
-Target이 `DOWN`이면 다음 순서로 범위를 좁힙니다.  
-
-1. Host에서 `http://localhost:9464/metrics`가 열리는지 확인합니다.  
-2. `npm run dev`가 `instrumentation.ts`를 먼저 불러오는지 확인합니다.  
-3. `prometheus.yml`의 Target이 `host.docker.internal:9464`인지 확인합니다.  
-4. Linux 환경에서 Compose의 `extra_hosts`가 설정되어 있는지 확인합니다.  
-
-Prometheus Expression Browser에서 `up`을 실행해도 수집 상태를 확인할 수 있습니다.  
+PromQL에서도 같은 상태를 확인할 수 있습니다.  
 
 ```promql
 up{job="observability-basics"}
 ```
 
-결과가 `1`이면 Scrape가 성공한 상태이고 `0`이면 Target에 연결하지 못한 상태입니다.  
+결과는 다음처럼 해석합니다.  
 
-### 🟦 HTTP Request Rate 분석
+| 값 | 의미 | 우선 확인할 내용 |
+| --- | --- | --- |
+| `1` | 마지막 Scrape에 성공했습니다. | 필요한 Metric이 실제로 들어오는지 확인합니다. |
+| `0` | Target은 있지만 마지막 Scrape에 실패했습니다. | 애플리케이션, `/metrics`, Network와 Target 설정을 확인합니다. |
+| 결과 없음 | 해당 label과 일치하는 Target이 없습니다. | `job` 이름과 `prometheus.yml` 적용 여부를 확인합니다. |
 
-Counter는 Process가 시작된 뒤의 누적 요청 수입니다.  
-현재 누적값보다 일정 시간 동안 증가한 속도를 보는 편이 서비스 상태를 해석하기 쉽습니다.  
+Scrape 자체가 느려지거나 수집되는 Sample 수가 갑자기 달라지는지도 확인할 수 있습니다.  
 
 ```promql
-sum(rate(http_requests_total[1m]))
+# 한 번 Metrics를 수집하는 데 걸린 시간
+scrape_duration_seconds{job="observability-basics"}
 ```
 
-`rate(...[1m])`은 최근 1분 동안 Counter가 초당 얼마나 증가했는지 계산합니다.  
-결과가 `12.5`라면 최근 1분의 변화량을 기준으로 초당 약 12.5건을 처리했다는 뜻입니다.  
+```promql
+# 한 번 Scrape할 때 Prometheus가 읽어온 Metric Sample 개수
+scrape_samples_scraped{job="observability-basics"}
+```
 
-Route별 요청률은 `route` label을 유지해서 집계합니다.  
+`scrape_duration_seconds`가 Scrape 주기인 5초에 가까워지면 Metrics 수집 자체가 밀릴 수 있습니다.  
+`scrape_samples_scraped`가 갑자기 줄었다면 애플리케이션이 일부 Metric을 더 이상 노출하지 않는지도 확인합니다.  
+
+### 🟦 실제 Metric 이름과 label 확인
+
+이번 글에서 사용할 주요 Metric은 다음과 같습니다.  
+
+| 영역 | Prometheus Metric | 주요 label |
+| --- | --- | --- |
+| HTTP 요청 수 | `http_requests_total` | `method`, `route`, `status_code`, `instance` |
+| HTTP 응답 시간 | `http_request_duration_seconds_bucket` | `method`, `route`, `status_code`, `le`, `instance` |
+| Process CPU | `process_cpu_utilization` | `instance` |
+| Process RSS | `process_resident_memory_bytes` | `instance` |
+| V8 Heap 사용량 | `v8js_memory_heap_used` | `v8js_heap_space_name`, `instance` |
+| V8 Heap 확보 크기 | `v8js_memory_heap_space_size` | `v8js_heap_space_name`, `instance` |
+| V8 Heap 여유 공간 | `v8js_memory_heap_space_available_size` | `v8js_heap_space_name`, `instance` |
+| GC 실행 시간 | `v8js_gc_duration_bucket` | `v8js_gc_type`, `le`, `instance` |
+| Event Loop Delay | `nodejs_eventloop_delay_p50`, `nodejs_eventloop_delay_p90`, `nodejs_eventloop_delay_p99` | `instance` |
+| Event Loop 사용률 | `nodejs_eventloop_utilization` | `instance` |
+
+OpenTelemetry Metric 이름의 점(`.`)은 Prometheus에서는 일반적으로 밑줄(`_`)로 변환됩니다.  
+여러 서비스를 함께 수집하는 운영 환경에서는 다른 서비스의 값이 섞이지 않도록 각 Metric Selector에 `job="observability-basics"` 또는 환경에서 사용하는 서비스 식별 label을 추가합니다.  
+
+## 2. HTTP Request Rate와 Error 분석 {#session-02}
+
+HTTP 서비스는 먼저 **RED** 관점으로 살펴보면 이해하기 쉽습니다.  
+
+![Http Metrics 실무 Query](/assets/images/nodejs/nodejs-observability/image-2026-09-30-4.png)
+
+| 항목 | 확인할 질문 | 대표 Metric |
+| --- | --- | --- |
+| Rate | 요청량이 평소보다 늘거나 줄었는가 | `http_requests_total` |
+| Errors | 실패 비율과 실제 오류 건수가 증가했는가 | `http_requests_total{status_code=~"5.."}` |
+| Duration | 일반 요청과 느린 요청의 응답 시간이 증가했는가 | `http_request_duration_seconds_*` |
+
+HTTP Metrics에서는 단순히 값을 보는 것보다 다음 순서로 문제 범위를 좁히는 것이 중요합니다.  
+
+```text
+전체 서비스
+   ↓
+Route
+   ↓
+Instance
+   ↓
+Runtime Metrics 또는 Trace
+```
+
+### 🟦 Request Rate 분석
+
+`http_requests_total`은 Process가 시작된 뒤 처리한 HTTP 요청 수를 계속 누적하는 Counter입니다.  
+따라서 현재 트래픽을 확인할 때는 누적된 전체 값보다 **일정 시간 동안 요청 수가 얼마나 빠르게 증가했는지**를 봅니다.  
+서비스 전체 Request Rate는 다음과 같이 계산합니다.  
+
+```promql
+sum(
+  rate(http_requests_total[1m])
+)
+```
+
+`rate(...[1m])`은 최근 1분 동안 Counter가 증가한 속도를 초당 값으로 계산합니다.  
+예를 들어 결과가 `12.5`라면 최근 1분 동안 평균적으로 초당 약 12.5건의 요청을 처리했다는 뜻입니다.  
+Process가 재시작되면 Counter는 다시 `0`부터 시작하지만, `rate()`는 일반적인 Counter Reset을 고려해서 증가율을 계산합니다.  
+Range는 Prometheus Scrape 주기보다 충분히 길게 잡아야 합니다.  
+이번 환경의 Scrape 주기는 5초이므로 `1m`과 `5m` 모두 여러 Sample을 포함합니다.  
+
+- `1m`은 최근 변화에 빠르게 반응하지만 값이 자주 흔들릴 수 있습니다.  
+- `5m`은 값이 더 안정적이지만 짧은 Spike는 덜 두드러져 보일 수 있습니다.  
+- 장애 상황에서는 `1m`과 `5m`을 함께 보면 순간적인 변화인지 지속적인 변화인지 구분하기 쉽습니다.  
+
+![HTTP Request Rate 예시](/assets/images/nodejs/nodejs-observability/image-2026-09-30.png)
+
+전체 Request Rate가 평소와 다르다면 다음으로 **어떤 API에서 변화가 생겼는지** 확인합니다.  
 
 ```promql
 sum by (method, route) (
@@ -166,11 +266,72 @@ sum by (method, route) (
 )
 ```
 
-전체 Request Rate가 증가해도 특정 Route만 증가했을 수 있으므로 전체 값과 Route별 값을 함께 확인합니다.  
+이 Query는 다음과 같이 API별 Request Rate를 구분해서 보여 줍니다.  
 
-### 🟦 HTTP 5xx Error Rate 분석
+```text
+GET  /posts
+POST /users
+GET  /search
+```
 
-`status_code`가 `5`로 시작하는 요청률을 전체 요청률로 나누면 최근 5분의 5xx 비율을 계산할 수 있습니다.  
+그다음 특정 Instance에 요청이 몰렸는지도 확인합니다.  
+
+```promql
+sum by (instance) (
+  rate(http_requests_total[1m])
+)
+```
+
+`instance`는 같은 서비스를 실행하는 각각의 실행 단위를 의미합니다.  
+환경에 따라 서버, Process, Container 또는 Pod가 될 수 있습니다.  
+
+### 예시 1. 여러 API의 Request Rate가 함께 증가하고 Latency와 Error Rate가 안정적이라면
+
+이벤트나 광고로 **실제 사용자 유입이 증가했을 가능성**이 큽니다. 현재 요청을 정상적으로 처리하고 있다면 즉시 조치할 필요는 없습니다.  
+
+- 요청 분산: Instance별 Request Rate가 고른지
+- CPU: 높은 사용률이 지속되는지
+- Latency: HTTP p95와 p99가 증가하는지
+- 처리 용량: 추가 트래픽을 처리할 여유가 있는지
+
+자원 여유가 계속 줄어든다면 Scale-out이나 Instance 증설을 검토합니다.  
+
+### 예시 2. 특정 API의 Request Rate만 크게 증가한다면
+
+특정 기능의 **정상적인 사용 증가인지 비정상적인 반복 호출인지** 구분합니다.  
+
+- 실제 사용량: 이벤트나 신규 기능으로 호출이 늘었는지
+- Crawler·Bot: 자동화된 요청이 집중되는지
+- Client Retry: 실패한 요청을 과도하게 재시도하는지
+- Frontend: 반복 호출이나 잘못된 Polling 주기가 있는지
+
+비정상 호출이라면 Rate Limit과 Cache를 적용하거나 Retry·Polling 정책과 Crawler·Bot 제어를 조정합니다.  
+
+### 예시 3. 전체 Request Rate는 비슷한데 특정 Instance만 높다면
+
+정상 Instance와 비교하여 **특정 Instance에만 요청이 몰리는 이유**를 확인합니다.  
+
+- Load Balancer: 요청을 고르게 분배하는지
+- Health Check: 다른 Instance가 정상적으로 요청을 받는지
+- 배포 버전: Instance마다 버전이나 설정이 다른지
+- Host 상태: CPU와 Memory에 차이가 있는지
+
+### 예시 4. 평소 요청이 들어오던 서비스의 Request Rate가 갑자기 `0`이 된다면
+
+사용자 요청이 사라졌다고 판단하기 전에 **Metrics 수집과 실제 요청 경로를 구분**하여 확인합니다.  
+
+- `up`: Prometheus가 Target을 정상적으로 수집하는지
+- `/metrics`: 애플리케이션이 Metrics를 노출하는지
+- Load Balancer: 요청을 애플리케이션으로 전달하는지
+- Routing: 서비스 경로가 올바른지
+- 배포 상태: 애플리케이션이 정상 실행 중인지
+
+Metrics만 끊겼다면 Prometheus 수집 문제를 해결하고, 실제 요청이 끊겼다면 Load Balancer나 Routing을 복구합니다.  
+
+### 🟦 5xx Error Rate와 오류 건수 분석
+
+서버 오류는 단순히 5xx 요청 수만 보기보다 **전체 요청 중 5xx가 차지하는 비율**을 함께 보는 것이 좋습니다.  
+최근 5분의 5xx Error Rate는 다음처럼 계산합니다.  
 
 ```promql
 sum(
@@ -182,124 +343,126 @@ sum(
 )
 ```
 
-결과가 `0.05`이면 최근 5분 동안 전체 요청의 약 5%가 5xx 응답으로 끝났다는 의미입니다.  
-Grafana에서는 Unit을 `Percent (0.0-1.0)`으로 지정하면 `5%`로 표시할 수 있습니다.  
+![에러율 예시](/assets/images/nodejs/nodejs-observability/image-2026-09-30-1.png)
 
-전체 요청이 없는 구간에서는 분모가 0이 되어 값이 표시되지 않을 수 있습니다.  
-이는 에러율이 0이라는 뜻과 다르므로 같은 시간대의 Request Rate를 함께 확인합니다.  
-
-### 🟦 Runtime Metrics 조회
-
-먼저 Prometheus의 Metric 자동 완성이나 `/metrics` 출력에서 실제 이름을 확인합니다.  
-OpenTelemetry Runtime Instrumentation 버전과 Exporter의 단위 변환에 따라 suffix가 달라질 수 있습니다.  
-
-예제 환경에서는 다음 계열을 중심으로 조회합니다.  
+결과가 `0.032`라면 최근 5분 요청의 약 3.2%가 5xx 응답으로 끝났다는 의미입니다.  
+전체 Error Rate가 높아졌다면 다음으로 어떤 API에서 오류가 발생했는지 확인합니다.  
 
 ```promql
-process_cpu_utilization
-```
-
-```promql
-process_resident_memory_bytes
-```
-
-Heap Space별 사용량을 모두 더하면 V8 Heap의 전체 사용량을 확인할 수 있습니다.  
-
-```promql
-sum(v8js_memory_heap_used_bytes)
-```
-
-Heap Space별 변화를 따로 보려면 이름 attribute를 유지합니다.  
-Prometheus Exporter가 attribute의 점을 밑줄로 변환하므로 실제 label 이름은 `/metrics` 출력에서 확인합니다.  
-
-```promql
-sum by (v8js_heap_space_name) (
-  v8js_memory_heap_used_bytes
+sum by (method, route) (
+  rate(http_requests_total{status_code=~"5.."}[5m])
+)
+/
+sum by (method, route) (
+  rate(http_requests_total[5m])
 )
 ```
 
-Event Loop Delay p99는 다음과 같이 조회합니다.  
+하지만 Error Rate만 보면 상황을 잘못 판단할 수도 있습니다.  
+예를 들어 어떤 Route에 요청이 2건 들어왔는데 그중 1건이 실패했다면 Error Rate는 50%입니다.  
+숫자만 보면 매우 높아 보이지만 실제 오류는 1건입니다.  
+따라서 같은 시간대의 실제 5xx 발생 건수도 함께 확인합니다.  
 
 ```promql
-nodejs_eventloop_delay_p99_seconds
+sum by (method, route, status_code) (
+  increase(http_requests_total{status_code=~"5.."}[5m])
+)
 ```
 
-GC는 Histogram이므로 최근 GC 횟수와 평균 정지 시간을 나누어 확인합니다.  
+![에러율 예시-increase](/assets/images/nodejs/nodejs-observability/image-2026-09-30-2.png)
+
+`rate()`와 `increase()`는 용도가 조금 다릅니다.  
+
+- `rate()`는 지정한 시간 구간을 기준으로 1초당 평균 몇 번 발생했는지 보여 줍니다.
+- `increase()`는 지정한 시간 동안 총 몇 번 발생했는지 보여 줍니다
+
+`increase()`는 Prometheus가 수집한 Sample을 이용해 구간의 증가량을 추정하기 때문에 `5`, `10`처럼 정확한 정수가 아니라 `5.08`과 같은 소수로 표시될 수도 있습니다.  
+
+### 예시 1. Error Rate와 실제 오류 건수가 함께 증가한다면
+
+**실제 장애일 가능성이 높으므로** 실패가 집중된 Route부터 조사 범위를 좁힙니다.  
+
+- 실패 Route: 오류가 집중된 API를 찾습니다.  
+- 최근 배포: 오류 발생 시점과 배포 시점이 겹치는지 확인합니다.  
+- Application Log: Exception과 오류 메시지를 확인합니다.  
+- Trace: 실패한 요청의 실행 경로를 확인합니다.  
+- 공통 의존성: DB, 외부 API와 Middleware 상태를 확인합니다.  
+
+### 예시 2. 배포 직후 특정 Route의 5xx만 증가한다면
+
+오류 발생 시점이 배포와 겹친다면 **해당 Route의 최근 변경 사항**부터 확인합니다.  
+
+- Application Code: 오류가 발생한 처리 로직이 바뀌었는지
+- 환경 변수: 새 설정이 누락되거나 잘못 적용됐는지
+- DB: Query나 Schema가 함께 변경됐는지
+- 외부 API: 호출 방식이나 응답 형식이 달라졌는지
+- 입력 데이터: 새 입력값을 올바르게 처리하는지
+
+배포와 오류 발생 시점이 명확하게 일치하고 영향 범위가 크다면 Rollback 또는 Hotfix를 검토합니다.  
+
+### 예시 3. 여러 Route에서 동시에 5xx가 증가한다면
+
+여러 Route가 동시에 실패한다면 개별 코드보다 **여러 요청이 공유하는 의존성**을 먼저 확인합니다.  
+
+- DB: 장애나 Connection Pool 고갈이 발생했는지
+- 인증 서비스: 인증 요청이 정상적으로 처리되는지
+- 외부 API: 공통으로 호출하는 서비스에 장애가 있는지
+- Middleware: 인증·로깅 같은 공통 처리가 실패하는지
+- Network: 서비스 간 연결에 문제가 있는지
+
+외부 의존성이 원인이라면 Timeout, Retry와 Circuit Breaker 정책도 함께 점검합니다.  
+> Circuit Breaker: 특정 외부 서비스의 실패가 계속될 때 일정 시간 호출을 차단하는 방식입니다.  
+
+### 예시 4. Error Rate는 높지만 실제 오류 건수가 한두 건이라면
+
+요청량이 적으면 오류 한두 건만으로도 비율이 크게 오를 수 있으므로 **Error Rate만 보고 장애로 판단하지 않습니다.**  
+
+- 시간 범위: `5m`에서 `15m`, `30m`으로 넓혀 추세를 확인합니다.  
+- 오류 건수: 전체 요청 수와 실제 오류 건수를 함께 확인합니다.  
+- 상태 코드: 인증 실패나 잘못된 입력처럼 정상적으로 발생할 수 있는 4xx를 구분합니다.  
+
+필요하면 상태 코드별 Request Rate를 확인합니다.  
 
 ```promql
-sum(rate(v8js_gc_duration_seconds_count[5m]))
+sum by (status_code) (
+  rate(http_requests_total[5m])
+)
 ```
 
+이 Query를 사용하면 `200`, `400`, `404`, `500`처럼 각 상태 코드가 어느 정도 발생하고 있는지 흐름을 확인할 수 있습니다.  
+
+## 3. HTTP Latency와 Percentile 분석 {#session-03}
+
+평균 응답 시간은 Histogram의 `_sum` 증가율을 `_count` 증가율로 나누어 계산합니다.  
+
 ```promql
-sum(rate(v8js_gc_duration_seconds_sum[5m]))
+sum(
+  rate(http_request_duration_seconds_sum[5m])
+)
 /
-sum(rate(v8js_gc_duration_seconds_count[5m]))
+sum(
+  rate(http_request_duration_seconds_count[5m])
+)
 ```
 
-첫 번째 Query는 초당 GC 실행 횟수이고 두 번째 Query는 최근 5분 동안 관측한 평균 GC Duration입니다.  
-GC가 없는 구간에는 평균값이 표시되지 않을 수 있으므로 실행 횟수와 함께 해석합니다.  
+평균 응답 시간만으로는 일부 느린 요청을 놓칠 수 있습니다.  
+예를 들어 대부분의 요청은 100ms 안에 끝나지만 일부 요청만 2초가 걸린다고 가정해 보겠습니다.  
+이 경우 평균값의 변화는 생각보다 크지 않을 수 있습니다.  
+그래서 운영 환경에서는 p50, p95와 p99를 함께 확인합니다.  
 
-## 2. Histogram과 Request Latency 분석 {#session-02}
+| Percentile | 의미 | 주로 확인하는 내용 |
+| --- | --- | --- |
+| p50 | 요청의 약 50%가 이 시간 이하에 완료됩니다. | 일반적인 사용자 경험 |
+| p95 | 요청의 약 95%가 이 시간 이하에 완료됩니다. | 비교적 느린 요청 |
+| p99 | 요청의 약 99%가 이 시간 이하에 완료됩니다. | Tail Latency와 일부 긴 요청 |
 
-### 🟦 Histogram Bucket 구조
-
-Histogram은 개별 응답 시간을 모두 저장하지 않고, 미리 정한 경계 이하에 들어온 요청 수를 누적합니다.  
-
-![Histogram Bucket 경계와 누적값 해석](/assets/images/nodejs/nodejs-observability/05-histogram-bucket-cumulative.png)
-
-예를 들어 `80ms` 요청 한 건은 다음 Bucket에 함께 포함됩니다.  
-
-```text
-le="0.05"    포함되지 않음
-le="0.075"   포함되지 않음
-le="0.1"     포함됨
-le="0.25"    포함됨
-le="0.5"     포함됨
-le="+Inf"    포함됨
-```
-
-`le="0.25"` 값이 `92`라면 100~250ms 구간에 92건이 있다는 뜻이 아닙니다.  
-250ms 이하에서 처리된 누적 요청 수가 92건이라는 의미입니다.  
-
-```text
-http_request_duration_seconds_bucket  경계별 누적 요청 수
-http_request_duration_seconds_count   전체 관측 수
-http_request_duration_seconds_sum     관측한 응답 시간의 합
-```
-
-Bucket 경계가 실제 서비스의 Latency 범위를 충분히 나누는지도 확인해야 합니다.  
-대부분의 요청이 50~500ms인데 경계가 100ms와 1초뿐이면 그 사이의 분포를 세밀하게 구분하기 어렵습니다.  
-
-### 🟦 평균과 Percentile 차이
-
-평균 응답 시간은 `_sum`을 `_count`로 나누어 계산합니다.  
-
-```promql
-sum(rate(http_request_duration_seconds_sum[5m]))
-/
-sum(rate(http_request_duration_seconds_count[5m]))
-```
-
-평균만 보면 일부 요청에서 발생하는 큰 지연이 가려질 수 있습니다.  
-예를 들어 대부분의 요청이 100ms에 끝나고 소수의 요청만 2초가 걸리면 평균은 두 집단의 차이를 충분히 보여 주지 못할 수 있습니다.  
-
-Percentile은 요청을 빠른 순서로 정렬했을 때 일정 비율의 요청이 해당 값 이하에서 끝났음을 나타냅니다.  
-
-| Percentile | 의미 |
-| --- | --- |
-| p50 | 전체 요청의 약 50%가 이 시간 이하에 끝납니다. |
-| p95 | 전체 요청의 약 95%가 이 시간 이하에 끝납니다. |
-| p99 | 전체 요청의 약 99%가 이 시간 이하에 끝납니다. |
-
-p95는 가장 느린 5% 요청의 평균이 아닙니다.  
-p95가 0.8초라면 약 95%가 0.8초 이하에 끝나고 나머지 약 5%가 이를 초과했다는 의미입니다.  
-
-### 🟦 p50, p95와 p99 계산
-
-Prometheus는 누적 Bucket의 증가율에 `histogram_quantile()`을 적용해 Percentile을 추정합니다.  
+p95는 가장 느린 5% 요청의 평균값이 아닙니다.  
+p95가 `0.8초`라면 전체 요청의 약 95%가 0.8초 안에 끝났다는 의미입니다.  
+`histogram_quantile()`을 이용해 Percentile을 계산합니다.  
 
 ```promql
 # p50
+
 histogram_quantile(
   0.50,
   sum by (le) (
@@ -310,6 +473,7 @@ histogram_quantile(
 
 ```promql
 # p95
+
 histogram_quantile(
   0.95,
   sum by (le) (
@@ -320,6 +484,7 @@ histogram_quantile(
 
 ```promql
 # p99
+
 histogram_quantile(
   0.99,
   sum by (le) (
@@ -328,227 +493,520 @@ histogram_quantile(
 )
 ```
 
-`sum by (le)`는 Percentile 계산에 필요한 Bucket 상한을 유지하면서 Route, 상태 코드와 Instance를 합칩니다.  
-특정 Route의 Latency를 보고 싶다면 `route`도 유지합니다.  
+`le`는 Histogram Bucket 경계를 나타내는 label입니다.  
+Classic Histogram에서 Percentile을 계산할 때 반드시 유지해야 합니다.  
+느린 Route를 찾을 때는 `route`도 함께 유지합니다.  
 
 ```promql
 histogram_quantile(
   0.95,
-  sum by (route, le) (
+  sum by (method, route, le) (
     rate(http_request_duration_seconds_bucket[5m])
   )
 )
 ```
 
-### 🟦 Tail Latency 해석
-
-p95와 p99처럼 분포의 느린 끝부분을 Tail Latency라고 합니다.  
-
-- p50·p95·p99가 모두 증가하면 공통 DB 지연, 외부 의존성이나 전체 부하 증가를 먼저 확인합니다.  
-- p50은 비슷하고 p99만 증가하면 일부 요청에서 발생하는 DB Lock, GC 정지, Event Loop 정체나 재시도를 확인합니다.  
-- 특정 Route의 p95만 증가하면 해당 Route의 Service와 DB Span으로 범위를 좁힙니다.  
-
-Percentile은 Bucket 분포로 추정한 값이므로 개별 요청을 직접 정렬한 정확한 값과 차이가 있을 수 있습니다.  
-짧은 시간의 한 점만으로 결론을 내리지 않고 같은 조건에서 여러 번 관찰합니다.  
-
-## 3. Grafana Dashboard 구성 {#session-03}
-
-### 🟦 Prometheus Data Source 연결
-
-Grafana는 Metrics를 직접 수집하지 않고 Prometheus의 PromQL 결과를 시각화합니다.  
-`http://localhost:3001`에 로그인한 뒤 다음 순서로 Data Source를 추가합니다.  
-
-1. **Connections → Data sources**로 이동합니다.  
-2. **Add new data source**를 선택합니다.  
-3. **Prometheus**를 선택합니다.  
-4. Prometheus Server URL에 `http://prometheus:9090`을 입력합니다.  
-5. **Save & test**를 선택합니다.  
-
-Grafana도 Container 안에서 실행되므로 `localhost:9090`이 아니라 Compose 서비스 이름인 `prometheus`를 사용합니다.  
-
-### 🟦 Request Rate와 Error Rate Panel
-
-새 Dashboard에서 **Add visualization**을 선택하고 다음 Panel을 구성합니다.  
-
-| Panel | PromQL | 권장 Unit |
-| --- | --- | --- |
-| Request Rate | `sum(rate(http_requests_total[1m]))` | `req/s` |
-| Error Rate | 5xx 요청률 ÷ 전체 요청률 | `Percent (0.0-1.0)` |
-
-Error Rate Panel에는 다음 Query를 입력합니다.  
-
-```promql
-sum(rate(http_requests_total{status_code=~"5.."}[5m]))
-/
-sum(rate(http_requests_total[5m]))
-```
-
-Panel 이름, 범례와 단위를 함께 지정하면 값의 의미를 다시 확인하지 않고도 Dashboard를 읽을 수 있습니다.  
-
-### 🟦 p50, p95와 p99 Latency Panel
-
-Request Latency Panel 하나에 p50, p95와 p99 Query를 각각 추가합니다.  
-세 Query의 구조는 같고 `histogram_quantile()`의 첫 번째 값만 다릅니다.  
-
-```promql
-histogram_quantile(
-  0.50,
-  sum by (le) (
-    rate(http_request_duration_seconds_bucket[5m])
-  )
-)
-```
+특정 Instance에서만 느려지는지도 확인할 수 있습니다.  
 
 ```promql
 histogram_quantile(
   0.95,
-  sum by (le) (
+  sum by (instance, le) (
     rate(http_request_duration_seconds_bucket[5m])
   )
 )
 ```
+
+![Instance p95 응답시간 예시](/assets/images/nodejs/nodejs-observability/image-2026-09-30-3.png)
+
+Percentile은 Histogram Bucket 사이의 값을 이용해 추정한 결과입니다.  
+Bucket 간격이 넓으면 실제 응답 시간 분포와 차이가 생길 수 있으므로 지나치게 정밀한 숫자로 해석하지 않는 것이 좋습니다.  
+
+### 예시 1. 평균과 p50, p95, p99가 모두 증가한다면
+
+**서비스 전체가 느려졌을 가능성**이 높습니다. 같은 시간대의 CPU와 Event Loop를 확인하고, Runtime Metrics가 정상이라면 DB나 외부 API Trace로 조사 범위를 넓힙니다.  
+
+### 예시 2. p50은 안정적인데 p95와 p99만 증가한다면
+
+**일부 요청만 느려지고 있을 가능성**이 큽니다. Route별 p95와 p99로 느린 API를 찾은 뒤 Trace에서 다음 항목을 확인합니다.  
+
+- DB: 느린 Query나 Lock이 발생했는지
+- Cache: Cache Miss로 처리 시간이 길어졌는지
+- 외부 API: 응답 지연이나 Retry가 발생했는지
+- 입력 데이터: 특정 입력에서만 무거운 처리가 실행되는지
+
+### 예시 3. 특정 Route만 느리다면
+
+서비스 전체를 튜닝하기보다 **해당 Route 내부의 병목**을 먼저 확인합니다. DB Query가 원인이라면 Index나 Query 구조를 개선하고, 반복 조회 데이터에는 Cache 적용을 검토합니다.  
+
+### 예시 4. 한 Instance에서만 Latency가 높다면
+
+특정 Instance에서만 Latency가 높다면 **정상 Instance와 비교하여 무엇이 다른지** 확인합니다.  
+
+- CPU: 해당 Instance만 사용률이 높은지
+- Heap·GC: 메모리 사용량과 GC 빈도·시간이 증가했는지
+- Event Loop Delay: Node.js 처리 지연이 발생하고 있는지
+- 배포 버전: 다른 Instance와 버전이나 설정이 다른지
+- Host 상태: 메모리, 디스크 I/O, 네트워크에 문제가 있는지
+- Load Balancer: 해당 Instance에 요청이 과도하게 몰리고 있는지
+
+문제가 특정 Instance에 집중되어 있고 서비스 영향이 크다면 해당 Instance를 **Traffic에서 먼저 제외한 뒤 원인을 조사**할 수 있습니다.  
+
+### 예시 5. Request Rate와 Latency가 함께 증가한다면
+
+현재 시스템이 **처리 용량의 한계에 가까워지고 있을 가능성**이 있습니다. CPU와 Event Loop뿐 아니라 다음 Resource Pool도 확인합니다.  
+
+- DB Connection Pool: Query를 기다리는 요청이 늘어나는지
+- HTTP Connection Pool: 외부 요청의 연결 대기가 발생하는지
+- Worker Pool: 처리할 작업이 대기하는지
+- Queue: 처리 속도보다 작업 유입이 빠른지
+
+처리량 증가에 따라 특정 자원이 포화되고 있다면 Scale-out이나 Pool 설정 조정을 검토합니다.  
+
+## 4. Process CPU와 Memory 분석 {#session-04}
+
+HTTP Metrics가 사용자에게 나타나는 현상을 보여 준다면, Runtime Metrics는 그 문제가 Node.js Process 내부 상태와 관련 있는지 확인하는 데 도움을 줍니다.  
+절대값 하나보다 **HTTP Metrics가 변한 같은 시간대에 Runtime Metric도 함께 변했는지** 보는 것이 중요합니다.  
+
+![Runtime Metrics Query](/assets/images/nodejs/nodejs-observability/image-2026-09-30-5.png)
+
+Runtime Metrics는 다음 흐름으로 살펴볼 수 있습니다.  
+
+```text
+HTTP Latency 또는 Error 증가
+        │
+        ├─ CPU 확인
+        │
+        ├─ Memory / Heap 확인
+        │
+        ├─ GC 확인
+        │
+        └─ Event Loop 확인
+```
+
+Runtime Metrics가 모두 안정적이라면 Node.js 내부보다 DB, 외부 API와 Network 쪽으로 조사 범위를 넓힐 수 있습니다.  
+
+### 🟦 Process CPU 분석
+
+`process_cpu_utilization`은 Process가 CPU를 얼마나 사용하고 있는지 보여 주는 Gauge Metric입니다.  
+
+```promql
+process_cpu_utilization
+```
+
+예를 들어 값이 0.7이면, 관측 구간 동안 평균적으로 CPU 코어 1개의 70% 정도를 사용했다고 이해하면 됩니다.
+
+```text
+0.5 → CPU 코어 0.5개 사용 ≈ 코어 1개의 50%
+1.0 → CPU 코어 1개를 거의 100% 사용
+2.0 → CPU 코어 2개를 합쳐 100%씩 사용한 것과 비슷한 수준
+```
+
+다만 실제 label 구성은 사용 중인 OpenTelemetry Instrumentation 버전에 따라 달라질 수 있으므로 `/metrics` 출력을 먼저 확인하는 것이 좋습니다.  
+최근 5분 동안 CPU가 지속적으로 높았는지 확인하려면 다음처럼 시간 평균을 사용할 수 있습니다.  
+
+```promql
+avg_over_time(
+  process_cpu_utilization[5m]
+)
+```
+
+여러 Time Series가 같은 `instance`에 존재하는 환경이라면 실제 label 구성을 확인한 뒤 필요한 경우 다음처럼 Instance 기준으로 집계할 수 있습니다.  
+
+```promql
+avg by (instance) (
+  avg_over_time(process_cpu_utilization[5m])
+)
+```
+
+CPU 경고 기준은 Core 수, Container CPU Limit과 평소 사용량에 따라 달라집니다.  
+따라서 `70%`, `80%` 같은 숫자 하나만 기준으로 삼기보다 **평소 기준선과 높은 상태가 얼마나 지속되는지**를 함께 보는 것이 좋습니다.  
+
+### 예시 1. Request Rate와 CPU가 함께 증가하지만 Latency가 안정적이라면
+
+증가한 트래픽을 **현재 시스템이 정상적으로 처리하고 있을 가능성**이 큽니다. CPU가 높다는 이유만으로 바로 장애라고 판단할 필요는 없습니다.  
+
+- CPU 분산: Instance별 사용률이 고른지
+- Latency: HTTP p95와 p99가 안정적인지
+- Event Loop Delay: Node.js 처리 지연이 증가하지 않는지
+- 처리 용량: 추가 트래픽을 처리할 CPU 여유가 있는지
+
+CPU 여유가 계속 줄어드는 추세라면 Scale-out 기준이나 Container CPU Limit을 검토합니다.  
+
+### 예시 2. Request Rate는 비슷한데 CPU와 HTTP p99가 함께 증가한다면
+
+트래픽 변화 없이 CPU와 p99가 함께 증가하면 **CPU를 오래 점유하는 코드**가 실행되고 있을 수 있습니다.  
+
+- 데이터 변환: 큰 JSON 직렬화·역직렬화나 대량 배열 처리
+- 계산 작업: 암호화, 이미지 처리 또는 긴 반복문
+- 정규 표현식: 복잡하거나 입력에 따라 오래 걸리는 패턴
+- 동기 작업: Event Loop를 막는 CPU 작업
+
+Route별 HTTP p99로 느린 API를 찾은 뒤 CPU Profile에서 오래 실행되는 함수를 확인합니다.  
+
+CPU를 오래 점유하는 작업이 확인되면 알고리즘과 반복 계산을 개선하고, Cache나 Worker Thread를 적용하거나 별도 Worker·Queue로 분리합니다.  
+
+### 예시 3. 한 Instance의 CPU만 높다면
+
+애플리케이션 전체보다 **해당 Instance나 Host에만 있는 차이**를 확인합니다.  
+
+- Load Balancer: 요청이 특정 Instance에 몰리는지
+- Process: 해당 Process만 별도 작업을 수행하는지
+- 배포 버전: 다른 Instance와 코드나 설정이 다른지
+- Host CPU: Host 자체의 CPU 사용률이 높은지
+- 다른 Process: 같은 Host의 다른 Process가 자원을 점유하는지
+
+### 🟦 RSS와 V8 Heap 분석
+
+RSS는 Node.js Process가 실제 RAM에 올려 사용하는 전체 메모리입니다.  
+V8 Heap뿐 아니라 다음 영역도 포함합니다.  
+
+- 실행 코드
+- Stack
+- `Buffer`
+- Native Memory
+- Native Module이 사용하는 Memory
+
+RSS는 다음 Metric으로 확인합니다.  
+
+```promql
+process_resident_memory_bytes
+```
+
+V8 Heap Space별 사용량을 합하면 Instance의 전체 Heap Used를 확인할 수 있습니다.  
+
+```promql
+sum by (instance) (
+  v8js_memory_heap_used
+)
+```
+
+`v8js_memory_heap_used`는 Heap Space별 Time Series로 수집됩니다.  
+`sum by (instance)`를 사용하면 Heap Space 값을 합치면서 Instance 구분은 유지합니다.  
+
+Heap Space별 상태를 확인하려면 `v8js_heap_space_name`을 유지합니다.  
+
+```promql
+sum by (instance, v8js_heap_space_name) (
+  v8js_memory_heap_used
+)
+```
+
+이를 이용하면 `new_space`, `old_space`와 같은 영역의 변화를 각각 볼 수 있습니다.  
+
+#### GC 이후 Heap 기준선 확인
+
+Memory Leak을 살펴볼 때는 순간적인 최고값보다 **GC 이후에도 Heap 사용량의 기준선이 계속 높아지는지**를 보는 것이 중요합니다.  
+먼저 Instance별 전체 Heap Used를 합산한 뒤 최근 30분의 최저점을 확인합니다.  
+
+```promql
+min_over_time(
+  (
+    sum by (instance) (
+      v8js_memory_heap_used
+    )
+  )[30m:]
+)
+```
+
+이 Query의 순서는 다음과 같습니다.  
+
+```text
+Heap Space별 Heap Used
+        ↓
+Instance별 전체 Heap Used 합산
+        ↓
+최근 30분 구간 확인
+        ↓
+최저점 계산
+```
+
+Heap Space별 최저점을 먼저 계산한 뒤 합산하면 서로 다른 시점의 최저값이 더해질 수 있습니다.  
+따라서 전체 Heap 기준선을 보고 싶다면 먼저 Heap Space를 합산하고 그 결과의 최저점을 확인하는 편이 더 적절합니다.  
+이 Query 역시 정확한 GC 직후의 값만 선택하는 것은 아닙니다.  
+최근 구간의 낮은 Heap 수준이 반복해서 높아지는지를 살펴보는 **보조 지표**로 사용하는 것이 좋습니다.  
+
+#### Heap 확보 크기와 여유 공간 확인
+
+V8이 현재 확보한 Heap Space 크기는 다음처럼 확인합니다.  
+
+```promql
+sum by (instance) (
+  v8js_memory_heap_space_size
+)
+```
+
+Heap Space에서 추가로 사용할 수 있는 여유 공간도 확인합니다.  
+
+```promql
+sum by (instance) (
+  v8js_memory_heap_space_available_size
+)
+```
+
+운영체제가 Heap Space에 실제로 할당한 크기는 다음처럼 확인합니다.  
+
+```promql
+sum by (instance) (
+  v8js_memory_heap_space_physical_size
+)
+```
+
+### 예시 1. Heap Used가 증가했다가 다시 이전 수준으로 내려온다면
+
+객체가 생성된 뒤 GC로 정리되는 **일반적인 메모리 사용 패턴**일 수 있습니다. HTTP Latency와 GC Duration도 안정적이라면 특별한 조치가 필요하지 않습니다.  
+
+### 예시 2. Heap의 낮은 수준이 시간이 지나면서 계속 높아진다면
+
+GC 이후의 낮은 수준이 계속 높아진다면 **해제되지 않는 객체가 누적되는지** 확인합니다.  
+
+- Cache: 크기 제한이나 만료 정책이 없는지
+- Event Listener·Timer: 사용 후 해제되는지
+- 전역 객체: 데이터가 계속 추가되고 있는지
+- Closure: 불필요한 객체 참조를 유지하는지
+- 요청 데이터: 요청이 끝난 뒤에도 객체가 남아 있는지
+
+Memory Leak이 의심된다면 시간차를 두고 Heap Snapshot을 수집해서 비교합니다.  
+Retained Size가 계속 증가하는 객체를 찾고 어떤 코드가 해당 객체를 계속 참조하고 있는지 확인합니다.  
+
+### 예시 3. `old_space`가 계속 증가하고 major GC도 함께 늘어난다면
+
+**오래 살아남는 객체가 많아지고 있을 가능성**이 있습니다. Cache와 장기 객체의 수명을 확인하고 불필요한 참조를 제거합니다.  
+
+### 예시 4. Heap은 안정적인데 RSS만 계속 증가한다면
+
+RSS만 계속 증가한다면 **V8 Heap 밖의 Memory 사용량**을 확인합니다.  
+
+- `Buffer`: 대용량 데이터가 계속 남아 있는지
+- Native Module·Library: Native Memory를 과도하게 사용하는지
+- 파일 처리: 읽은 데이터를 제때 해제하는지
+- Network 처리: 송수신 Buffer가 누적되는지
+
+이 경우 V8 Heap Limit만 늘리는 것은 근본적인 해결책이 아닐 수 있습니다.  
+
+### 예시 5. Heap Used가 확보 크기에 가까워지고 Available Size가 계속 감소한다면
+
+**Heap 압박이 발생하고 있을 가능성**이 있습니다.  
+
+- 객체 누적: 불필요한 객체가 해제되지 않는 원인을 먼저 제거합니다.  
+- 정상 Workload: 실제로 많은 Memory가 필요하다면 Instance Memory와 V8 Heap Limit을 조정합니다.  
+- RSS: V8이 확보한 Memory를 즉시 반환하지 않을 수 있으므로 GC 직후 RSS만으로 Memory Leak을 판단하지 않습니다.  
+
+## 5. GC와 Event Loop 분석 {#session-05}
+
+GC Duration은 Histogram Metric입니다.  
+`v8js_gc_type` label을 통해 다음과 같은 GC 유형을 구분할 수 있습니다.  
+
+- `minor`
+- `major`
+- `incremental`
+- `weakcb`
+
+먼저 최근 5분 동안 각 GC 유형이 초당 얼마나 실행됐는지 확인합니다.  
+
+```promql
+sum by (instance, v8js_gc_type) (
+  rate(v8js_gc_duration_count[5m])
+)
+```
+
+이 값은 GC 실행 횟수 자체가 아니라 **초당 GC 실행률**입니다.  
+예를 들어 결과가 `0.2`라면 평균적으로 약 5초에 한 번 GC가 실행된 것으로 볼 수 있습니다.  
+GC 유형별 평균 Duration은 실행 시간 증가율을 실행 횟수 증가율로 나누어 계산합니다.  
+
+```promql
+sum by (instance, v8js_gc_type) (
+  rate(v8js_gc_duration_sum[5m])
+)
+/
+sum by (instance, v8js_gc_type) (
+  rate(v8js_gc_duration_count[5m])
+)
+```
+
+평균값에 가려지는 긴 GC를 확인하려면 p95도 확인합니다.  
 
 ```promql
 histogram_quantile(
-  0.99,
-  sum by (le) (
-    rate(http_request_duration_seconds_bucket[5m])
+  0.95,
+  sum by (instance, v8js_gc_type, le) (
+    rate(v8js_gc_duration_bucket[5m])
   )
 )
 ```
 
-Legend를 각각 `p50`, `p95`, `p99`로 지정하고 Unit은 `seconds (s)`를 사용합니다.  
+### 예시 1. `minor` GC Rate만 증가하고 Duration이 짧다면
 
-![HTTP Request Rate, Error Rate와 Latency Panel 예시](/assets/images/nodejs/nodejs-observability/image-2026-09-29-2.png)
+**수명이 짧은 객체가 많이 생성되고 있을 가능성**이 있습니다. HTTP Latency가 안정적이라면 바로 장애로 판단할 필요는 없지만, GC가 매우 빈번하다면 임시 객체 생성을 확인합니다.  
 
-### 🟦 CPU, Memory와 Heap Panel
+- 배열: 반복적으로 복사하는지
+- 배열 함수: `map`, `filter`, `reduce`를 과도하게 중첩하는지
+- 데이터 변환: 큰 JSON 변환이나 문자열 조합이 반복되는지
+- 요청 처리: 요청마다 많은 임시 객체를 만드는지
 
-Runtime 상태는 HTTP Panel과 같은 시간 범위에 배치해야 서로의 변화를 비교하기 쉽습니다.  
+CPU Profile이나 Allocation Profile을 이용해 객체 생성이 많은 코드를 찾고, 불필요한 중간 객체와 배열 생성을 줄입니다.  
 
-| Panel | PromQL | 권장 Unit |
-| --- | --- | --- |
-| Process CPU | `process_cpu_utilization` | `Percent (0.0-1.0)` |
-| Process RSS | `process_resident_memory_bytes` | `bytes (IEC)` |
-| V8 Heap Used | `sum(v8js_memory_heap_used_bytes)` | `bytes (IEC)` |
+### 예시 2. `major` GC Rate와 GC p95가 함께 증가하고 Heap 여유 공간이 감소한다면
 
-Heap Space별 변화를 보고 싶다면 다음 Query를 사용하고 Legend에 Heap Space label을 표시합니다.  
+**Heap 압박이 발생하고 있을 가능성**이 있습니다. 다음 순서로 오래 살아남는 객체가 증가하는지 확인합니다.  
+
+- Available Size: 사용할 수 있는 Heap 공간이 계속 감소하는지
+- `old_space`: 오래 살아남는 객체가 증가하는지
+- Heap 기준선: GC 이후의 낮은 수준이 계속 높아지는지
+- Heap Snapshot: 어떤 객체와 참조가 Memory를 유지하는지
+
+특히 크기 제한이 없는 Cache, 해제되지 않은 Event Listener, 전역 객체와 요청 종료 후에도 남는 참조를 확인합니다.  
+단순히 `--max-old-space-size`를 늘리는 것은 근본적인 해결책이 아닐 수 있습니다.  
+Memory Leak 때문인지, 정상적으로 많은 Memory가 필요한 Workload인지 먼저 구분합니다.  
+
+### 예시 3. GC Rate와 GC p95, HTTP p99가 같은 시간대에 증가한다면
+
+세 Metric이 함께 증가하면 **GC와 객체 할당이 요청 지연에 영향을 주는지** 확인합니다.  
+
+- Instance 비교: GC p95와 HTTP p99가 같은 Instance에서 증가하는지
+- Route 비교: HTTP p99가 높은 API가 무엇인지
+- Trace: 느린 요청에서 시간이 오래 걸린 구간이 어디인지
+- Allocation·Heap Profile: 객체를 많이 생성하거나 유지하는 코드가 무엇인지
+
+대량 객체 생성이나 JSON 처리가 원인으로 확인된다면 해당 로직을 최적화합니다.  
+다만 Metric이 같은 시점에 움직였다는 사실만으로 GC가 HTTP 지연의 직접적인 원인이라고 단정하면 안 됩니다.  
+Trace와 Profile로 실제 실행 흐름을 확인하는 것이 중요합니다.  
+
+### 🟦 GC가 없는 구간의 No data와 0 구분
+
+GC가 발생하지 않은 구간에서는 평균 Duration이나 p95가 표시되지 않을 수 있습니다.  
+
+먼저 같은 구간의 GC Count가 실제로 증가했는지 확인합니다.  
 
 ```promql
-sum by (v8js_heap_space_name) (
-  v8js_memory_heap_used_bytes
+sum by (instance, v8js_gc_type) (
+  rate(v8js_gc_duration_count[5m])
 )
 ```
 
-RSS와 Heap Used가 함께 증가하는지, Heap은 감소하는데 RSS가 높은 상태로 유지되는지를 비교합니다.  
-두 값의 차이만으로 Memory Leak을 단정하지 않고 충분한 시간 범위와 GC 이후의 기준선을 확인합니다.  
+결과는 다음처럼 구분해서 봅니다.  
 
-### 🟦 GC와 Event Loop Panel
+```text
+GC Count 증가 없음
+→ 해당 구간에 실제 GC가 없었을 가능성이 높음
 
-GC와 Event Loop는 Tail Latency가 증가한 이유를 좁힐 때 유용합니다.  
+Duration Query가 No data 또는 NaN
+→ Percentile을 계산할 유효한 GC 관측값이 없는지 확인
 
-| Panel | PromQL | 권장 Unit |
-| --- | --- | --- |
-| GC Rate | `sum(rate(v8js_gc_duration_seconds_count[5m]))` | `ops/s` |
-| Average GC Duration | GC Duration Sum 증가율 ÷ Count 증가율 | `seconds (s)` |
-| Event Loop Delay p99 | `nodejs_eventloop_delay_p99_seconds` | `seconds (s)` |
-| Event Loop Utilization | `nodejs_eventloop_utilization` | `Percent (0.0-1.0)` |
+GC Count는 증가
+Duration Query만 비정상
+→ Histogram Bucket, label과 PromQL 집계 조건 확인
+```
 
-Average GC Duration Panel에는 다음 Query를 사용합니다.  
+`No data`와 `Duration = 0`은 같은 의미가 아닙니다.  
+
+Grafana에서도 값이 없는 상태를 임의로 `0 ms`로 표현하지 않도록 Panel 설정을 확인하는 것이 좋습니다.  
+
+### 🟦 Event Loop Delay와 Utilization 분석
+
+Event Loop Delay는 예정된 Timer나 Callback이 실제로 실행될 때까지 추가로 기다린 시간을 의미합니다.  
+p50은 일반적인 지연을 확인할 때 사용합니다.  
 
 ```promql
-sum(rate(v8js_gc_duration_seconds_sum[5m]))
-/
-sum(rate(v8js_gc_duration_seconds_count[5m]))
+nodejs_eventloop_delay_p50
 ```
 
-Runtime Metric 이름은 설치한 Instrumentation과 Exporter 버전에 따라 달라질 수 있습니다.  
-Panel Query가 결과를 반환하지 않으면 `/metrics` 출력과 Prometheus의 Metric 자동 완성에서 실제 이름을 먼저 확인합니다.  
+p99는 일부 구간에서 발생하는 큰 지연을 확인하는 데 유용합니다.  
 
-## 4. Metrics 종합 분석과 Trace 연계 {#session-04}
-
-### 🟦 테스트 요청과 부하 발생
-
-응답 시간이 다른 요청과 오류 요청을 만들어 HTTP Metrics의 변화를 확인합니다.  
-
-```bash
-for delay in 50 50 50 300 300 1000; do
-  curl -s "http://localhost:3000/api/ch05/posts?delay=${delay}" > /dev/null
-done
-
-curl -s "http://localhost:3000/api/ch05/error" > /dev/null
+```promql
+nodejs_eventloop_delay_p99
 ```
 
-동시 요청을 만들어 요청량이 증가한 구간도 관찰합니다.  
+가장 큰 지연값도 확인할 수 있습니다.  
 
-```bash
-seq 1 100 \
-  | xargs -P10 -I{} \
-    curl -s "http://localhost:3000/api/ch05/posts?delay=300" -o /dev/null
+```promql
+nodejs_eventloop_delay_max
 ```
 
-`sleep()`으로 만든 지연은 Event Loop를 막지 않으므로 Event Loop Delay나 CPU가 반드시 증가하지는 않습니다.  
-이 실습은 HTTP 부하와 Runtime Metrics를 같은 시간축에서 비교하는 방법에 초점을 둡니다.  
+Max는 한 번의 Spike에도 크게 영향을 받습니다.  
+따라서 Max 하나만 보고 판단하기보다 p99와 지연이 얼마나 지속됐는지를 함께 보는 것이 좋습니다.  
+Event Loop Utilization은 Event Loop가 실제 작업을 수행한 시간의 비율입니다.  
 
-### 🟦 Latency와 CPU·Memory·Heap 비교
+```promql
+nodejs_eventloop_utilization
+```
 
-Dashboard를 다음 순서로 확인합니다.  
+### 예시 1. Event Loop Utilization, Delay p99와 CPU가 함께 증가한다면
 
-1. Request Rate에서 부하가 시작된 시점을 찾습니다.  
-2. p50·p95·p99에서 일반 지연과 Tail Latency 변화를 확인합니다.  
-3. 같은 시간대의 Process CPU와 RSS를 확인합니다.  
-4. V8 Heap Used의 증가와 감소 패턴을 확인합니다.  
+**CPU 집약적인 동기 작업이 Event Loop를 오래 점유하고 있을 가능성**이 있습니다.  
 
-Latency와 CPU가 함께 증가해도 CPU 사용이 지연의 원인이라고 바로 단정할 수는 없습니다.  
-트래픽 증가가 CPU와 Latency를 동시에 높였을 수도 있으므로 Route별 Latency와 Trace의 내부 Span을 함께 확인합니다.  
+- Route: HTTP p99가 높은 API를 찾습니다.  
+- CPU Profile: 오래 실행되는 함수가 무엇인지 확인합니다.  
+- 계산 작업: 긴 반복문, 암호화나 이미지 처리가 있는지 확인합니다.  
+- 데이터 처리: 큰 JSON 직렬화나 복잡한 정규 표현식이 있는지 확인합니다.  
+- 동기 I/O: 동기식 파일 처리가 Event Loop를 막는지 확인합니다.  
 
-Heap은 객체가 할당되면서 증가하고 GC 뒤에 감소하는 톱니 모양을 보일 수 있습니다.  
-GC 뒤에도 기준선이 장시간 계속 높아지는지, RSS도 함께 증가하는지를 반복해서 관찰합니다.  
+원인이 확인되면 알고리즘과 불필요한 연산을 개선하고, Worker Thread나 별도 Worker Process·Queue로 작업을 분리합니다.  
 
-### 🟦 Latency와 GC·Event Loop Delay 비교
+### 예시 2. Event Loop Utilization은 높지만 Delay와 HTTP Latency가 안정적이라면
 
-p50은 안정적인데 p99만 증가했다면 같은 시간대의 GC Duration과 Event Loop Delay를 확인합니다.  
+Event Loop가 바쁘더라도 Latency가 안정적이라면 **아직 요청을 제시간에 처리하고 있는 상태**일 수 있습니다. 즉시 장애로 판단하기보다 현재 처리량과 남은 용량을 확인합니다.  
+
+### 예시 3. HTTP p99는 높지만 Event Loop Delay가 안정적이라면
+
+Node.js 내부 CPU 작업보다 **Process 밖의 응답을 기다리는 상황**을 먼저 확인합니다.  
+
+- DB Query·Lock: Query 실행이나 Lock 대기가 길어지는지
+- DB Connection Pool: Connection을 얻기 위해 대기하는지
+- 외부 API: 호출한 서비스의 응답이 느린지
+- Network: 서비스 간 통신이 지연되는지
+
+같은 시간대의 느린 Trace에서 DB Span과 HTTP Client Span을 비교하면 어디에서 시간이 오래 걸렸는지 확인하기 쉽습니다.  
+
+### 예시 4. p50은 안정적인데 p99와 Max만 증가한다면
+
+대부분의 요청은 정상이지만 **일부 요청에서만 긴 동기 작업이나 Callback 폭주가 발생할 가능성**이 있습니다. Route별 p99와 Trace를 이용해 특정 입력이나 코드 경로에 문제가 집중되는지 확인합니다.  
+
+## 6. HTTP와 Runtime Metrics 연계 분석 {#session-06}
+
+실무에서는 Runtime Metric 하나만 보고 조치하기보다 HTTP Metrics와 같은 시간대의 움직임을 함께 봅니다.  
+다음 패턴을 기억해 두면 장애 원인을 좁히는 데 도움이 됩니다.  
+
+| 관측한 변화 | 가능한 상황 | 우선 확인할 내용 | 대응 방향 |
+| --- | --- | --- | --- |
+| Request Rate·CPU 증가, Latency 안정 | 트래픽 증가를 정상 처리 | Instance별 부하, 남은 CPU | 필요하면 Scale-out 준비 |
+| 5xx Error Rate·오류 건수 증가 | 실제 서버 오류 증가 | 실패 Route, Log, 최근 배포 | Rollback, Hotfix 또는 의존성 복구 |
+| CPU·Event Loop Delay·HTTP p99 증가 | 동기 작업이 Event Loop 점유 | 느린 Route, CPU Profile | 코드 최적화, Worker 분리 |
+| Heap 기준선·major GC·HTTP p99 증가 | Heap 압박 가능성 | `old_space`, Heap Snapshot | Cache와 객체 참조 정리 |
+| RSS 증가, Heap 안정 | Heap 밖 Memory 증가 | `Buffer`, Native Module | 외부 Memory 사용 원인 확인 |
+| HTTP p99 증가, Runtime 안정 | Process 외부 지연 | DB, 외부 API, Network Trace | Query와 외부 의존성 최적화 |
+| 한 Instance만 Rate·Latency 증가 | 요청 분배 또는 개별 Process 문제 | LB, 배포, Host 상태 | 분배 조정 또는 Instance 격리 |
+
+예를 들어 Request Rate는 비슷한데 CPU, Event Loop Delay와 HTTP p99가 함께 증가했다고 가정해 보겠습니다.  
+이 경우 큰 JSON 처리나 긴 반복문 같은 동기 작업이 Event Loop를 막고 있을 가능성을 생각할 수 있습니다.  
+Route별 HTTP p99로 느린 API를 찾고 CPU Profile에서 오래 실행되는 함수를 확인합니다.  
+반대로 HTTP p99는 증가했지만 CPU, Heap, GC와 Event Loop가 모두 안정적이라면 Node.js Process 내부보다 DB나 외부 API를 기다리는 시간이 길어진 상황일 가능성이 높습니다.  
+이 경우 Runtime을 계속 조사하기보다 Trace에서 DB Query와 외부 요청 Span을 확인하는 편이 더 빠릅니다.  
+
+전체 흐름을 단순하게 정리하면 다음과 같습니다.  
 
 ```text
 HTTP p99 증가
-├─ GC Duration도 증가
-│  └─ GC 정지와 Heap 변화 확인
-├─ Event Loop Delay도 증가
-│  └─ CPU를 오래 점유하는 동기 작업 확인
+│
+├─ CPU + Event Loop Delay 증가
+│   └─ 동기 작업 확인
+│      → CPU Profile
+│      → 코드 최적화
+│
+├─ Heap 기준선 + major GC 증가
+│   └─ Heap 압박 확인
+│      → Heap Snapshot
+│      → Cache / 객체 참조 확인
+│
 └─ Runtime Metrics 변화 없음
-   └─ DB, 외부 API와 Network Span 확인
+    └─ Process 외부 지연 확인
+       → DB
+       → 외부 API
+       → Network Trace
 ```
 
-같은 시점에 값이 움직였다는 사실은 원인과 결과를 확정하지 않습니다.  
-Metrics는 조사할 시간대와 구성 요소를 좁히고, Trace와 Profile 같은 세부 자료로 가설을 확인하는 출발점입니다.  
+Prometheus에서 Metric이 같은 시점에 움직였다는 사실만으로 원인과 결과가 확정되지는 않습니다.  
+Metrics의 역할은 **문제가 발생한 시간과 구성 요소를 빠르게 좁히는 것**입니다.  
+그다음 단계에서는 Trace, CPU Profile, Heap Snapshot과 Log를 이용해 실제 원인을 확인합니다.  
 
-### 🟦 Grafana 이상 구간에서 Jaeger Trace로 이동
-
-Grafana에서 이상 구간을 찾으면 시간 범위와 느린 Route를 기록합니다.  
-그다음 Jaeger에서 `observability-basics` Service와 같은 시간대를 선택해 Trace를 조회합니다.  
-
-```text
-Grafana
-└─ 14:05~14:10 /api/ch05/posts p99 증가
-       │
-       ▼
-Jaeger
-└─ observability-basics, 같은 시간대의 느린 Trace 조회
-       │
-       ▼
-HTTP → Fastify → Service → Prisma Span 비교
-```
-
-Trace에서는 다음 순서로 확인합니다.  
-
-1. HTTP Span의 전체 요청 시간과 상태 코드를 확인합니다.  
-2. Fastify handler가 요청 시간의 대부분을 차지하는지 확인합니다.  
-3. Service와 Prisma Span에서 반복되거나 오래 걸린 작업을 찾습니다.  
-4. 오류가 있다면 실패한 Span의 status와 exception event를 확인합니다.  
-5. 같은 Route의 정상 Trace와 느린 Trace를 비교합니다.  
-
-Metric label에는 Cardinality가 큰 `traceId`를 넣지 않았으므로 이 예제에서는 시간대와 Route를 기준으로 Jaeger 검색 범위를 좁힙니다.  
-Grafana와 Trace Backend를 연결하거나 Exemplar를 별도로 구성하면 Dashboard에서 특정 Trace로 직접 이동하는 흐름도 만들 수 있습니다.  
-
-Metrics와 Trace의 역할은 서로 다릅니다.  
-Metrics는 서비스 전체에서 이상이 발생한 시점과 범위를 보여 주고, Trace는 특정 요청 안에서 시간이 오래 걸린 구간을 보여 줍니다.  
-HTTP와 Runtime Metrics를 함께 관찰한 뒤 Trace로 이동하면 단순히 느린 요청을 찾는 데서 그치지 않고 애플리케이션, Runtime과 DB 가운데 어디를 먼저 조사해야 하는지 결정할 수 있습니다.  
+다음 7편에서는 이번 글에서 사용한 PromQL을 Grafana Panel에 배치하고, HTTP와 Node.js Runtime 상태를 한 화면에서 비교할 수 있는 Dashboard를 구성해 보겠습니다.  
