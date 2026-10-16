@@ -5,7 +5,7 @@ description: "[글의 대상, 주제, 글을 통해 얻는 결과를 한두 문�
 category_id: [하위-카테고리-id]
 categories: [상위-카테고리-id, 하위-카테고리-id]
 series: [시리즈-id]
-series_order: [순서]
+series_order: 1
 ai_assisted: true
 toc:
   - id: session-01
@@ -28,6 +28,7 @@ YYYY-MM-DD-series-order-short-slug.md
 title, description, toc는 본문 내용에 맞게 작성합니다.
 toc의 항목은 본문의 모든 2단계 제목과 순서, 문구, id가 같아야 합니다.
 필요하지 않은 목차와 본문 단락은 함께 삭제합니다.
+series_order는 앞자리 0과 따옴표가 없는 정수로 작성합니다(예: 1, 2, 10).
 
 문단과 줄바꿈:
 - 서로 다른 문단은 빈 줄로 구분합니다.

@@ -5,7 +5,7 @@ description: "npm workspace에 Fastify 프로젝트를 생성하고 TypeScript �
 category_id: nodejs-fastify
 categories: [nodejs, nodejs-fastify]
 series: fastify
-series_order: 01
+series_order: 1
 ai_assisted: true
 toc:
   - id: session-01

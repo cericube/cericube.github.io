@@ -5,7 +5,7 @@ description: "앞에서 검증한 PromQL을 Grafana Dashboard에 배치합니다
 category_id: nodejs-observability
 categories: [nodejs, nodejs-observability]
 series: observability
-series_order: 07
+series_order: 7
 ai_assisted: true
 toc:
   - id: session-01

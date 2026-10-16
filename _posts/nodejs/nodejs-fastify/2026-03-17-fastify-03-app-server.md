@@ -5,7 +5,7 @@ description: "환경 변수를 한곳에서 관리하고 Fastify 애플리케이
 category_id: nodejs-fastify
 categories: [nodejs, nodejs-fastify]
 series: fastify
-series_order: 03
+series_order: 3
 ai_assisted: true
 toc:
   - id: session-01

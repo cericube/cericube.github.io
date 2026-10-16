@@ -5,7 +5,7 @@ description: "Windows에서 WSL 2를 설치하는 방법과 배포판·버전·�
 category_id: system-infra-virtualization
 categories: [system-infra, system-infra-virtualization]
 series: wsl
-series_order: 01
+series_order: 1
 ai_assisted: true
 toc:
   - id: session-01

@@ -5,7 +5,7 @@ description: "JavaScript의 표준 모듈 시스템인 ESM을 중심으로 impor
 category_id: nodejs-typescript
 categories: [nodejs, nodejs-typescript]
 series: javascript
-series_order: "06"
+series_order: 6
 ai_assisted: true
 toc:
   - id: session-01

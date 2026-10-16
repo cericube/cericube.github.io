@@ -5,7 +5,7 @@ description: "Prisma 7에서 where·select·include·페이지네이션으로 �
 category_id: nodejs-prisma
 categories: [nodejs, nodejs-prisma]
 series: prisma
-series_order: 04
+series_order: 4
 ai_assisted: true
 toc:
   - id: session-01

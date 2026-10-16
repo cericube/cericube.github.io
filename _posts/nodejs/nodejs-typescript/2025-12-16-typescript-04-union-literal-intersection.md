@@ -5,7 +5,7 @@ description: "TypeScript의 유니언, 리터럴, 인터섹션 타입과 typeof,
 category_id: nodejs-typescript
 categories: [nodejs, nodejs-typescript]
 series: typescript
-series_order: "04"
+series_order: 4
 ai_assisted: true
 toc:
   - id: session-01

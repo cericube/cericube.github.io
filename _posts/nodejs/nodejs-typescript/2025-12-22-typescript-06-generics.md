@@ -5,7 +5,7 @@ description: "TypeScript에서 any 대신 제네릭을 사용하는 이유와 �
 category_id: nodejs-typescript
 categories: [nodejs, nodejs-typescript]
 series: typescript
-series_order: "06"
+series_order: 6
 ai_assisted: true
 toc:
   - id: session-01

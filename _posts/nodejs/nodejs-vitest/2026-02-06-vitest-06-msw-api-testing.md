@@ -5,7 +5,7 @@ description: "Vitest의 Node.js 테스트 환경에 MSW를 설정하고, 외부 
 category_id: nodejs-vitest
 categories: [nodejs, nodejs-vitest]
 series: vitest
-series_order: 06
+series_order: 6
 ai_assisted: true
 toc:
   - id: session-01

@@ -5,7 +5,7 @@ description: "Redis String을 활용해 사용자 조회 캐시, 이메일 인�
 category_id: nodejs-redis
 categories: [nodejs, nodejs-redis]
 series: redis
-series_order: 05
+series_order: 5
 ai_assisted: true
 toc:
   - id: session-01

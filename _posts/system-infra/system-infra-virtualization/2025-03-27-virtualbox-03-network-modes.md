@@ -5,7 +5,7 @@ description: "VirtualBox의 NAT, NAT Network, 브리지, 호스트 전용 및 �
 category_id: system-infra-virtualization
 categories: [system-infra, system-infra-virtualization]
 series: virtualbox
-series_order: 03
+series_order: 3
 ai_assisted: true
 toc:
   - id: session-01

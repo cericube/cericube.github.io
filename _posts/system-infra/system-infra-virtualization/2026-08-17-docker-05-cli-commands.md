@@ -5,7 +5,7 @@ description: "Docker의 버전 확인부터 이미지, 컨테이너, 실행 옵�
 category_id: system-infra-virtualization
 categories: [system-infra, system-infra-virtualization]
 series: docker
-series_order: 05
+series_order: 5
 ai_assisted: true
 toc:
   - id: session-01

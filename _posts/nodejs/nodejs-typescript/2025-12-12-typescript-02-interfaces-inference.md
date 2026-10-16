@@ -5,7 +5,7 @@ description: "TypeScript의 Interface와 Type Alias를 비교하고, 선택적·
 category_id: nodejs-typescript
 categories: [nodejs, nodejs-typescript]
 series: typescript
-series_order: "02"
+series_order: 2
 ai_assisted: true
 toc:
   - id: session-01

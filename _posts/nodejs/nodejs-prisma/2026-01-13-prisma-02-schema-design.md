@@ -5,7 +5,7 @@ description: "Prisma 7과 PostgreSQL을 기준으로 schema.prisma의 모델과 
 category_id: nodejs-prisma
 categories: [nodejs, nodejs-prisma]
 series: prisma
-series_order: 02
+series_order: 2
 ai_assisted: true
 toc:
   - id: session-01

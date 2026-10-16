@@ -28,4 +28,6 @@
     - id: nodejs-fastify
       name: "Fastify 5" 
     - id: nodejs-observability
-      name: "Observability"    
+      name: "Observability"
+    - id: nodejs-graphql
+      name: "GraphQL"

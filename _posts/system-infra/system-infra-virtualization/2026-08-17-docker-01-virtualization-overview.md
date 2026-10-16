@@ -5,7 +5,7 @@ description: "Docker를 이해하는 데 필요한 가상화 개념을 살펴보
 category_id: system-infra-virtualization
 categories: [system-infra, system-infra-virtualization]
 series: docker
-series_order: 01
+series_order: 1
 ai_assisted: true
 toc:
   - id: session-01

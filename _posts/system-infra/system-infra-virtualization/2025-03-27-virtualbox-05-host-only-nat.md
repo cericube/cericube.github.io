@@ -5,7 +5,7 @@ description: "VirtualBox 가상 머신에 Host-Only와 NAT 어댑터를 함께 �
 category_id: system-infra-virtualization
 categories: [system-infra, system-infra-virtualization]
 series: virtualbox
-series_order: 05
+series_order: 5
 ai_assisted: true
 toc:
   - id: session-01

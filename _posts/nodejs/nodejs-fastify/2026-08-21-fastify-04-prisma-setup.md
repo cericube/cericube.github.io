@@ -5,7 +5,7 @@ description: "Fastify에서 Prisma를 사용하기 위해 사용자, 게시글, 
 category_id: nodejs-fastify
 categories: [nodejs, nodejs-fastify]
 series: fastify
-series_order: 04
+series_order: 4
 ai_assisted: true
 toc:
   - id: session-01

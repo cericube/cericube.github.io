@@ -5,7 +5,7 @@ description: "Fastify 플러그인으로 공통 기능을 재사용하고 라우
 category_id: nodejs-fastify
 categories: [nodejs, nodejs-fastify]
 series: fastify
-series_order: 02
+series_order: 2
 ai_assisted: true
 toc:
   - id: session-01

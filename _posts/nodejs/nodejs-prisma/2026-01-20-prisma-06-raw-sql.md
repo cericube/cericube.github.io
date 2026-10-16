@@ -5,7 +5,7 @@ description: "Prisma 7에서 $queryRaw와 $executeRaw로 Raw SQL을 실행하고
 category_id: nodejs-prisma
 categories: [nodejs, nodejs-prisma]
 series: prisma
-series_order: 06
+series_order: 6
 ai_assisted: true
 toc:
   - id: session-01

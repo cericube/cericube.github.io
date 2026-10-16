@@ -5,7 +5,7 @@ description: "JavaScript의 Error 객체와 스택 트레이스, Error.cause, tr
 category_id: nodejs-typescript
 categories: [nodejs, nodejs-typescript]
 series: javascript
-series_order: "09"
+series_order: 9
 ai_assisted: true
 toc:
   - id: session-01

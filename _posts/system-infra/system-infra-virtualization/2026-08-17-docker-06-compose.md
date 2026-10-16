@@ -5,7 +5,7 @@ description: "Docker Compose와 Docker의 역할 차이를 알아보고, compose
 category_id: system-infra-virtualization
 categories: [system-infra, system-infra-virtualization]
 series: docker
-series_order: 06
+series_order: 6
 ai_assisted: true
 toc:
   - id: session-01

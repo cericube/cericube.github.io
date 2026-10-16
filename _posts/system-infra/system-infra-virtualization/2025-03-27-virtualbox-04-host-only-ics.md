@@ -5,7 +5,7 @@ description: "Windows 인터넷 연결 공유(ICS)를 이용해 VirtualBox Host-
 category_id: system-infra-virtualization
 categories: [system-infra, system-infra-virtualization]
 series: virtualbox
-series_order: 04
+series_order: 4
 ai_assisted: true
 toc:
   - id: session-01

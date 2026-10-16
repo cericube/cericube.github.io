@@ -5,7 +5,7 @@ description: "개발 초보자가 TypeScript의 연산자, 타입, 함수, 클�
 category_id: nodejs-typescript
 categories: [nodejs, nodejs-typescript]
 series: typescript
-series_order: "08"
+series_order: 8
 ai_assisted: true
 toc:
   - id: session-01

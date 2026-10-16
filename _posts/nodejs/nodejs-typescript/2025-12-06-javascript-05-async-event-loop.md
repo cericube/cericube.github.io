@@ -5,7 +5,7 @@ description: "JavaScript의 콜백, Promise, async/await, AbortController, 이�
 category_id: nodejs-typescript
 categories: [nodejs, nodejs-typescript]
 series: javascript
-series_order: "05"
+series_order: 5
 ai_assisted: true
 toc:
   - id: session-01

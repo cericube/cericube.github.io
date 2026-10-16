@@ -5,7 +5,7 @@ description: "Vitest의 Lifecycle Hook과 비동기 테스트 작성법을 알�
 category_id: nodejs-vitest
 categories: [nodejs, nodejs-vitest]
 series: vitest
-series_order: 03
+series_order: 3
 ai_assisted: true
 toc:
   - id: session-01

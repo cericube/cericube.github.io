@@ -5,7 +5,7 @@ description: "npm workspace로 구성한 nodejs-workbook에서 루트의 Vitest 
 category_id: nodejs-vitest
 categories: [nodejs, nodejs-vitest]
 series: vitest
-series_order: 01
+series_order: 1
 ai_assisted: true
 toc:
   - id: session-01

@@ -5,7 +5,7 @@ description: "redis-cli로 String, Hash, List, Set과 Sorted Set에서 자주 �
 category_id: nodejs-redis
 categories: [nodejs, nodejs-redis]
 series: redis
-series_order: 03
+series_order: 3
 ai_assisted: true
 toc:
   - id: session-01

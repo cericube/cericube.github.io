@@ -5,7 +5,7 @@ description: "Fastify의 요청과 응답 스키마를 작성할 때 사용하�
 category_id: nodejs-fastify
 categories: [nodejs, nodejs-fastify]
 series: fastify
-series_order: 06
+series_order: 6
 ai_assisted: true
 toc:
   - id: session-01

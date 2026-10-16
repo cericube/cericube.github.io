@@ -5,7 +5,7 @@ description: "JavaScript 클래스가 프로토타입을 통해 메서드를 공
 category_id: nodejs-typescript
 categories: [nodejs, nodejs-typescript]
 series: javascript
-series_order: "04"
+series_order: 4
 ai_assisted: true
 toc:
   - id: session-01

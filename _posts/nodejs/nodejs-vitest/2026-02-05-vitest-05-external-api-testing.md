@@ -5,7 +5,7 @@ description: "Vitest에서 Axios와 Undici로 외부 HTTP API를 호출하고, �
 category_id: nodejs-vitest
 categories: [nodejs, nodejs-vitest]
 series: vitest
-series_order: 05
+series_order: 5
 ai_assisted: true
 toc:
   - id: session-01

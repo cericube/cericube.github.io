@@ -5,7 +5,7 @@ description: "Docker 컨테이너의 데이터가 사라지는 이유와 Docker 
 category_id: system-infra-virtualization
 categories: [system-infra, system-infra-virtualization]
 series: docker
-series_order: 04
+series_order: 4
 ai_assisted: true
 toc:
   - id: session-01

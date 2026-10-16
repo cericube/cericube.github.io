@@ -5,7 +5,7 @@ description: "자동 계측으로 만든 HTTP, Fastify, Prisma Span 사이에 �
 category_id: nodejs-observability
 categories: [nodejs, nodejs-observability]
 series: observability
-series_order: 04
+series_order: 4
 ai_assisted: true
 toc:
   - id: session-01

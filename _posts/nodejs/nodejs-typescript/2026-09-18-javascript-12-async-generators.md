@@ -5,7 +5,7 @@ description: "JavaScript의 비동기 제너레이터(async function*) 개념과
 category_id: nodejs-typescript
 categories: [nodejs, nodejs-typescript]
 series: javascript
-series_order: "12"
+series_order: 12
 ai_assisted: true
 toc:
   - id: session-01

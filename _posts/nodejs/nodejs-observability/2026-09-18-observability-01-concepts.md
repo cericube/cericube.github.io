@@ -5,7 +5,7 @@ description: "Observability의 개념과 Monitoring과의 차이를 살펴봅니
 category_id: nodejs-observability
 categories: [nodejs, nodejs-observability]
 series: observability
-series_order: 01
+series_order: 1
 ai_assisted: true
 toc:
   - id: session-01

@@ -5,7 +5,7 @@ description: "Fastify 실습 프로젝트의 User, Post와 PostAttachment Prisma
 category_id: nodejs-fastify
 categories: [nodejs, nodejs-fastify]
 series: fastify
-series_order: 07
+series_order: 7
 ai_assisted: true
 toc:
   - id: session-01

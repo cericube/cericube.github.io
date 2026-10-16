@@ -5,7 +5,7 @@ description: "Fastify의 inject()를 활용하여 실제 포트를 열지 않고
 category_id: nodejs-vitest
 categories: [nodejs, nodejs-vitest]
 series: vitest
-series_order: 04
+series_order: 4
 ai_assisted: true
 toc:
   - id: session-01

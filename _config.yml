@@ -15,3 +15,5 @@ exclude:
   - Gemfile
   - Gemfile.lock
   - vendor
+
+port: 4001

@@ -5,7 +5,7 @@ description: "HttpInstrumentation, FastifyOtelInstrumentation, PrismaInstrumenta
 category_id: nodejs-observability
 categories: [nodejs, nodejs-observability]
 series: observability
-series_order: 03
+series_order: 3
 ai_assisted: true
 toc:
   - id: session-01

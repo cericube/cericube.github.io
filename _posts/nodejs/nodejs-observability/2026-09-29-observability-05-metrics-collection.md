@@ -5,7 +5,7 @@ description: "OpenTelemetry Meter와 Instrument를 이해하고 Fastify HTTP 요
 category_id: nodejs-observability
 categories: [nodejs, nodejs-observability]
 series: observability
-series_order: 05
+series_order: 5
 ai_assisted: true
 toc:
   - id: session-01

@@ -5,7 +5,7 @@ description: "VirtualBox에서 ISO 또는 기존 VDI로 가상 머신을 만들�
 category_id: system-infra-virtualization
 categories: [system-infra, system-infra-virtualization]
 series: virtualbox
-series_order: 02
+series_order: 2
 ai_assisted: true
 toc:
   - id: session-01

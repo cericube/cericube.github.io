@@ -5,7 +5,7 @@ description: "Fastify 모듈을 Route, Controller, Service, Repository 계층으
 category_id: nodejs-fastify
 categories: [nodejs, nodejs-fastify]
 series: fastify
-series_order: 05
+series_order: 5
 ai_assisted: true
 toc:
   - id: session-01

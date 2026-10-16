@@ -5,7 +5,7 @@ description: "JavaScript의 함수 선언과 호출, 화살표 함수, this 바�
 category_id: nodejs-typescript
 categories: [nodejs, nodejs-typescript]
 series: javascript
-series_order: "03"
+series_order: 3
 ai_assisted: true
 toc:
   - id: session-01

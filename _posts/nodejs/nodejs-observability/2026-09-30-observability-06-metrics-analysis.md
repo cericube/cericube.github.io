@@ -5,7 +5,7 @@ description: "OpenTelemetry로 수집한 HTTP와 Node.js Runtime Metrics를 Prom
 category_id: nodejs-observability
 categories: [nodejs, nodejs-observability]
 series: observability
-series_order: 06
+series_order: 6
 ai_assisted: true
 toc:
   - id: session-01

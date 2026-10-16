@@ -5,7 +5,7 @@ description: "Vitest에서 @vitest/coverage-v8을 설정하고, 예제 테스트
 category_id: nodejs-vitest
 categories: [nodejs, nodejs-vitest]
 series: vitest
-series_order: 07
+series_order: 7
 ai_assisted: true
 toc:
   - id: session-01

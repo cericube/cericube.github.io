@@ -5,7 +5,7 @@ description: "Linux에서 Docker가 컨테이너 포트를 게시할 때 UFW와 
 category_id: system-infra-virtualization
 categories: [system-infra, system-infra-virtualization]
 series: docker
-series_order: 03
+series_order: 3
 ai_assisted: true
 toc:
   - id: session-01

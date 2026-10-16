@@ -5,7 +5,7 @@ description: "Redis List를 활용해 최근 본 게시글과 검색어를 관�
 category_id: nodejs-redis
 categories: [nodejs, nodejs-redis]
 series: redis
-series_order: 07
+series_order: 7
 ai_assisted: true
 toc:
   - id: session-01

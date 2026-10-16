@@ -506,7 +506,7 @@ Front Matter의 주요 항목은 다음과 같이 사용합니다.
 - `category_id`: 사이드바 분류와 같은 카테고리의 이전·다음 글을 결정하는 하위 카테고리 ID
 - `categories`: Jekyll URL에 사용할 상위·하위 카테고리 ID
 - `series`: 글이 속한 시리즈
-- `series_order`: 시리즈 안에서의 글 순서
+- `series_order`: 시리즈 안에서의 글 순서(앞자리 0과 따옴표가 없는 정수)
 - `ai_assisted`: `true`이면 본문 하단에 `_config.yml`의 `ai_notice` 문구 표시
 - `toc`: 필요한 글에서만 목차 항목을 정의하며, 브라우저에서는 기본적으로 접힌 상태로 표시
 

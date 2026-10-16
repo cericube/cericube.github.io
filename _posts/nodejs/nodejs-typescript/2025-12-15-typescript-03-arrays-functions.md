@@ -5,7 +5,7 @@ description: "TypeScript의 배열과 튜플 선언법부터 함수 매개변수
 category_id: nodejs-typescript
 categories: [nodejs, nodejs-typescript]
 series: typescript
-series_order: "03"
+series_order: 3
 ai_assisted: true
 toc:
   - id: session-01

@@ -5,7 +5,7 @@ description: "JavaScript의 for, while, forEach 문법과 Iterable, Iterator, Ge
 category_id: nodejs-typescript
 categories: [nodejs, nodejs-typescript]
 series: javascript
-series_order: "08"
+series_order: 8
 ai_assisted: true
 toc:
   - id: session-01

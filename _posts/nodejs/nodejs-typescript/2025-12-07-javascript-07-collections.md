@@ -5,7 +5,7 @@ description: "JavaScript 배열의 주요 메서드와 Map, Set, groupBy, WeakMa
 category_id: nodejs-typescript
 categories: [nodejs, nodejs-typescript]
 series: javascript
-series_order: "07"
+series_order: 7
 ai_assisted: true
 toc:
   - id: session-01

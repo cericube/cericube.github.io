@@ -5,7 +5,7 @@ description: "Redis 7의 인메모리 저장 방식과 핵심 기능을 설명�
 category_id: nodejs-redis
 categories: [nodejs, nodejs-redis]
 series: redis
-series_order: 01
+series_order: 1
 ai_assisted: true
 toc:
   - id: session-01

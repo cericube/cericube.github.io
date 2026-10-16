@@ -5,7 +5,7 @@ description: "Prisma 7의 배열·대화형 트랜잭션과 중첩 쓰기를 살
 category_id: nodejs-prisma
 categories: [nodejs, nodejs-prisma]
 series: prisma
-series_order: 07
+series_order: 7
 ai_assisted: true
 toc:
   - id: session-01

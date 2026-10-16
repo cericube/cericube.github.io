@@ -5,7 +5,7 @@ description: "Windows에 VirtualBox 7.1.6을 설치하고 설치 오류를 해�
 category_id: system-infra-virtualization
 categories: [system-infra, system-infra-virtualization]
 series: virtualbox
-series_order: 01
+series_order: 1
 ai_assisted: true
 toc:
   - id: session-01

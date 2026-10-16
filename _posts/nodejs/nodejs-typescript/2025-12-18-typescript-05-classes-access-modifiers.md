@@ -5,7 +5,7 @@ description: "TypeScript 클래스의 속성·생성자·메서드에 타입을 
 category_id: nodejs-typescript
 categories: [nodejs, nodejs-typescript]
 series: typescript
-series_order: "05"
+series_order: 5
 ai_assisted: true
 toc:
   - id: session-01

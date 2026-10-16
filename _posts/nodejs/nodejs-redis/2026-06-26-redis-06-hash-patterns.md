@@ -5,7 +5,7 @@ description: "Redis Hash를 활용해 사용자 프로필 캐시, 로그인 세�
 category_id: nodejs-redis
 categories: [nodejs, nodejs-redis]
 series: redis
-series_order: 06
+series_order: 6
 ai_assisted: true
 toc:
   - id: session-01

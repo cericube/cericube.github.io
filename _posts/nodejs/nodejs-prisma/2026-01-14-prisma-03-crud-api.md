@@ -5,7 +5,7 @@ description: "Prisma Client Query의 기본 구조와 공통 인자를 살펴보
 category_id: nodejs-prisma
 categories: [nodejs, nodejs-prisma]
 series: prisma
-series_order: 03
+series_order: 3
 ai_assisted: true
 toc:
   - id: session-01

@@ -5,7 +5,7 @@ description: "JavaScript의 비교, 논리, 기본값 처리, 선택적 체이�
 category_id: nodejs-typescript
 categories: [nodejs, nodejs-typescript]
 series: javascript
-series_order: "11"
+series_order: 11
 ai_assisted: true
 toc:
   - id: session-01

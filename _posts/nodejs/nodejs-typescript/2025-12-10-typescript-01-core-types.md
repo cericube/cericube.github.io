@@ -5,7 +5,7 @@ description: "TypeScript의 핵심 개념과 기본 타입, 타입 별칭, 모�
 category_id: nodejs-typescript
 categories: [nodejs, nodejs-typescript]
 series: typescript
-series_order: "01"
+series_order: 1
 ai_assisted: true
 toc:
   - id: session-01

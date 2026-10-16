@@ -5,7 +5,7 @@ description: "Vitest의 describe와 it으로 테스트 구조를 설계하고, e
 category_id: nodejs-vitest
 categories: [nodejs, nodejs-vitest]
 series: vitest
-series_order: 02
+series_order: 2
 ai_assisted: true
 toc:
   - id: session-01

@@ -5,7 +5,7 @@ description: "Prisma 7과 SQLite, Redis, Vitest를 사용하는 Redis 실습 프
 category_id: nodejs-redis
 categories: [nodejs, nodejs-redis]
 series: redis
-series_order: 04
+series_order: 4
 ai_assisted: true
 toc:
   - id: session-01

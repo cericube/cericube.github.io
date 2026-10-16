@@ -5,7 +5,7 @@ description: "Ubuntu에 Docker 공식 저장소를 등록해 Docker Engine을 �
 category_id: system-infra-virtualization
 categories: [system-infra, system-infra-virtualization]
 series: docker
-series_order: 02
+series_order: 2
 ai_assisted: true
 toc:
   - id: session-01

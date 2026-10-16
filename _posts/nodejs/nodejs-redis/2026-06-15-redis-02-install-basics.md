@@ -5,7 +5,7 @@ description: "Docker와 Docker Compose로 Redis 7.2를 안전하게 실행하고
 category_id: nodejs-redis
 categories: [nodejs, nodejs-redis]
 series: redis
-series_order: 02
+series_order: 2
 ai_assisted: true
 toc:
   - id: session-01

@@ -5,7 +5,7 @@ description: "Fastify에서 생성한 Logs, Metrics, Traces가 OpenTelemetry를 
 category_id: nodejs-observability
 categories: [nodejs, nodejs-observability]
 series: observability
-series_order: 02
+series_order: 2
 ai_assisted: true
 toc:
   - id: session-01

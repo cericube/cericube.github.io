@@ -5,7 +5,7 @@ description: "JavaScript 객체와 배열의 생성·접근·검색·변경 방�
 category_id: nodejs-typescript
 categories: [nodejs, nodejs-typescript]
 series: javascript
-series_order: "02"
+series_order: 2
 ai_assisted: true
 toc:
   - id: session-01

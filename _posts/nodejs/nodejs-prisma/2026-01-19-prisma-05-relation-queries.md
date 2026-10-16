@@ -5,7 +5,7 @@ description: "Prisma 7에서 include와 select로 관계 데이터를 조회하�
 category_id: nodejs-prisma
 categories: [nodejs, nodejs-prisma]
 series: prisma
-series_order: 05
+series_order: 5
 ai_assisted: true
 toc:
   - id: session-01

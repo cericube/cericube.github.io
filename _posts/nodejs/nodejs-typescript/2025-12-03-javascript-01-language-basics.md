@@ -5,7 +5,7 @@ description: "JavaScript의 변수 선언, 데이터 타입, Truthy와 Falsy, �
 category_id: nodejs-typescript
 categories: [nodejs, nodejs-typescript]
 series: javascript
-series_order: "01"
+series_order: 1
 ai_assisted: true
 toc:
   - id: session-01

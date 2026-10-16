@@ -5,7 +5,7 @@ description: "WSL 2에 Ubuntu 24.04를 설치하고 실행 및 기본 배포판 
 category_id: system-infra-virtualization
 categories: [system-infra, system-infra-virtualization]
 series: wsl
-series_order: 02
+series_order: 2
 ai_assisted: true
 toc:
   - id: session-01

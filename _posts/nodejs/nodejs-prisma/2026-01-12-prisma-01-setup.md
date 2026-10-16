@@ -5,7 +5,7 @@ description: "nodejs-workbook 루트 workspace의 prisma-basics 하위 프로젝
 category_id: nodejs-prisma
 categories: [nodejs, nodejs-prisma]
 series: prisma
-series_order: 01
+series_order: 1
 ai_assisted: true
 toc:
   - id: session-01

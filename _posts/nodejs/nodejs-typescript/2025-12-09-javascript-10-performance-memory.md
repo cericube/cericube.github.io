@@ -5,7 +5,7 @@ description: "JavaScript의 Spread와 구조 분해에 드는 비용, 클로저�
 category_id: nodejs-typescript
 categories: [nodejs, nodejs-typescript]
 series: javascript
-series_order: "10"
+series_order: 10
 ai_assisted: true
 toc:
   - id: session-01

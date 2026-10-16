@@ -5,7 +5,7 @@ description: "TypeScript의 Partial, Readonly, Pick, Omit과 조건부 타입, �
 category_id: nodejs-typescript
 categories: [nodejs, nodejs-typescript]
 series: typescript
-series_order: "07"
+series_order: 7
 ai_assisted: true
 toc:
   - id: session-01
