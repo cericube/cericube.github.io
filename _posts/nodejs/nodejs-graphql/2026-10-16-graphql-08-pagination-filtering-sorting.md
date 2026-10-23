@@ -1,7 +1,7 @@
 ---
 layout: post
 title: "08. GraphQL Pagination, Filtering, Sorting"
-description: "GraphQL Input Type으로 게시글 필터·정렬·페이지 조건을 정의하고, Prisma의 skip·take와 Cursor를 이용해 Offset 및 Cursor 기반 목록 조회 API를 구현합니다."
+description: "GraphQL Input Type으로 필터·정렬·페이지 조건을 정의하고, Prisma로 Offset Pagination과 GraphQL Cursor Connections 기반 양방향 Cursor Pagination API를 구현하고 테스트합니다."
 category_id: nodejs-graphql
 categories: [nodejs, nodejs-graphql]
 series: graphql
@@ -11,59 +11,60 @@ toc:
   - id: session-01
     title: "1. Offset 기반 Pagination 구현"
   - id: session-02
-    title: "2. Cursor 기반 Pagination 개념과 활용"
+    title: "2. GraphQL Cursor Connections 기반 양방향 Pagination"
   - id: session-03
     title: "3. Input Type을 활용한 Filtering 및 Sorting"
   - id: session-04
-    title: "4. Prisma 기반 게시글 목록 조회 API 구현"
+    title: "4. 게시글 목록 조회 API 구현 및 실습"
 ---
 
 📂 **[[GitHub 코드 보러가기]](https://github.com/cericube/nodejs-workbook/tree/main/graphql-basics){: target="_blank" rel="noopener noreferrer" }**  
 
-게시글이 늘어나면 모든 데이터를 한 번에 반환하기보다 일정한 크기로 나누어 조회해야 합니다.  
-Pagination은 목록을 여러 페이지로 나누고, Filtering은 필요한 게시글만 남기며, Sorting은 결과의 순서를 정합니다.  
-이번 글에서는 GraphQL Input Type으로 조회 조건을 정의하고 Prisma를 이용해 Offset과 Cursor 기반 게시글 목록 API를 구현합니다.  
-
 ## 1. Offset 기반 Pagination 구현 {#session-01}
 
-Offset 기반 Pagination은 앞에서 몇 건을 건너뛸지와 몇 건을 가져올지를 숫자로 지정하는 방식입니다.  
+### 🟦 Offset Pagination 개념과 동작 원리
+
+Offset Pagination은 앞에서 몇 건을 건너뛸지와 몇 건을 가져올지를 숫자로 지정하는 방식입니다.  
+`offset`은 건너뛸 데이터 수이고, `limit`은 한 번에 가져올 최대 데이터 수입니다.  
+
 예를 들어 `offset: 10`, `limit: 5`를 전달하면 앞의 10건을 건너뛰고 그다음 5건을 조회합니다.  
 
-Prisma에서는 각각 `skip`과 `take`로 표현합니다.  
-
-```typescript
-return prisma.post.findMany({
-  skip: 10,
-  take: 5,
-  orderBy: { createdAt: 'desc' },
-});
+```text
+전체 데이터: 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 ...
+offset: 10  → 1번부터 10번까지 건너뜁니다.
+limit: 5    → 11번부터 15번까지 가져옵니다.
 ```
 
-페이지 번호를 사용한다면 Offset은 다음 식으로 계산할 수 있습니다.  
+페이지 번호를 Offset으로 바꾸는 식은 다음과 같습니다.  
 
 ```text
 offset = (page - 1) × limit
 ```
 
-한 페이지에 10개씩 보여 줄 때 1페이지는 `offset: 0`, 2페이지는 `offset: 10`, 3페이지는 `offset: 20`이 됩니다. 원하는 페이지로 바로 이동하기 쉽다는 것이 Offset 방식의 장점입니다.  
+한 페이지에 10개씩 보여 준다면 1페이지는 `offset: 0`, 2페이지는 `offset: 10`, 3페이지는 `offset: 20`이 됩니다.  
+페이지 번호를 조회 조건으로 바꾸기 쉽고 원하는 페이지로 바로 이동할 수 있다는 점이 Offset 방식의 장점입니다.  
 
-### 🟦 Offset 페이지 Schema 정의
+### 🟦 GraphQL Schema 및 Pagination Input 정의
 
-실습 프로젝트는 Pagination 조건과 응답 정보를 별도의 타입으로 정의합니다.  
+Offset 입력과 응답 정보를 GraphQL 타입으로 정의합니다. 입력에는 `offset`과 `limit`을 넣고, 응답에는 게시글 목록과 전체 개수, 현재 페이지 정보를 넣습니다.  
 
 ```graphql
 # /src/modules/post/post.schema.ts
+
+# offset은 건너뛸 행 수이고 limit은 반환할 최대 행 수입니다.
 input OffsetPaginationInput {
   offset: Int = 0
   limit: Int = 10
 }
 
+# 현재 조회 범위와 다음 페이지 존재 여부를 제공합니다.
 type OffsetPageInfo {
   offset: Int!
   limit: Int!
   hasNextPage: Boolean!
 }
 
+# 게시글 목록과 전체 개수, 페이지 정보를 하나로 묶습니다.
 type OffsetPostPage {
   items: [Post!]!
   totalCount: Int!
@@ -71,17 +72,8 @@ type OffsetPostPage {
 }
 ```
 
-`OffsetPaginationInput`을 생략하면 첫 번째 게시글부터 10개를 가져옵니다. 응답에는 게시글 배열뿐 아니라 필터를 만족하는 전체 개수와 다음 페이지 존재 여부도 포함합니다.  
-
-| 필드 | 의미 |
-| --- | --- |
-| `items` | 현재 페이지에 포함된 게시글 목록 |
-| `totalCount` | 필터를 만족하는 전체 게시글 수 |
-| `pageInfo.offset` | 이번 요청에서 건너뛴 게시글 수 |
-| `pageInfo.limit` | 요청한 페이지 크기 |
-| `pageInfo.hasNextPage` | 다음 페이지 존재 여부 |
-
-Query에는 Pagination과 함께 Filter, Sort 입력을 받을 수 있는 `postsByOffset` 필드를 선언합니다.  
+Pagination 입력을 생략하면 Service에서 기본값을 적용하여 첫 번째 게시글부터 10개를 가져옵니다.  
+`items`는 현재 페이지의 게시글이고, `totalCount`는 필터 조건을 만족하는 전체 게시글 수입니다.  
 
 ```graphql
 extend type Query {
@@ -93,9 +85,12 @@ extend type Query {
 }
 ```
 
-### 🟦 Prisma의 skip과 take
+`filter`와 `sort`는 선택 사항입니다. 두 입력 타입은 3장에서 정의하고 Pagination과 연결합니다.  
 
-Repository는 Service에서 검증한 조건을 Prisma 쿼리로 옮깁니다.  
+### 🟦 Prisma `skip`, `take`를 이용한 목록 조회
+
+Prisma에서는 `offset`과 `limit`을 각각 `skip`과 `take`로 표현합니다.  
+Repository는 필터와 정렬 조건을 먼저 적용한 결과에서 `skip`만큼 건너뛴 뒤 `take`만큼 가져옵니다.  
 
 ```typescript
 // /src/modules/post/post.repository.ts
@@ -103,133 +98,382 @@ findByOffset(
   filter: PostFilterInput,
   offset: number,
   take: number,
-  orderBy: Prisma.PostOrderByWithRelationInput[],
+  sort: NormalizedPostSort,
 ) {
   return this.prisma.post.findMany({
-    where: this.where(filter),
-    skip: offset,
-    take,
-    orderBy,
+    where: this.where(filter), // 조건을 만족하는 게시글만 남깁니다.
+    skip: offset,// 앞에서 offset만큼 건너뜁니다.
+    take, // 현재 페이지에 필요한 개수만 가져옵니다.
+    orderBy: this.orderBy(sort), // 지정한 기준과 방향으로 결과를 정렬합니다.
   });
 }
 ```
 
-Offset이 커질수록 데이터베이스가 앞의 행을 많이 건너뛰어야 하므로 뒤쪽 페이지의 조회 비용이 커질 수 있습니다. 또한 사용자가 페이지를 이동하는 사이에 새 게시글이 추가되면 기존 데이터의 위치가 밀려 같은 게시글이 다시 나오거나 일부 게시글이 빠질 수 있습니다.  
-
-관리자 화면처럼 전체 페이지 수가 필요하거나 특정 페이지로 바로 이동해야 하는 목록에는 Offset 방식이 잘 어울립니다. 반면 계속 아래로 내리는 피드나 데이터가 자주 바뀌는 목록에는 Cursor 방식을 고려할 수 있습니다.  
-
-## 2. Cursor 기반 Pagination 개념과 활용 {#session-02}
-
-Cursor 기반 Pagination은 건너뛸 개수 대신 이전 페이지의 마지막 항목을 기준점으로 사용합니다. 첫 요청에서는 Cursor를 생략하고, 다음 요청부터 직전 응답의 `endCursor`를 `after`로 전달합니다.  
-
-```text
-첫 요청: after 없음 → 게시글 3개와 endCursor 반환
-다음 요청: after = 이전 endCursor → 그 게시글 다음부터 3개 반환
-```
-
-Cursor는 클라이언트가 내부 구조에 의존하지 않도록 불투명한 문자열로 전달하는 것이 좋습니다. 실습 프로젝트는 게시글 ID에 종류를 나타내는 접두어를 붙이고 Base64URL 문자열로 변환합니다.  
+Pagination에서는 정렬 순서가 매번 같아야 합니다.  
+실습 코드는 사용자가 선택한 필드로 먼저 정렬하고, 값이 같을 때는 고유한 `id`를 두 번째 기준으로 사용합니다.  
 
 ```typescript
-// /src/common/pagination/cursor.ts
-export function encodeCursor(id: number): string {
-  return Buffer.from(`post:${id}`, 'utf8').toString('base64url');
-}
+// /src/modules/post/post.repository.ts
+private orderBy(
+  sort: NormalizedPostSort,
+  reverse = false,
+): Prisma.PostOrderByWithRelationInput[] {
+  const fields = {
+    CREATED_AT: 'createdAt',
+    UPDATED_AT: 'updatedAt',
+    TITLE: 'title',
+  } as const;
+  const requested = sort.direction.toLowerCase() as Prisma.SortOrder;
+  const direction = reverse
+    ? (requested === 'asc' ? 'desc' : 'asc')
+    : requested;
 
-export function decodeCursor(cursor: string): number {
-  const [kind, rawId] = Buffer.from(cursor, 'base64url').toString('utf8').split(':');
-  const id = Number(rawId);
-
-  if (kind !== 'post' || !Number.isInteger(id) || id < 1) {
-    throw new BusinessError(
-      ErrorCode.VALIDATION_ERROR,
-      '올바르지 않은 게시글 cursor입니다.',
-    );
-  }
-
-  return id;
+  return [{ [fields[sort.field]]: direction }, { id: direction }];
 }
 ```
 
-Base64URL은 값을 암호화하지 않습니다. 단지 `post:4`와 같은 내부 표현을 API에서 직접 사용하지 않도록 문자열 형태를 바꾸는 역할입니다. Cursor에 민감한 정보를 넣어서는 안 됩니다.  
+### 🟦 Offset Pagination의 장단점
 
-### 🟦 Cursor 페이지 Schema 정의
+Offset 방식은 구조가 단순하고 페이지 번호를 사용하기 쉽습니다. `totalCount`와 `limit`을 이용하면 전체 페이지 수도 계산할 수 있습니다.  
 
-요청에는 기준 위치인 `after`와 가져올 개수인 `first`를 사용합니다.  
+```text
+totalPages = ceil(totalCount / limit)
+```
+
+관리자 화면처럼 특정 페이지로 바로 이동하거나 전체 페이지 수를 보여 주는 목록에 잘 어울립니다.  
+
+반면 Offset이 커질수록 데이터베이스가 앞쪽의 행을 더 많이 건너뛰어야 하므로 뒤쪽 페이지의 조회 비용이 커질 수 있습니다.  
+페이지를 이동하는 사이에 데이터가 추가되거나 삭제되면 같은 게시글이 다시 나오거나 일부 게시글이 누락될 수도 있습니다.  
+
+### 🟦 Offset GraphQL 요청과 응답 실습
+
+다음 요청은 공개된 게시글을 최신 작성일 순으로 두 건씩 조회합니다. 첫 페이지이므로 `offset`은 `0`으로 지정합니다.  
+![Offset요청 예시](/assets/images/nodejs/nodejs-graphql/image-2026-10-16.png)
+
+`hasNextPage`가 `true`이므로 다음 요청에서는 `limit`은 그대로 두고 `offset`만 `2`로 변경합니다. 세 번째 페이지를 조회할 때는 `offset`을 `4`로 변경합니다.  
+
+```json
+{
+  "pagination": {
+    "offset": 2,
+    "limit": 2
+  }
+}
+```
+
+무한 스크롤처럼 데이터를 순서대로 계속 불러오거나 목록이 자주 바뀌는 화면에는 Cursor 방식이 더 적합합니다.  
+
+## 2. GraphQL Cursor Connections 기반 양방향 Pagination {#session-02}
+
+### 🟦 Cursor Pagination과 GraphQL Cursor Connections 명세 이해
+
+Cursor Pagination은 건너뛸 데이터 수 대신 현재 위치를 나타내는 Cursor를 사용합니다.  
+클라이언트는 서버가 반환한 Cursor를 다음 요청에 그대로 전달하며, Cursor 내부 값을 직접 해석하거나 만들지 않습니다.  
+
+```text
+전방 조회: 현재 페이지의 endCursor를 다음 요청의 after에 전달합니다.
+후방 조회: 현재 페이지의 startCursor를 이전 요청의 before에 전달합니다.
+```
+
+`GraphQL Cursor Connections Specification`은 Relay 프로젝트에서 정의한 명세로, Cursor 기반 목록을 일관된 구조로 표현하는 방법을 제시합니다.  
+Relay를 사용하지 않는 GraphQL 서버에도 이 Connection 패턴을 적용할 수 있습니다.  
+목록을 배열로 바로 반환하지 않고 `Connection`으로 감싸며, 각 항목은 `Edge`로 표현합니다.  
+페이지 이동에 필요한 정보는 `PageInfo`에 담습니다.  
+
+![GraphQL Cursor Connections 구조](/assets/images/nodejs/nodejs-graphql/image-2026-10-16-1.png)
+
+실습 API는 최신 글에서 오래된 글로 이동하는 전방 조회뿐만 아니라 이전 페이지로 돌아가는 후방 조회도 지원합니다.  
+
+### 🟦 Connection, Edge, Node, PageInfo 구조와 네이밍
+
+각 구성 요소의 역할은 다음과 같습니다.  
+
+| 구성 요소 | 역할 | 실습 타입 |
+| --- | --- | --- |
+| `Connection` | 목록과 Pagination 메타데이터를 묶는 최상위 객체 | `PostConnection` |
+| `Edge` | 한 항목과 해당 항목의 Cursor를 묶는 객체 | `PostEdge` |
+| `Node` | 실제로 조회한 도메인 데이터 | `Post` |
+| `PageInfo` | 앞뒤 페이지 존재 여부와 현재 페이지 경계 | `PageInfo` |
+
+실습 Schema는 GraphQL Cursor Connections의 응답 구조를 기반으로 다음과 같이 정의합니다.  
 
 ```graphql
-input CursorPaginationInput {
-  after: String
-  first: Int = 10
+# /src/modules/post/post.schema.ts
+# 각 Edge는 Node와 그 Node의 위치를 나타내는 Opaque Cursor를 함께 제공합니다.
+type PostEdge {
+  cursor: String!
+  node: Post!
 }
-
-type CursorPageInfo {
-  hasNextPage: Boolean!
-  endCursor: String
+# Connection의 양방향 이동에 필요한 경계 정보입니다.
+type PageInfo {
+  hasNextPage: Boolean!       # 다음 페이지의 존재 여부
+  hasPreviousPage: Boolean!   # 이전 페이지의 존재 여부
+  startCursor: String         # 이전 페이지 조회 시 before에 전달할 Cursor
+  endCursor: String           # 다음 페이지 조회 시 after에 전달할 Cursor
 }
-
+# GraphQL Cursor Connections 구조에 따라 게시글을 Edge 목록으로 반환합니다.
 type PostConnection {
-  items: [Post!]!
+  edges: [PostEdge!]!
   totalCount: Int!
-  pageInfo: CursorPageInfo!
+  pageInfo: PageInfo!
+}
+```
+
+> Opaque Cursor는 클라이언트가 내부 구조를 해석하지 않고, 서버에서 받은 값을 다음 요청에 그대로 사용하는 커서입니다.
+
+각 `PostEdge`는 게시글인 `node`와 그 게시글의 위치를 나타내는 `cursor`를 함께 제공합니다.  
+`startCursor`와 `endCursor`는 현재 페이지의 첫 Edge와 마지막 Edge에 해당하는 Cursor입니다.  
+결과가 비어 있으면 두 값은 `null`입니다.  
+
+`hasNextPage`는 현재 정렬 순서에서 뒤쪽 페이지가 있는지를 나타내고, `hasPreviousPage`는 앞쪽 페이지가 있는지를 나타냅니다.  
+`totalCount`는 GraphQL Cursor Connections 명세의 필수 필드는 아니지만, 실습에서는 필터를 만족하는 전체 게시글 수를 보여 주기 위해 추가했습니다.  
+
+### 🟦 `first`, `after`, `last`, `before`를 이용한 양방향 조회
+
+Cursor 입력에는 전방과 후방 Pagination에 필요한 네 필드를 정의합니다.  
+
+```graphql
+# first/after는 전방, last/before는 후방 페이지를 조회합니다.
+input CursorPaginationInput {
+  first: Int       # 조회 범위의 앞에서 반환할 게시글 수
+  after: String    # 지정한 Cursor 다음 게시글부터 조회
+  last: Int        # 조회 범위의 뒤에서 반환할 게시글 수
+  before: String   # 지정한 Cursor 이전 게시글까지만 조회
 }
 
 extend type Query {
   postsByCursor(
     pagination: CursorPaginationInput
     filter: PostFilterInput
+    sort: PostSortInput
   ): PostConnection!
 }
 ```
 
-Relay Cursor Connections 사양에서는 보통 `edges` 안에 `node`와 `cursor`를 넣습니다. 이 예제는 개념에 집중하기 위해 `items` 배열과 `pageInfo`만 반환하는 단순한 구조를 사용합니다.  
+| 방향 | 개수 | 기준 Cursor | 사용 예 |
+| --- | --- | --- | --- |
+| 전방 | `first` | `after` | `after` 다음에서 `first`개를 조회합니다. |
+| 후방 | `last` | `before` | `before` 앞에서 `last`개를 조회합니다. |
 
-### 🟦 한 건 더 조회해 다음 페이지 확인
+![전방 페이지 조회 예시](/assets/images/nodejs/nodejs-graphql/image-2026-10-16-2.png)
 
-Cursor 방식에서는 요청한 개수보다 한 건을 더 조회하면 별도의 목록 조회 없이 다음 페이지가 있는지 확인할 수 있습니다.  
+### 🟦 양방향 GraphQL 요청과 응답 실습
 
-```typescript
-const rows = await this.posts.findByCursor(filter, cursorId, first + 1);
-const hasNextPage = rows.length > first;
-const items = rows.slice(0, first);
+앞에서 정의한 Query로 두 페이지를 이동한 뒤 다시 이전 페이지로 돌아가 보겠습니다. 예제는 게시글을 최신순으로 두 건씩 조회합니다.  
+
+### 🔷 첫 페이지 전방 조회
+
+첫 전방 페이지에는 기준 Cursor가 없습니다. 따라서 `first`만 사용하고 `$after`에는 `null`을 전달하거나 Variables에서 생략합니다.  
+
+```graphql
+query ForwardPosts($after: String) {
+  postsByCursor(pagination: { first: 2, after: $after }) {
+    edges {
+      cursor
+      node {
+        id
+        title
+      }
+    }
+    pageInfo {
+      hasNextPage
+      hasPreviousPage
+      startCursor
+      endCursor
+    }
+  }
+}
 ```
 
-클라이언트가 3건을 요청했다면 Repository에는 4건을 요청합니다. 4건이 반환되면 네 번째 게시글은 응답에서 제외하고 `hasNextPage`를 `true`로 설정합니다. 3건 이하라면 마지막 페이지입니다.  
+첫 요청의 GraphQL Variables는 다음과 같습니다.  
 
-Repository는 Cursor가 가리키는 게시글 다음부터 조회합니다.  
+```json
+{
+  "after": null
+}
+```
+
+응답의 `edges`에는 게시글과 각 게시글의 Cursor가 들어 있습니다. 실제 게시글 내용은 데이터베이스 상태에 따라 달라집니다.  
+
+```json
+{
+  "data": {
+    "postsByCursor": {
+      "edges": [
+        {
+          "cursor": "NQ",
+          "node": { "id": "5", "title": "GraphQL Pagination 구현" }
+        },
+        {
+          "cursor": "NA",
+          "node": { "id": "4", "title": "GraphQL Filtering 구현" }
+        }
+      ],
+      "pageInfo": {
+        "hasNextPage": true,
+        "hasPreviousPage": false,
+        "startCursor": "NQ",
+        "endCursor": "NA"
+      }
+    }
+  }
+}
+```
+
+### 🔷 다음 페이지 전방 조회
+
+`hasNextPage`가 `true`이므로 다음 페이지를 조회할 수 있습니다. 첫 페이지의 마지막 위치인 `endCursor` 값 `NA`를 `$after`에 전달합니다.  
+
+```json
+{
+  "after": "NA"
+}
+```
+
+```json
+{
+  "data": {
+    "postsByCursor": {
+      "edges": [
+        {
+          "cursor": "Mw",
+          "node": { "id": "3", "title": "GraphQL Sorting 구현" }
+        },
+        {
+          "cursor": "Mg",
+          "node": { "id": "2", "title": "GraphQL Schema 작성" }
+        }
+      ],
+      "pageInfo": {
+        "hasNextPage": true,
+        "hasPreviousPage": true,
+        "startCursor": "Mw",
+        "endCursor": "Mg"
+      }
+    }
+  }
+}
+```
+
+두 번째 페이지에서는 게시글 `3`, `2`를 받았고 `hasPreviousPage`도 `true`가 되었습니다. 이제 현재 페이지의 첫 위치인 `startCursor` 값 `Mw`를 사용해 이전 페이지로 돌아갈 수 있습니다.  
+
+### 🔷 이전 페이지 후방 조회
+
+후방 조회는 `last`로 가져올 개수를 지정하고, 현재 페이지의 `startCursor`를 `before`에 전달합니다.  
+
+```graphql
+query BackwardPosts($before: String) {
+  postsByCursor(pagination: { last: 2, before: $before }) {
+    edges {
+      cursor
+      node {
+        id
+        title
+      }
+    }
+    pageInfo {
+      hasNextPage
+      hasPreviousPage
+      startCursor
+      endCursor
+    }
+  }
+}
+```
+
+GraphQL Variables에는 `startCursor` 값 `Mw`를 넣습니다.  
+
+```json
+{
+  "before": "Mw"
+}
+```
+
+후방 조회는 Cursor 앞쪽의 게시글을 가져옵니다. 응답은 전방 조회와 같은 최신순을 유지하므로 게시글 `5`, `4` 순서로 반환됩니다.  
+
+```json
+{
+  "data": {
+    "postsByCursor": {
+      "edges": [
+        {
+          "cursor": "NQ",
+          "node": { "id": "5", "title": "GraphQL Pagination 구현" }
+        },
+        {
+          "cursor": "NA",
+          "node": { "id": "4", "title": "GraphQL Filtering 구현" }
+        }
+      ],
+      "pageInfo": {
+        "hasNextPage": true,
+        "hasPreviousPage": false,
+        "startCursor": "NQ",
+        "endCursor": "NA"
+      }
+    }
+  }
+}
+```
+
+정리하면 다음 페이지로 이동할 때는 `endCursor → after`, 이전 페이지로 이동할 때는 `startCursor → before` 흐름을 사용합니다.  
+실습 Service는 `first`와 `last`, `after`와 `before`처럼 서로 충돌하는 입력을 함께 전달하지 못하게 막습니다.  
+
+### 🟦 Cursor 인코딩·디코딩 및 Prisma 조회 방식
+
+실습 프로젝트의 Cursor는 게시글 ID를 Base64URL 문자열로 바꾼 값입니다.  
+Base64URL은 암호화가 아니므로 민감한 정보를 숨기는 용도로 사용하면 안 됩니다.  
+
+```typescript
+// /src/modules/post/post.cursor.ts
+export function encodeCursor(id: number): string {
+  return Buffer.from(String(id), 'utf8').toString('base64url');
+}
+
+export function decodeCursor(cursor: string): number {
+  // Buffer는 Node.js에서 바이너리 데이터(Byte 배열)를 저장하고 처리하기 위한 객체입니다.
+  const id = Number(Buffer.from(cursor, 'base64url').toString('utf8'));
+  if (!Number.isInteger(id) || id < 1) {
+    throw new BusinessError(
+      ErrorCode.VALIDATION_ERROR,
+      '올바르지 않은 게시글 cursor입니다.',
+    );
+  }
+  return id;
+}
+```
+
+Repository는 전방 조회에서는 요청한 정렬 방향을 그대로 사용합니다.  
+후방 조회에서는 정렬 방향을 반대로 바꾸어 Cursor 앞쪽의 데이터를 가까운 순서부터 가져온 뒤, 결과 배열을 다시 뒤집어 클라이언트가 항상 같은 정렬 순서를 받도록 합니다.  
 
 ```typescript
 // /src/modules/post/post.repository.ts
-findByCursor(filter: PostFilterInput, cursorId: number | undefined, take: number) {
-  return this.prisma.post.findMany({
+async findByCursor(
+  filter: PostFilterInput,
+  cursorId: number | undefined,
+  take: number,
+  sort: NormalizedPostSort,
+  backward: boolean,
+) {
+  const rows = await this.prisma.post.findMany({
     where: this.where(filter),
     ...(cursorId == null ? {} : { cursor: { id: cursorId }, skip: 1 }),
     take,
-    orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
+    orderBy: this.orderBy(sort, backward),
   });
+  return backward ? rows.reverse() : rows;
 }
 ```
 
-Prisma의 `cursor`는 기준 행을 결과에 포함하므로 `skip: 1`로 직전 페이지의 마지막 게시글을 제외합니다. Cursor가 없는 첫 요청에는 `cursor`와 `skip`을 넣지 않습니다.  
-
-Cursor Pagination에서는 정렬 순서가 매번 같아야 합니다. `createdAt` 값이 같은 게시글이 여러 개일 수 있으므로 고유한 `id`를 두 번째 정렬 기준으로 추가해 순서를 확정합니다. Prisma Schema에도 같은 조회 패턴을 고려한 복합 인덱스를 선언했습니다.  
-
-```prisma
-model Post {
-  id        Int      @id @default(autoincrement())
-  createdAt DateTime @default(now()) @map("created_at")
-
-  @@index([createdAt, id])
-  @@map("posts")
-}
-```
+Prisma의 `cursor`는 기준 게시글도 결과에 포함하므로 `skip: 1`로 해당 게시글을 제외합니다.  
+첫 요청처럼 Cursor가 없으면 `cursor`와 `skip`을 모두 생략합니다.  
 
 ## 3. Input Type을 활용한 Filtering 및 Sorting {#session-03}
 
-페이지 조건, 검색 조건, 정렬 조건을 각각 Input Type으로 분리하면 Query 인자가 길어지지 않고 목적도 명확해집니다. 새로운 필터가 추가되더라도 Query 필드의 전체 구조를 바꾸지 않고 Input Type을 확장할 수 있습니다.  
+### 🟦 게시글 Filtering Input 정의
 
-### 🟦 게시글 Filter Input
-
-게시 여부, 작성자, 제목 검색어를 선택적으로 전달할 수 있도록 정의합니다.  
+게시 여부, 작성자, 제목 검색어를 하나의 Input Type으로 묶습니다.  
+각 필드는 선택 사항이며 여러 값을 함께 전달하면 모든 조건을 만족하는 게시글을 찾습니다.  
 
 ```graphql
 input PostFilterInput {
@@ -239,7 +483,7 @@ input PostFilterInput {
 }
 ```
 
-여러 값을 함께 전달하면 모든 조건을 만족하는 게시글을 찾습니다. 다음 변수는 공개된 게시글 중 작성자 ID가 `2`이고 제목에 `GraphQL`이 포함된 게시글을 의미합니다.  
+다음 변수는 작성자 ID가 `2`이고 제목에 `GraphQL`이 포함된 공개 게시글을 조회한다는 의미입니다.  
 
 ```json
 {
@@ -251,28 +495,10 @@ input PostFilterInput {
 }
 ```
 
-Repository의 `where` 메서드는 실제 값이 있는 조건만 Prisma의 `PostWhereInput`으로 변환합니다.  
+### 🟦 게시글 Sorting Input 및 Enum 정의
 
-```typescript
-// /src/modules/post/post.repository.ts
-private where(filter: PostFilterInput = {}): Prisma.PostWhereInput {
-  return {
-    ...(filter.published != null ? { published: filter.published } : {}),
-    ...(filter.authorId != null ? { authorId: Number(filter.authorId) } : {}),
-    ...(filter.titleContains
-      ? { title: { contains: filter.titleContains } }
-      : {}),
-  };
-}
-```
-
-JavaScript에서 `false`는 falsy 값이므로 `if (filter.published)`처럼 검사하면 `published: false` 조건이 사라집니다. `null`과 `undefined`만 제외하도록 `!= null`을 사용해야 공개되지 않은 게시글도 정상적으로 필터링할 수 있습니다.  
-
-같은 `where()`를 목록 조회와 `count()`에서 함께 사용하면 `items`와 `totalCount`에 서로 다른 조건이 적용되는 실수를 막을 수 있습니다.  
-
-### 🟦 게시글 Sort Input
-
-정렬 가능한 필드와 방향은 문자열 대신 Enum으로 제한합니다.  
+정렬 필드와 방향은 일반 문자열 대신 Enum으로 제한합니다.  
+그러면 지원하지 않는 값이나 오타를 GraphQL 검증 단계에서 발견할 수 있습니다.  
 
 ```graphql
 enum PostSortField {
@@ -292,68 +518,99 @@ input PostSortInput {
 }
 ```
 
-클라이언트가 임의의 데이터베이스 열 이름을 전달할 수 없으며, 오타도 GraphQL 검증 단계에서 발견됩니다. Service는 GraphQL Enum을 Prisma의 필드 이름과 정렬 방향으로 변환합니다.  
+정렬 입력을 생략하면 작성일과 ID를 기준으로 최신 게시글부터 조회합니다.  
+Service를 GraphQL 외부에서 직접 호출할 때도 같은 기본값을 사용하도록 입력을 정규화합니다.  
 
 ```typescript
-function orderBy(sort: PostSortInput = {}): Prisma.PostOrderByWithRelationInput[] {
-  const direction = (sort.direction ?? 'DESC').toLowerCase() as Prisma.SortOrder;
-  const fields = {
-    CREATED_AT: 'createdAt',
-    UPDATED_AT: 'updatedAt',
-    TITLE: 'title',
-  } as const;
-
-  return [
-    { [fields[sort.field ?? 'CREATED_AT']]: direction },
-    { id: direction },
-  ];
+function normalizeSort(sort: PostSortInput = {}): NormalizedPostSort {
+  return {
+    field: sort.field ?? 'CREATED_AT',
+    direction: sort.direction ?? 'DESC',
+  };
 }
 ```
 
-첫 번째 정렬 값이 같을 때도 결과 순서가 바뀌지 않도록 `id`를 보조 정렬 기준으로 사용합니다. 이처럼 Pagination에는 결과의 순서를 완전히 결정할 수 있는 안정적인 정렬 조건이 필요합니다.  
+### 🟦 Prisma `where`, `orderBy` 조건 구성
 
-이 예제의 사용자 지정 정렬은 Offset API에만 제공합니다. Cursor API는 Cursor와 정렬 기준이 항상 일치하도록 `createdAt DESC, id DESC`로 고정합니다. Cursor API에 자유로운 정렬을 추가하려면 Cursor에도 정렬 필드의 값과 ID를 함께 담고, 각 정렬 방식에 맞는 다음 페이지 조건을 구현해야 합니다.  
+Repository의 `where()` 메서드는 값이 전달된 필터만 Prisma 조건으로 변환합니다.  
 
-## 4. Prisma 기반 게시글 목록 조회 API 구현 {#session-04}
+```typescript
+private where(filter: PostFilterInput = {}): Prisma.PostWhereInput {
+  return {
+    ...(filter.published != null ? { published: filter.published } : {}),
+    ...(filter.authorId != null ? { authorId: Number(filter.authorId) } : {}),
+    ...(filter.titleContains
+      ? { title: { contains: filter.titleContains } }
+      : {}),
+  };
+}
+```
 
-게시글 목록 요청은 Resolver, Service, Repository 순서로 처리됩니다. 각 계층의 책임을 나누면 GraphQL 연결 코드, 입력 검증, Prisma 조회 코드를 따로 이해하고 변경할 수 있습니다.  
+`published`는 `false`도 유효한 검색 조건입니다. `if (filter.published)`처럼 검사하면 `false`가 빠지므로 `!= null`을 사용해 `null`과 `undefined`만 제외합니다.  
+
+`orderBy()`는 GraphQL Enum을 Prisma 모델의 필드 이름으로 바꾸고 `id`를 보조 정렬 기준으로 추가합니다. 첫 번째 정렬 값이 같은 게시글도 `id`로 순서를 확정하므로 페이지 사이의 중복과 누락을 줄일 수 있습니다.  
+
+### 🟦 Pagination과 Filtering·Sorting 연계
+
+목록 조회는 다음 순서로 이해할 수 있습니다.  
+
+```text
+전체 게시글
+  → where로 필요한 게시글만 남깁니다.
+  → orderBy로 결과 순서를 정합니다.
+  → skip·take 또는 cursor·take로 현재 페이지를 가져옵니다.
+```
+
+목록과 `totalCount`에는 같은 Filter를 적용해야 합니다. 실습 Repository는 `findByOffset()`, `findByCursor()`, `count()`에서 같은 `where()`를 사용합니다.  
+
+Cursor도 현재 필터 결과에 실제로 포함되는지 검사합니다. 필터에 포함되지 않는 게시글의 Cursor를 전달하면 잘못된 페이지 경계가 될 수 있으므로 Service에서 요청을 거절합니다.  
+
+```typescript
+async contains(filter: PostFilterInput, id: number) {
+  return (await this.prisma.post.count({
+    where: { AND: [this.where(filter), { id }] },
+  })) === 1;
+}
+```
+
+정렬을 바꾸면 Cursor가 가리키는 위치의 의미도 달라집니다. 사용자가 정렬 기준을 변경할 때는 기존 Cursor를 버리고 첫 페이지부터 다시 요청해야 합니다.  
+
+## 4. 게시글 목록 조회 API 구현 및 실습 {#session-04}
+
+### 🟦 Resolver → Service → Repository 처리 흐름
+
+게시글 목록 요청은 Resolver, Service, Repository 순서로 처리합니다.  
 
 ```text
 GraphQL Query
-  → Post Resolver
-    → Post Service: 기본값 적용, 입력 검증, 페이지 응답 조립
-      → Post Repository: Prisma where, orderBy, skip, take 실행
+  → Post Resolver: 인자와 Context를 Service에 전달합니다.
+    → Post Service: 기본값 적용, 입력 검증, 응답 조립을 담당합니다.
+      → Post Repository: Prisma 조회 조건을 구성하고 실행합니다.
         → SQLite
 ```
 
-### 🟦 Resolver에서 Service 연결
-
-Resolver는 GraphQL 인자를 그대로 Service에 전달합니다.  
+Resolver에서는 Offset과 Cursor 요청 인자를 직접 처리하지 않고 해당 Service 메서드로 전달합니다.  
 
 ```typescript
 // /src/modules/post/post.resolver.ts
-export const postResolvers = {
-  Query: {
-    postsByOffset: (
-      _parent: unknown,
-      args: OffsetPostQueryArgs,
-      context: GraphQLContext,
-    ) => context.services.posts.listByOffset(args),
+postsByOffset: (
+  _parent: unknown,
+  args: OffsetPostQueryArgs,
+  context: GraphQLContext,
+) => context.services.posts.listByOffset(args),
 
-    postsByCursor: (
-      _parent: unknown,
-      args: CursorPostQueryArgs,
-      context: GraphQLContext,
-    ) => context.services.posts.listByCursor(args),
-  },
-};
+postsByCursor: (
+  _parent: unknown,
+  args: CursorPostQueryArgs,
+  context: GraphQLContext,
+) => context.services.posts.listByCursor(args),
 ```
 
-Resolver에 검증이나 Prisma 코드를 넣지 않아 HTTP가 아닌 다른 진입점에서도 같은 Service를 재사용할 수 있습니다.  
+Service는 입력값의 범위와 조합을 검증하고 Repository 결과를 GraphQL 응답 형태로 조립합니다. Repository는 필터, 정렬, 페이지 경계를 Prisma 쿼리로 변환합니다.  
 
-### 🟦 Offset 목록 Service 구현
+### 🟦 Offset 기반 목록 조회 API 구현
 
-Service는 페이지 크기와 Offset을 검증하고, 목록과 전체 개수를 병렬로 조회합니다.  
+Offset Service는 페이지와 정렬 기본값을 적용한 뒤 게시글 목록과 전체 개수를 병렬로 조회합니다.  
 
 ```typescript
 // /src/modules/post/post.service.ts
@@ -363,16 +620,14 @@ async listByOffset(args: OffsetPostQueryArgs = {}) {
 
   const offset = args.pagination?.offset ?? 0;
   const limit = pageSize(args.pagination?.limit);
+  const sort = normalizeSort(args.sort ?? {});
 
   if (!Number.isInteger(offset) || offset < 0) {
-    throw new BusinessError(
-      ErrorCode.VALIDATION_ERROR,
-      'offset은 0 이상의 정수여야 합니다.',
-    );
+    validationError('offset은 0 이상의 정수여야 합니다.');
   }
 
   const [items, totalCount] = await Promise.all([
-    this.posts.findByOffset(filter, offset, limit, orderBy(args.sort ?? {})),
+    this.posts.findByOffset(filter, offset, limit, sort),
     this.posts.count(filter),
   ]);
 
@@ -388,69 +643,118 @@ async listByOffset(args: OffsetPostQueryArgs = {}) {
 }
 ```
 
-목록과 개수 조회는 서로의 결과에 의존하지 않으므로 `Promise.all()`로 동시에 실행합니다. 다음 페이지 여부는 현재까지 지나온 항목 수인 `offset + items.length`가 전체 개수보다 작은지 비교해 계산합니다.  
+`offset + items.length`가 `totalCount`보다 작으면 아직 조회하지 않은 게시글이 있으므로 `hasNextPage`는 `true`가 됩니다.  
 
-페이지 크기는 Service에서 다시 검사합니다. GraphQL의 `Int`는 정수 여부만 보장하므로 음수나 지나치게 큰 값은 별도로 제한해야 합니다.  
+### 🟦 GraphQL Cursor Connections 기반 양방향 조회 API 구현
+
+Cursor Service는 `last`나 `before`가 있으면 후방 조회로 판단합니다. 요청한 페이지 크기보다 한 건 더 조회해 이동하려는 방향에 데이터가 더 있는지 확인하고, 게시글마다 `Edge`를 만듭니다.  
 
 ```typescript
-function pageSize(value: number | null | undefined): number {
-  const size = value ?? 10;
+// /src/modules/post/post.service.ts
+async listByCursor(args: CursorPostQueryArgs = {}) {
+  // 선택 입력을 빈 객체로 바꿔 이후 로직에서 null과 undefined를 반복해서 확인하지 않습니다.
+  const filter = args.filter ?? {};
+  this.validateFilter(filter);
+  const pagination = args.pagination ?? {};
+  const sort = normalizeSort(args.sort ?? {});
 
-  if (!Number.isInteger(size) || size < 1 || size > 100) {
-    throw new BusinessError(
-      ErrorCode.VALIDATION_ERROR,
-      '페이지 크기는 1에서 100 사이여야 합니다.',
-    );
+  // last나 before가 있으면 이전 페이지를 찾는 후방 조회로 판단합니다.
+  // 아무 인자도 없으면 기본 크기 10을 사용하는 전방 첫 페이지를 조회합니다.
+  const backward = pagination.last != null || pagination.before != null;
+
+  // 한 요청에는 전방 조회 인자 또는 후방 조회 인자 중 한 방향만 사용할 수 있습니다.
+  if (pagination.first != null && pagination.last != null) validationError('first와 last는 함께 사용할 수 없습니다.');
+  if (pagination.after != null && pagination.before != null) validationError('after와 before는 함께 사용할 수 없습니다.');
+  if (pagination.after != null && backward) validationError('after는 first와 함께 사용해야 합니다.');
+  if (pagination.before != null && pagination.first != null) validationError('before는 last와 함께 사용해야 합니다.');
+
+  // 조회 방향에 따라 개수와 경계 Cursor를 각각 first/after 또는 last/before에서 가져옵니다.
+  const size = pageSize(backward ? pagination.last : pagination.first);
+  const rawCursor = backward ? pagination.before : pagination.after;
+  // 정렬을 바꾸는 UI는 이전 Cursor를 버리고 첫 페이지부터 다시 요청해야 합니다.
+  const cursorId = rawCursor == null ? undefined : decodeCursor(rawCursor);
+
+  // 삭제됐거나 현재 필터 결과에 없는 게시글은 페이지 경계로 사용할 수 없습니다.
+  if (cursorId != null && !(await this.posts.contains(filter, cursorId))) {
+    validationError('cursor가 현재 게시글 검색 조건에 포함되지 않습니다.');
   }
 
-  return size;
+  // 한 건을 더 읽어 조회 방향 반대편에 페이지가 남았는지 추가 count 없이 판별합니다.
+  const rows = await this.posts.findByCursor(filter, cursorId, size + 1, sort, backward);
+  const hasExtra = rows.length > size;
+
+  // Repository는 항상 요청한 정렬 순서로 반환합니다. 후방 조회에서는 앞쪽 초과 행을 제거합니다.
+  const items = backward ? rows.slice(-size) : rows.slice(0, size);
+
+  // Edge는 게시글 Node와 그 게시글을 다시 경계로 사용할 Cursor를 묶습니다.
+  const edges = items.map((node) => ({ node, cursor: encodeCursor(node.id) }));
+
+  // totalCount는 현재 페이지 크기가 아니라 필터를 만족하는 전체 게시글 수입니다.
+  const totalCount = await this.posts.count(filter);
+
+  return {
+    edges,
+    totalCount,
+    pageInfo: {
+      // 후방 조회에서는 before가 가리킨 행이 다음 페이지에 있고, 전방 조회에서는 초과 행으로 판단합니다.
+      hasNextPage: backward ? cursorId != null : hasExtra,
+      // 전방 조회에서는 after 앞에 이전 페이지가 있고, 후방 조회에서는 초과 행으로 판단합니다.
+      hasPreviousPage: backward ? hasExtra : cursorId != null,
+      // 결과가 비어 있으면 사용할 경계가 없으므로 Cursor는 null입니다.
+      startCursor: edges[0]?.cursor ?? null,
+      endCursor: edges.at(-1)?.cursor ?? null,
+    },
+  };
 }
 ```
 
-### 🟦 Offset API 요청
+### 🟦 Filtering 및 Sorting 적용과 동작 확인
 
-다음 Query는 공개된 게시글을 제목 오름차순으로 두 개씩 조회합니다.  
+![예시 화면](/assets/images/nodejs/nodejs-graphql/image-2026-10-16-3.png)  
+다음 Query는 Pagination, Filtering, Sorting 조건을 모두 Variables로 받습니다. 같은 Query를 사용하고 `pagination`만 바꾸면 전방과 후방을 모두 조회할 수 있습니다.  
 
 ```graphql
-query GetPostsByOffset(
-  $pagination: OffsetPaginationInput
+query GetPosts(
+  $pagination: CursorPaginationInput
   $filter: PostFilterInput
   $sort: PostSortInput
 ) {
-  postsByOffset(
+  postsByCursor(
     pagination: $pagination
     filter: $filter
     sort: $sort
   ) {
-    items {
-      id
-      title
-      published
-      author {
+    edges {
+      cursor
+      node {
         id
-        displayName
+        title
+        published
       }
     }
     totalCount
     pageInfo {
-      offset
-      limit
       hasNextPage
+      hasPreviousPage
+      startCursor
+      endCursor
     }
   }
 }
 ```
 
-Variables에는 입력 객체를 각각 전달합니다.  
+### 🔷 첫 페이지 전방 조회
+
+공개된 게시글 중 제목에 `GraphQL`이 포함된 글을 제목 오름차순으로 두 건 조회합니다. 첫 페이지에는 기준 Cursor가 없으므로 `first`만 전달합니다.  
 
 ```json
 {
   "pagination": {
-    "offset": 0,
-    "limit": 2
+    "first": 2
   },
   "filter": {
-    "published": true
+    "published": true,
+    "titleContains": "GraphQL"
   },
   "sort": {
     "field": "TITLE",
@@ -459,92 +763,154 @@ Variables에는 입력 객체를 각각 전달합니다.
 }
 ```
 
-다음 페이지는 응답의 `pageInfo.hasNextPage`를 확인한 뒤 `offset`을 2로 바꾸어 요청합니다.  
-
-### 🟦 Cursor 목록 Service 구현
-
-Cursor Service는 `after`를 게시글 ID로 해석한 뒤 요청한 크기보다 한 건 더 조회합니다.  
-
-```typescript
-// /src/modules/post/post.service.ts
-async listByCursor(args: CursorPostQueryArgs = {}) {
-  const filter = args.filter ?? {};
-  this.validateFilter(filter);
-
-  const first = pageSize(args.pagination?.first);
-  const cursorId = args.pagination?.after == null
-    ? undefined
-    : decodeCursor(args.pagination.after);
-
-  const rows = await this.posts.findByCursor(filter, cursorId, first + 1);
-  const hasNextPage = rows.length > first;
-  const items = rows.slice(0, first);
-  const totalCount = await this.posts.count(filter);
-
-  return {
-    items,
-    totalCount,
-    pageInfo: {
-      hasNextPage,
-      endCursor: items.at(-1) ? encodeCursor(items.at(-1)!.id) : null,
-    },
-  };
-}
-```
-
-현재 페이지에 게시글이 있으면 마지막 게시글의 ID로 `endCursor`를 만듭니다. 결과가 비어 있으면 다음 요청의 기준점이 없으므로 `null`을 반환합니다. `totalCount`는 Cursor 뒤에 남은 개수가 아니라 같은 Filter를 만족하는 전체 게시글 수입니다.  
-
-### 🟦 Cursor API 요청
-
-첫 페이지에서는 `after`를 생략합니다.  
-
-```graphql
-query GetPostsByCursor(
-  $pagination: CursorPaginationInput
-  $filter: PostFilterInput
-) {
-  postsByCursor(pagination: $pagination, filter: $filter) {
-    items {
-      id
-      title
-      createdAt
-    }
-    totalCount
-    pageInfo {
-      hasNextPage
-      endCursor
-    }
-  }
-}
-```
+조건을 만족하는 게시글이 네 건이라면 첫 페이지에서 제목이 앞선 두 건을 반환합니다. 실제 ID와 제목은 데이터베이스 내용에 따라 달라집니다.  
 
 ```json
 {
-  "pagination": {
-    "first": 2
-  },
-  "filter": {
-    "published": true
+  "data": {
+    "postsByCursor": {
+      "edges": [
+        {
+          "cursor": "NA",
+          "node": {
+            "id": "4",
+            "title": "GraphQL Filtering",
+            "published": true
+          }
+        },
+        {
+          "cursor": "NQ",
+          "node": {
+            "id": "5",
+            "title": "GraphQL Pagination",
+            "published": true
+          }
+        }
+      ],
+      "totalCount": 4,
+      "pageInfo": {
+        "hasNextPage": true,
+        "hasPreviousPage": false,
+        "startCursor": "NA",
+        "endCursor": "NQ"
+      }
+    }
   }
 }
 ```
 
-응답에서 `hasNextPage`가 `true`라면 다음 요청의 `after`에 받은 `endCursor`를 그대로 넣습니다.  
+응답에는 `published: true`이고 제목에 `GraphQL`이 포함된 게시글만 있습니다. 제목은 `Filtering → Pagination` 순서로 정렬됩니다.  
+
+### 🔷 다음 페이지 전방 조회
+
+`hasNextPage`가 `true`이므로 첫 페이지의 `endCursor` 값 `NQ`를 `after`에 전달합니다. 페이지를 이동해도 Filter와 Sort는 이전 요청과 같게 유지합니다.  
 
 ```json
 {
   "pagination": {
     "first": 2,
-    "after": "cG9zdDo0"
+    "after": "NQ"
   },
   "filter": {
-    "published": true
+    "published": true,
+    "titleContains": "GraphQL"
+  },
+  "sort": {
+    "field": "TITLE",
+    "direction": "ASC"
   }
 }
 ```
 
-Cursor를 직접 해석하거나 새로 만들지 않고 서버가 반환한 값을 그대로 사용하는 것이 중요합니다. 또한 페이지를 이동하는 동안 Filter를 바꾸면 Cursor가 가리키는 기준과 조회 집합이 달라질 수 있으므로, 같은 목록을 이어서 조회할 때는 동일한 Filter를 유지해야 합니다.  
+```json
+{
+  "data": {
+    "postsByCursor": {
+      "edges": [
+        {
+          "cursor": "Mg",
+          "node": {
+            "id": "2",
+            "title": "GraphQL Schema",
+            "published": true
+          }
+        },
+        {
+          "cursor": "Mw",
+          "node": {
+            "id": "3",
+            "title": "GraphQL Sorting",
+            "published": true
+          }
+        }
+      ],
+      "totalCount": 4,
+      "pageInfo": {
+        "hasNextPage": false,
+        "hasPreviousPage": true,
+        "startCursor": "Mg",
+        "endCursor": "Mw"
+      }
+    }
+  }
+}
+```
 
-Offset 방식은 구현과 페이지 이동이 단순하고, Cursor 방식은 큰 데이터나 실시간으로 변하는 목록을 순차적으로 탐색할 때 유리합니다. 어느 방식이 항상 더 좋은 것은 아닙니다. 화면이 페이지 번호와 전체 개수를 요구하는지, 무한 스크롤인지, 데이터가 얼마나 자주 변경되는지를 기준으로 선택해야 합니다.  
+두 번째 페이지는 마지막 페이지이므로 `hasNextPage`는 `false`입니다. 앞쪽에는 첫 페이지가 있으므로 `hasPreviousPage`는 `true`입니다.  
 
-이번 실습에서는 두 Pagination 방식을 같은 `Post` 도메인에 구현하고, Input Type으로 Filter와 Sort를 분리했습니다. 다음 편에서는 게시글과 작성자를 중첩 조회할 때 발생할 수 있는 N+1 문제를 Prisma Query 로그로 확인하고 DataLoader로 개선합니다.  
+### 🔷 이전 페이지 후방 조회
+
+이전 페이지로 돌아갈 때는 현재 페이지의 `startCursor` 값 `Mg`를 `before`에 전달하고 `last`로 가져올 개수를 지정합니다. Filter와 Sort는 전방 조회와 동일하게 유지합니다.  
+
+```json
+{
+  "pagination": {
+    "last": 2,
+    "before": "Mg"
+  },
+  "filter": {
+    "published": true,
+    "titleContains": "GraphQL"
+  },
+  "sort": {
+    "field": "TITLE",
+    "direction": "ASC"
+  }
+}
+```
+
+```json
+{
+  "data": {
+    "postsByCursor": {
+      "edges": [
+        {
+          "cursor": "NA",
+          "node": {
+            "id": "4",
+            "title": "GraphQL Filtering",
+            "published": true
+          }
+        },
+        {
+          "cursor": "NQ",
+          "node": {
+            "id": "5",
+            "title": "GraphQL Pagination",
+            "published": true
+          }
+        }
+      ],
+      "totalCount": 4,
+      "pageInfo": {
+        "hasNextPage": true,
+        "hasPreviousPage": false,
+        "startCursor": "NA",
+        "endCursor": "NQ"
+      }
+    }
+  }
+}
+```
+
+후방 조회 결과도 제목 오름차순을 유지합니다. 페이지 방향만 바뀌며 Filtering과 Sorting 조건은 바뀌지 않습니다.  
