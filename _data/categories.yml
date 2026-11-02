@@ -31,3 +31,5 @@
       name: "Observability"
     - id: nodejs-graphql
       name: "GraphQL"
+    - id: nodejs-socketio
+      name: "Socket.IO"

@@ -557,3 +557,13 @@ body.is-resizing {
     display: none;
   }
 }
+.post-content .mermaid {
+  margin: 1.5rem 0;
+  overflow-x: auto;
+  text-align: center;
+}
+
+.post-content .mermaid svg {
+  height: auto;
+  max-width: 100%;
+}
