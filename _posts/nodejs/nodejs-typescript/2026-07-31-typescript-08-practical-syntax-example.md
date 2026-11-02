@@ -33,6 +33,11 @@ toc:
 이 글의 목적은 하나의 프로그램을 완성하는 것이 아니라 TypeScript 문법을 짧은 예제로 이해하는 것입니다.  
 각 코드 블록은 대부분 독립적인 예제이므로 처음부터 끝까지 한 파일에 복사할 필요가 없습니다.  
 
+예제는 TypeScript 4.9 이상과 ES2022를 지원하는 실행 환경을 기준으로 작성했습니다.  
+컴파일러 설정은 `target: "ES2022"`, `strict: true`를 기준으로 합니다.  
+`lib`를 직접 지정한다면 `Object.hasOwn()` 등의 타입 정의를 위해 `ES2022`를 포함해야 합니다.  
+컴파일러 설정만으로 실행 환경에 없는 API가 추가되지는 않습니다.  
+
 예제를 읽을 때는 다음 세 가지를 순서대로 확인합니다.  
 
 1. 기호가 무엇을 의미하는지 확인합니다.  
@@ -303,7 +308,7 @@ TypeScript가 오른쪽 값을 보고 타입을 정확히 추론할 수 있다�
 
 ```typescript
 const language = "TypeScript";
-// language는 string으로 추론됩니다.
+// language는 "TypeScript" 리터럴 타입으로 추론됩니다.
 ```
 
 ### 🟦 `any`와 `unknown`
@@ -639,12 +644,14 @@ function identity<Value>(value: Value): Value {
   return value;
 }
 
-const text = identity("hello"); // string으로 추론됩니다.
-const number = identity(123);   // number로 추론됩니다.
+const text = identity("hello"); // "hello" 리터럴 타입으로 추론됩니다.
+const number = identity(123);   // 123 리터럴 타입으로 추론됩니다.
 ```
 
 `Value`는 함수를 호출할 때 결정되는 타입 매개변수입니다.  
+Value 대신 T, Type, Data 등 원하는 이름을 사용할 수 있습니다.  
 입력 타입을 그대로 반환 타입에 연결하므로 `any`와 달리 타입 정보를 잃지 않습니다.  
+위 예제처럼 리터럴 값을 직접 전달하고 결과를 `const`로 받으면 구체적인 리터럴 타입도 보존됩니다.  
 
 ### 🟦 제네릭 제약 조건
 
@@ -834,26 +841,47 @@ async function comparePromiseMethods(): Promise<void> {
     anotherUserPromise,
   ]);
 
-  // 가장 먼저 끝난 결과가 필요할 때 사용합니다.
-  const firstUser = await Promise.race([
-    userPromise,
-    anotherUserPromise,
-  ]);
-
   // 일부 실패를 허용하고 모든 결과를 확인할 때 사용합니다.
   const results = await Promise.allSettled([
     userPromise,
     Promise.reject(new Error("요청 실패")),
   ]);
 
-  console.log({ users, firstUser, results });
+  console.log({ users, results });
 }
 ```
+
+`Promise.race()`는 아직 완료되지 않은 Promise를 사용한 별도 예제로 확인합니다.  
+
+```typescript
+function resolveAfter<Value>(value: Value, delayMs: number): Promise<Value> {
+  return new Promise((resolve) => {
+    setTimeout(() => resolve(value), delayMs);
+  });
+}
+
+async function printFirstResult(): Promise<void> {
+  // 느린 작업을 먼저 넣어도 먼저 완료되는 빠른 작업의 값을 받습니다.
+  const firstResult = await Promise.race([
+    resolveAfter("느린 작업", 100),
+    resolveAfter("빠른 작업", 10),
+  ]);
+
+  console.log(firstResult); // "빠른 작업"
+}
+
+printFirstResult();
+```
+
+가장 먼저 완료된 Promise가 거부되면 `Promise.race()`도 거부됩니다.  
+실패를 무시하고 가장 먼저 성공한 값이 필요하다면 `Promise.any()`를 사용합니다.  
+`race()`의 결과가 정해져도 나머지 작업은 자동으로 취소되지 않습니다.  
+이미 완료된 Promise만 전달하면 배열에서 앞에 있는 Promise의 상태와 결과를 따릅니다.  
 
 | 메서드 | 동작 | 사용하는 상황 |
 | --- | --- | --- |
 | `Promise.all()` | 모두 성공해야 성공 | 모든 결과가 필요한 병렬 요청 |
-| `Promise.race()` | 가장 먼저 끝난 결과 반환 | 시간 제한 또는 가장 빠른 응답 |
+| `Promise.race()` | 가장 먼저 이행되거나 거부된 Promise의 상태와 결과를 따름 | 시간 제한 또는 가장 빠른 응답 |
 | `Promise.allSettled()` | 성공과 실패에 관계없이 모두 대기 | 일부 실패를 허용하는 작업 |
 
 ### 🟦 Named Export와 Default Export
