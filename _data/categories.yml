@@ -16,7 +16,7 @@
   name: "3.Node.js"
   children:
     - id: nodejs-environment
-      name: "Node.js기본"
+      name: "Node.js개발환경"
     - id: nodejs-typescript
       name: "JavaScript&TypeScript"
     - id: nodejs-prisma
@@ -32,4 +32,14 @@
     - id: nodejs-graphql
       name: "GraphQL"
     - id: nodejs-socketio
-      name: "Socket.IO"
+      name: "Socket.IO/SSE"
+
+- id: python
+  name: "4.Python"
+  children:
+    - id: python-basics
+      name: "Python기초"        
+    - id: python-langchain
+      name: "LangChain기초"
+        
+
