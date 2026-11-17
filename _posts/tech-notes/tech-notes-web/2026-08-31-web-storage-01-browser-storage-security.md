@@ -2,8 +2,8 @@
 layout: post
 title: "01. Cookie와 브라우저 저장소의 수명·공유 범위·보안"
 description: "Cookie, localStorage, sessionStorage, IndexedDB, Cache Storage의 수명과 탭 사이의 공유 범위를 비교합니다. 인증 정보와 일반 데이터를 어떤 저장소에 보관해야 안전한지 실무 보안 설정과 함께 알아봅니다."
-category_id: tech-notes-concepts
-categories: [tech-notes, tech-notes-concepts]
+category_id: tech-notes-web
+categories: [tech-notes, tech-notes-web]
 series: web-storage
 series_order: 1
 ai_assisted: true

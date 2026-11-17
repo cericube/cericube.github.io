@@ -91,6 +91,85 @@ print(list(doubled_generator))  # []: 이미 끝까지 꺼냈습니다.
 `set`의 출력 순서는 보장되지 않으므로 `sorted()`로 정렬한 결과를 확인했습니다.  
 제너레이터의 값도 이 예시에서는 입력 순서대로 나오지만, **한 번 꺼낸 값은 다시 꺼낼 수 없습니다.**  
 
+### 🟦 제너레이터에서 값을 꺼내는 네 가지 방법
+
+제너레이터의 값은 `next()`로 직접 꺼낼 수도 있고, `for` 문·`list()`·`*` 언패킹으로 꺼낼 수도 있습니다. 뒤의 세 방법은 내부에서 값을 하나씩 꺼내 주므로, 직접 `next()`를 호출할 필요가 없습니다.
+
+아래 예제에서는 각 방법을 따로 확인할 수 있도록 매번 새로운 제너레이터를 만듭니다.
+
+**① `next()`: 다음 값 하나 꺼내기**
+
+```python
+gen = (x * 2 for x in range(1, 4))
+
+print(next(gen))  # 2
+print(next(gen))  # 4
+print(next(gen))  # 6
+```
+
+`next()`를 호출할 때마다 다음 `x`에 대해 `x * 2`를 계산합니다. 이 예제에서는 세 값을 모두 꺼낸 뒤 한 번 더 호출하면 `StopIteration`이 발생합니다. 이는 **더 이상 꺼낼 값이 없다**는 뜻입니다.
+
+**② `for` 문: 값을 하나씩 꺼내 반복하기**
+
+```python
+gen = (x * 2 for x in range(1, 4))
+
+for value in gen:
+    print(value)
+# 2
+# 4
+# 6
+```
+
+`for` 문은 내부적으로 다음 값을 계속 요청하고, 더 이상 값이 없으면 반복을 끝냅니다. 위 반복문을 `next()`로 풀어 쓰면 다음과 비슷합니다.
+
+```python
+gen = (x * 2 for x in range(1, 4))
+
+while True:
+    try:
+        value = next(gen)
+    except StopIteration:
+        break  # 꺼낼 값이 없으면 반복을 끝냅니다.
+    print(value)
+```
+
+**③ `list()`: 남은 값을 모두 꺼내 리스트로 모으기**
+
+```python
+gen = (x * 2 for x in range(1, 4))
+
+result = list(gen)
+print(result)  # [2, 4, 6]
+print(list(gen))  # []: 이미 모든 값을 꺼냈습니다.
+```
+
+`list(gen)`은 다음처럼 남은 값을 하나씩 꺼내 리스트에 담는 것과 비슷합니다.
+
+```python
+gen = (x * 2 for x in range(1, 4))
+
+result = []
+for value in gen:
+    result.append(value)
+print(result)  # [2, 4, 6]
+```
+
+**④ `*` 언패킹: 값을 꺼내 함수의 인자로 펼치기**
+
+```python
+def show(a, b, c):
+    print(a, b, c)
+
+gen = (x * 2 for x in range(1, 4))
+show(*gen)  # 2 4 6
+```
+
+`show(*gen)`은 제너레이터의 남은 값을 모두 꺼내 `show(2, 4, 6)`처럼 각각의 인자로 전달합니다. 이 예제의 `show()`는 인자를 세 개 받으므로, 꺼낸 값도 정확히 세 개여야 합니다.
+
+어떤 방법을 사용하든 **한 번 꺼낸 값은 제너레이터에 남아 있지 않습니다.**  
+앞에서 `next()`로 일부 값을 꺼냈다면 `for`·`list()`·`*`는 그다음 값부터 이어서 꺼냅니다.
+
 ### 🟦 제너레이터 표현식을 함수에 전달하기
 
 합계를 구하는 것처럼 각 값을 한 번씩만 사용한다면 중간 결과를 `list`에 담을 필요가 없습니다. 제너레이터 표현식을 함수의 유일한 인자로 전달할 때는 표현식을 감싸는 소괄호를 생략할 수 있습니다.  

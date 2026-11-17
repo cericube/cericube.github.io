@@ -1,7 +1,7 @@
 ---
 layout: post
 title: "11편. Python 타입 힌트와 데이터 클래스: TypedDict, dataclass"
-description: "변수·매개변수·반환값에 타입 힌트를 작성하고, 컬렉션과 None·Any를 표현하는 방법을 익힙니다. TypedDict로 dict의 필드 구조를 정의하고, dataclass와 field·default_factory로 데이터를 담는 클래스를 만듭니다."
+description: "변수·매개변수·반환값에 타입 힌트를 작성하고, 컬렉션과 None·Any를 표현하는 방법을 익힙니다. TypedDict로 dict의 필드 구조를 정의하고, dataclass와 field·default_factory로 데이터 클래스를 만든 뒤, TypedDict와 실제 객체·접근 방법·용도를 비교합니다."
 category_id: python-basics
 categories: [python, python-basics]
 series: python-basics
@@ -16,9 +16,13 @@ toc:
     title: "3. TypedDict로 dict 구조 정의하기"
   - id: session-04
     title: "4. dataclass로 데이터 클래스 만들기"
+  - id: session-05
+    title: "5. dataclass와 TypedDict 비교하기"
 ---
 
 ![타입힌트](/assets/images/python/python-basics/image-2026-11-05-6.png)
+
+이 글에서는 먼저 타입 힌트로 값의 타입을 표현하는 방법을 익힙니다. 이어서 딕셔너리의 구조를 설명하는 `TypedDict`와 데이터 클래스를 만드는 `dataclass`를 살펴보고, 마지막에 같은 데이터를 두 방식으로 표현해 차이를 비교합니다.  
 
 ## 1. 타입 힌트 기본 문법과 정적 타입 검사 {#session-01}
 
@@ -73,9 +77,9 @@ VS Code에서는 **Pyright 기반의 언어 서버인 Pylance**가 타입 힌트
 
 VS Code에 Microsoft의 Python·Pylance 확장이 설치되고 활성화되어 있는지 확인한 뒤, 설정 화면에서 검사 수준을 선택합니다.  
 
-1. `Ctrl + ,`를 눌러 설정(Settings) 화면을 엽니다.
-2. 검색창에 `python.analysis.typeCheckingMode`를 입력합니다.
-3. **Python › Analysis: Type Checking Mode** 항목에서 `basic`을 선택합니다.
+1. `Ctrl + ,`를 눌러 설정(Settings) 화면을 엽니다.  
+2. 검색창에 `python.analysis.typeCheckingMode`를 입력합니다.  
+3. **Python › Analysis: Type Checking Mode** 항목에서 `basic`을 선택합니다.  
 
 | 설정 | 설명 |
 |---|---|
@@ -265,8 +269,8 @@ print(member.get("email", "이메일 미등록"))  # 이메일 미등록
 
 ### 🟦 dataclass 개념과 자동 생성 메서드
 
-dataclass는 데이터를 저장하고 관리하는 클래스를 간단하게 작성할 수 있도록 도와주는 데코레이터입니다.  
-일반 클래스에서는 생성자(__init__())와 객체 출력(__repr__()) 등의 메서드를 직접 작성해야 하지만, @dataclass를 사용하면 자동으로 생성됩니다.
+`@dataclass`는 데이터를 담는 클래스에 필요한 메서드를 자동으로 만들어 주는 데코레이터입니다.  
+필드 이름과 타입을 적으면, 기본 설정에서 초기화 메서드 `__init__()`, 출력에 쓰이는 `__repr__()`, 값 비교에 쓰이는 `__eq__()` 등을 자동으로 생성합니다.  
 
 ```python
 from dataclasses import dataclass
@@ -298,7 +302,7 @@ dataclass는 데이터 저장에 필요한 반복적인 코드를 자동으로 �
 ### 🟦 필드 기본값과 field() 설정하기
 
 dataclass에서는 필드에 기본값을 지정할 수 있습니다. 기본값이 있는 필드는 객체 생성 시 해당 인자를 생략할 수 있습니다.  
-또한 field()를 사용하면 필드의 기본값이나 출력 여부 등을 세부적으로 설정할 수 있습니다.
+`field()`를 사용하면 필드의 기본값이나 출력 여부 등을 세부적으로 설정할 수 있습니다.  
 
 ```python
 from dataclasses import dataclass, field
@@ -315,9 +319,9 @@ print(member)        # Member(name='민수', age=0)
 print(member.email)  # minsu@example.com
 ```
 
-email은 repr=False로 설정했기 때문에 print(member) 결과에는 표시되지 않지만, member.email로 접근할 수 있습니다.  
+`email`은 `repr=False`로 설정했으므로 `print(member)` 결과에는 표시되지 않습니다. 값은 그대로 저장되어 있어 `member.email`로 접근할 수 있습니다.  
 
-주의: 기본값이 없는 필드는 기본값이 있는 필드보다 먼저 작성해야 합니다.
+위 예제처럼 일반적인 필드를 정의할 때는 기본값이 없는 필드를 기본값이 있는 필드보다 먼저 작성해야 합니다.  
 
 ### 🟦 default_factory로 인스턴스마다 새 list 만들기
 
@@ -375,3 +379,63 @@ class StudyGroup:
 ```
 
 - `default_factory=list`: `members`를 생략한 인스턴스를 만들 때마다 새 빈 `list`를 생성합니다.  
+
+## 5. dataclass와 TypedDict 비교하기 {#session-05}
+
+### 🟦 가장 큰 차이는 실제 객체의 형태입니다
+
+`dataclass`와 `TypedDict`는 모두 데이터에 어떤 항목이 있고 각 항목의 타입이 무엇인지 표현할 때 사용합니다. 가장 큰 차이는 **실행 중에 다루는 객체가 클래스 인스턴스인지, 일반 딕셔너리인지**입니다.  
+
+- **`dataclass`**: 데이터를 담는 클래스를 만들고, 그 인스턴스의 속성으로 값에 접근합니다.  
+- **`TypedDict`**: 일반 `dict`에 어떤 키와 타입의 값이 들어가는지 타입 검사기에 알려 줍니다.  
+
+### 🟦 같은 데이터를 두 방식으로 표현하기
+
+다음은 이름과 나이를 `dataclass`로 표현한 예제입니다. `Person` 인스턴스를 만들고 `person.name`처럼 속성으로 값을 꺼냅니다.  
+
+```python
+from dataclasses import dataclass
+
+# 이름과 나이를 속성으로 갖는 데이터 클래스를 정의합니다.
+@dataclass
+class Person:
+    name: str
+    age: int
+
+person = Person(name="홍길동", age=30)
+print(person.name)   # 홍길동
+print(person.age)    # 30
+print(type(person))  # <class '__main__.Person'>: 스크립트로 실행한 경우입니다.
+```
+
+같은 데이터를 `TypedDict`로 표현하면 다음과 같습니다. 이 예제는 위 코드와 별도로 실행합니다.  
+
+```python
+from typing import TypedDict
+
+# 딕셔너리에 필요한 키 이름과 각 값의 타입을 정의합니다.
+class PersonData(TypedDict):
+    name: str
+    age: int
+
+person: PersonData = {"name": "홍길동", "age": 30}
+print(person["name"])  # 홍길동
+print(person["age"])   # 30
+print(type(person))    # <class 'dict'>
+```
+
+두 예제에 담긴 정보는 같지만, 첫 번째는 `Person` 객체이고 두 번째는 일반 `dict`입니다. 그래서 값을 꺼내는 문법도 `person.name`과 `person["name"]`으로 달라집니다.  
+
+### 🟦 기본값·필수 항목·메서드 비교하기
+
+| 구분 | `dataclass` | `TypedDict` |
+|---|---|---|
+| 실제 객체 | 클래스 인스턴스 | 일반 `dict` |
+| 값 접근 | `person.name` | `person["name"]` |
+| 기본값 | 필드 기본값·`default_factory` 지원 | 기본값 설정 기능 없음 |
+| 필수 항목 | 기본값 없는 필드 | 기본적으로 모든 키 |
+| 메서드 | 직접 정의·일부 자동 생성 | 일반 `dict` 메서드 사용 |
+| 타입 자동 검증 | 없음 | 없음 |
+| 주요 용도 | 내부 데이터 모델 | API 요청·응답 딕셔너리 |
+
+`NotRequired`는 키 생략을 허용할 뿐, 기본값을 채워 주지는 않습니다. 키가 없을 때 사용할 값은 `.get("키", 기본값)`으로 지정할 수 있습니다.  

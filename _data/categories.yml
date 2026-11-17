@@ -1,8 +1,10 @@
 - id: tech-notes
   name: "1.기술노트"
   children:
-    - id: tech-notes-concepts
-      name: "이론/개념"
+    - id: tech-notes-web
+      name: "웹/모바일"
+    - id: tech-notes-ai
+      name: "인공지능"  
 
 - id: system-infra
   name: "2.시스템&인프라"
@@ -38,8 +40,8 @@
   name: "4.Python"
   children:
     - id: python-basics
-      name: "Python기초"        
+      name: "Python"        
     - id: python-langchain
-      name: "LangChain기초"
+      name: "LangChain"
         
 
