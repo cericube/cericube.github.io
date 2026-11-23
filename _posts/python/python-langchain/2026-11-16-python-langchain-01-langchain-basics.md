@@ -9,7 +9,7 @@ series_order: 1
 ai_assisted: true
 toc:
   - id: session-01
-    title: "1. LangChain 프레임워크와 주요 구성 요소"
+    title: "1. LangChain 프레임워크 개요"
   - id: session-02
     title: "2. Chat Model과 Message"
   - id: session-03
@@ -22,13 +22,54 @@ toc:
 
 📂 **[[GitHub 코드 보러가기]](https://github.com/cericube/agent-workbook/tree/main/langchain-basics){: target="_blank" rel="noopener noreferrer" }**
 
-## 1. LangChain 프레임워크와 주요 구성 요소 {#session-01}
+## 1. LangChain 프레임워크 개요 {#session-01}
 
-### 🟦 LangChain으로 애플리케이션 구성하기
+**LangChain**은 대규모 언어 모델(LLM)을 활용해 애플리케이션과 AI 에이전트를 만드는 오픈소스 프레임워크입니다. OpenAI, Anthropic, Google 등 여러 제공자의 모델을 연결할 수 있습니다. 프롬프트 구성, 모델 호출, 문서 검색, 도구 실행, 응답 처리에 필요한 구성 요소를 골라 조합합니다.  
 
-**LangChain**은 언어 모델을 활용하는 애플리케이션을 만들기 위한 프레임워크입니다. 모델에 보낼 입력을 만들고 응답을 처리하는 작업을 프롬프트 템플릿, 채팅 모델, 출력 파서 같은 구성 요소로 나누어 연결할 수 있습니다.  
+### 🟦 LangChain의 주요 구성 요소
 
-예를 들어 **회의록을 세 문장으로 요약하는 기능**을 만든다고 해 보겠습니다. 프롬프트 템플릿에 회의록을 넣어 요약을 요청하는 메시지를 만들고, 채팅 모델에 전달합니다. 답변을 받으면 응답 메시지에서 텍스트를 꺼내 화면에 표시합니다.  
+| 구성 요소 | 역할 |
+| --- | --- |
+| **Chat Model** | 프롬프트나 메시지를 받아 언어 모델을 호출하고 응답 메시지를 반환합니다. |
+| **Prompt Template** | 사용자 입력이나 문서 내용을 템플릿에 채워 모델에 보낼 요청을 만듭니다. |
+| **Message** | 사용자 요청, 모델 응답, 도구 실행 결과를 역할에 따라 구분합니다. |
+| **Output Parser · Structured Output** | Output Parser는 응답을 텍스트나 데이터로 변환합니다. Structured Output은 지정한 스키마에 맞춰 응답을 받는 방식입니다. |
+| **Runnable · LCEL** | Runnable은 `invoke()` 같은 공통 실행 방식을 제공합니다. LCEL은 파이프 연산자 등으로 여러 Runnable을 연결하는 표현식입니다. |
+| **Tool** | 데이터 조회, API 호출, 계산처럼 모델이 실행을 요청할 수 있는 기능을 정의합니다. |
+| **Agent** | 모델이 요청한 도구를 실행하고 결과를 전달해 모델을 다시 호출합니다. 모델이 추가 도구를 요청하면 이 과정을 반복합니다. |
+| **Embedding · Vector Store · Retriever** | Embedding은 텍스트를 벡터로 변환합니다. Vector Store는 벡터를 저장하고 유사한 벡터를 찾습니다. Retriever는 질문과 관련된 문서를 찾아 반환합니다. |
+
+![LangChain의 주요 구성 요소](/assets/images/python/python-langchain/image-2026-11-16-5.png)
+
+### 🟦 LangChain의 주요 패키지
+
+LangChain은 기능별로 패키지가 나뉘어 있습니다. 모델 연동, 문서 처리, 워크플로 구성 등 실습에 필요한 기능에 맞춰 패키지를 설치합니다.  
+
+| 설치 패키지 | 설명 |
+| --- | --- |
+| `langchain` | `create_agent()`로 에이전트를 만들고 미들웨어를 설정합니다. |
+| `langchain-core` | `Document`, 프롬프트, 메시지, Runnable 등 공통 구성 요소를 제공합니다. |
+| `langchain-text-splitters` | `RecursiveCharacterTextSplitter` 등으로 문서를 작은 조각으로 나눕니다. |
+| `langchain-unstructured` | `UnstructuredLoader`로 PDF, Word, HTML 등의 파일을 읽어 `Document`로 변환합니다. |
+| `langchain-google-genai` | Google Gemini 채팅 모델과 임베딩 모델을 연결합니다. |
+| `langchain-openai` | OpenAI 채팅 모델과 임베딩 모델을 연결합니다. |
+| `langchain-anthropic` | Anthropic Claude 채팅 모델을 연결합니다. |
+| `langchain-ollama` | Ollama에서 실행하는 채팅 모델과 임베딩 모델을 연결합니다. |
+| `langchain-chroma` | Chroma에 벡터를 저장하고 유사도 검색을 수행합니다. |
+| `langchain-mcp-adapters` | MCP 서버가 제공하는 도구를 LangChain 에이전트나 LangGraph 워크플로에서 사용할 수 있게 연결합니다. |
+| `langgraph` | 실행 상태를 유지하면서 조건에 따라 분기하거나 반복하는 워크플로를 구성합니다. |
+| `langchain-tests` | LangChain 연동 패키지가 공통 인터페이스를 올바르게 구현했는지 확인하는 표준 테스트를 제공합니다. |
+| `langchain-classic` | `LLMChain` 등 이전 버전의 LangChain API를 제공합니다. |
+| `langchain-community` | 여러 외부 연동을 모아 둔 패키지입니다. 2026년 5월에 유지보수가 종료됐습니다. |
+
+### 🟦 LangChain의 주요 활용
+
+- **대화와 요약** — 고객 상담 챗봇을 만들거나 회의록을 요약합니다.  
+- **구조화된 데이터 추출** — 계약서에서 계약일, 당사자, 금액을 추출해 정해진 형식으로 저장합니다.  
+- **문서 기반 질의응답(RAG)** — 사내 매뉴얼에서 질문과 관련된 내용을 검색하고, 검색 결과를 바탕으로 답변합니다.  
+- **도구를 사용하는 AI 에이전트** — 상품 가격을 조회한 뒤 수량에 따른 총액을 계산해 안내합니다.  
+
+회의록을 세 문장으로 요약하는 기능을 만들 때는 다음과 같이 구성 요소를 연결할 수 있습니다.  
 
 ```text
 회의록
@@ -38,22 +79,6 @@ toc:
   → Output Parser: 응답에서 사용할 텍스트를 추출합니다.
   → 화면에 요약 표시
 ```
-
-위 흐름도는 각 구성 요소가 어떤 역할을 하는지 보여 주는 예시입니다.  
-
-### 🟦 주요 구성 요소의 역할
-
-| 구성 요소 | 하는 일 | 요약 기능에서의 예 |
-|---|---|---|
-| Prompt Template | 변수 값을 받아 모델에 보낼 입력을 만듭니다. | `{transcript}`에 회의록을 넣어 요약 요청을 만듭니다. |
-| Message | 누가 어떤 내용을 말했는지 나타냅니다. | 요약 지시와 회의록을 메시지에 담습니다. |
-| Chat Model | 입력을 받아 모델 API를 호출하고 응답 메시지를 반환합니다. | 요약 요청을 Gemini에 전달합니다. |
-| Output Parser | 모델 응답을 다음 단계에서 사용할 형태로 변환합니다. | 응답 메시지에서 화면에 표시할 텍스트를 추출합니다. |
-| Tool | 모델이 호출을 요청할 수 있는 기능을 정의합니다. | 회의록을 검색하는 함수를 도구로 제공합니다. |
-| Runnable | 모델이나 템플릿 등을 공통된 방식으로 실행하고 연결할 수 있도록 합니다. | 프롬프트 생성, 모델 호출, 응답 처리를 하나의 흐름으로 연결합니다. |
-
-필요한 구성 요소만 골라 사용할 수 있습니다.  
-![주요 구성요소](/assets/images/python/python-langchain/image-2026-11-16-5.png)
 
 ## 2. Chat Model과 Message {#session-02}
 
@@ -90,7 +115,7 @@ LangChain의 Chat Model로 OpenAI의 GPT, Anthropic의 Claude, Google의 Gemini 
 |---|---|---|
 | `SystemMessage` | 모델의 역할이나 답변 방식을 지시합니다. | “당신은 파이썬 입문자를 가르치는 강사입니다. 쉬운 용어와 짧은 예제로 설명하세요.” |
 | `HumanMessage` | 사용자의 질문이나 요청을 담습니다. | “리스트와 튜플은 어떻게 달라?” |
-| `AIMessage` | 모델의 답변이나 도구 호출 요청을 담습니다. | 답변 텍스트 또는 주문 조회 요청 |
+| ` ` | 모델의 답변이나 도구 호출 요청을 담습니다. | 답변 텍스트 또는 주문 조회 요청 |
 | `ToolMessage` | 도구를 실행한 결과를 모델에 전달합니다. | 주문 조회 결과: “배송 중” |
 
 각 메시지의 내용은 `content`에 넣습니다. 기본 대화에서는 `SystemMessage`로 답변 방식을 정하고, `HumanMessage`로 질문을 보내면 `AIMessage`로 답변을 받습니다.  
@@ -107,7 +132,6 @@ HumanMessage: 사용자 질문
 
 ![메시지흐름예시](/assets/images/python/python-langchain/image-2026-11-16-6.png)
 `ToolMessage`의 `tool_call_id`는 원래 도구 호출의 ID와 일치해야 합니다.  
-
 답변을 출력할 때는 응답의 `.text`를 읽고, 대화를 이어 갈 때는 받은 `AIMessage` 객체를 메시지 목록에 추가합니다.  
 
 ## 3. Gemini 연동과 첫 모델 호출 {#session-03}
@@ -125,41 +149,30 @@ LangChain은 기능별로 패키지가 나뉘어 있습니다. 이번 실습에�
 python -m pip install -U langchain-google-genai python-dotenv
 ```
 
-| 패키지 | 역할 | 설치 방식 |
-|---|---|---|
-| `langchain-google-genai` | Gemini를 호출하는 `ChatGoogleGenerativeAI`를 제공합니다. | 위 명령으로 설치합니다. |
-| `langchain-core` | 메시지 클래스, 프롬프트 템플릿 등 공통 기능을 제공합니다. | Gemini 연동 패키지의 의존성으로 함께 설치됩니다. |
-| `python-dotenv` | `.env`의 설정을 환경 변수로 불러옵니다. | 위 명령으로 설치합니다. |
-| `langchain` | 에이전트 등 상위 기능을 제공합니다. | 필요할 때 별도로 설치합니다. |
+위 설치 명령을 실행하면 `langchain-google-genai`의 의존성인 `langchain-core`도 함께 설치됩니다. `langchain`은 에이전트 기능이 필요할 때 별도로 설치합니다.  
 
-`langchain-google-genai`를 설치해도 `langchain` 패키지까지 자동으로 설치되지는 않습니다.  
+실습 폴더의 `.env` 파일에 Gemini 모델 ID와 API 키를 설정합니다.  
 
 ```dotenv
 GEMINI_MODEL=gemini-3.5-flash-lite
 GEMINI_API_KEY=발급받은_API_키
 ```
 
-### 🟦 main.py에서 첫 질문 보내기
-
-아래 코드를 `main.py`에 저장하고 `python main.py`로 실행합니다.  
+### 🟦 첫 질문 보내기
 
 ```python
-# 파일명: main.py
-import os
-from pathlib import Path
-
-from dotenv import load_dotenv
+# 파일명: /ch01/01_hello.py
 from langchain_google_genai import ChatGoogleGenerativeAI
-
-# main.py와 같은 폴더의 .env를 읽습니다.
-load_dotenv(Path(__file__).with_name(".env"))
+# .env 파일을 찾아 설정을 환경 변수로 불러옵니다.
+# 이미 설정된 환경 변수는 덮어쓰지 않으므로 실행 환경의 설정이 우선합니다.
+load_dotenv()
 
 model_name = os.getenv("GEMINI_MODEL")
 api_key = os.getenv("GEMINI_API_KEY")
 if not model_name or not api_key:
     raise SystemExit(".env에 GEMINI_MODEL과 GEMINI_API_KEY를 설정해 주세요.")
 
-# 모델 ID와 인증 설정으로 Gemini 연동 객체를 만듭니다.
+# Gemini를 LangChain의 채팅 모델 인터페이스로 호출할 수 있도록 모델 객체를 만듭니다.
 model = ChatGoogleGenerativeAI(
     model=model_name,
     api_key=api_key,
@@ -172,33 +185,31 @@ print(type(response).__name__)  # AIMessage
 print(response.text)
 ```
 
-| 코드의 이름 | 의미 |
-|---|---|
-| `ChatGoogleGenerativeAI` | LangChain에서 Gemini를 호출하는 연동 클래스입니다. |
-| `GEMINI_MODEL` | 호출할 Gemini 모델의 ID를 담는 설정입니다. |
-| `model` | 모델 ID와 API 키를 지정해 만든 Gemini 호출용 객체입니다. |
-| `response` | 이번 호출에서 반환된 `AIMessage` 객체입니다. |
+Gemini는 Gemini Developer API와 Google Cloud의 (구)Vertex AI 경로를 통해 호출할 수 있습니다  
+`vertexai`는 Gemini를 호출할 경로를 선택합니다.  
 
-`vertexai=False`는 Gemini Developer API를 선택하는 설정입니다. 호출에 성공하면 첫 줄에는 `AIMessage`가, 다음 줄에는 Gemini가 생성한 답변이 출력됩니다.  
+- `False`: Gemini Developer API를 사용(기본값)합니다. 이 예제의 설정입니다.
+- `True`: Google Cloud의 Gemini Enterprise Agent Platform API를 사용합니다.
 
-`load_dotenv()`는 이미 설정된 환경 변수를 기본적으로 덮어쓰지 않습니다. 연동 옵션은 [ChatGoogleGenerativeAI 공식 문서](https://docs.langchain.com/oss/python/integrations/chat/google_generative_ai)를 참고합니다.  
+호출에 성공하면 첫 줄에는 `AIMessage`가, 다음 줄에는 Gemini가 생성한 답변이 출력됩니다.  
+
+```text
+((.venv) ) ubuntu:~/blog-workspaces/agent-workbook/langchain-basics/ch01$ python 01_hello.py 
+<class 'langchain_core.messages.ai.AIMessage'>
+LangChain(랑체인)은 **대형 언어 모델(LLM)을 활용하여 애플리케이션을 쉽게 개발할 수 있도록 돕는 프레임워크**입니다.
+```
 
 ## 4. 메시지 목록으로 대화 이어가기 {#session-04}
 
-먼저 리스트와 튜플의 차이를 묻고, 이어서 “그 차이”를 보여 주는 코드 예제를 요청합니다. 두 번째 질문을 보낼 때 이전 질문과 답변도 함께 전달합니다.  
-
 ### 🟦 메시지 목록에 첫 답변과 후속 질문 추가하기
-
-이 절과 다음 절의 예제는 3절에서 만든 `model`을 사용합니다. `main.py`에서 **모델을 만드는 코드까지 그대로 두고**, 아래의 질문·출력 부분을 실습할 코드로 바꿉니다.  
 
 ```python
 from langchain_core.messages import HumanMessage, SystemMessage
 
 messages = [
-    SystemMessage(content="파이썬 입문자에게 한국어로 간결하게 설명해 주세요."),
-    HumanMessage(content="리스트와 튜플은 어떻게 달라?"),
+    SystemMessage(content="파이썬 입문자에게 한국어로 한 문장으로 간결하게 설명해 주세요."),
+    HumanMessage(content="리스트와 튜플 차이는?."),
 ]
-
 # 1. 시스템 지시와 첫 질문을 보냅니다.
 first_reply = model.invoke(messages)
 print("첫 번째 답변")
@@ -207,13 +218,27 @@ print(first_reply.text)
 # 2. 응답 메시지를 그대로 기록에 추가하고, 다음 질문을 붙입니다.
 messages.append(first_reply)
 messages.append(
-    HumanMessage(content="그 차이를 보여 주는 짧은 코드 예제를 하나 들어 줘.")
+    HumanMessage(content="그 차이를 보여주는 짧은 snippet 코드 예시 만들어 줘.")
 )
 
 # 3. 이전 질문과 답변이 포함된 목록으로 다시 요청합니다.
 second_reply = model.invoke(messages)
+print("\n")
 print("두 번째 답변")
 print(second_reply.text)
+```
+
+```text
+((.venv) ) ubuntu:~/blog-workspaces/agent-workbook/langchain-basics/ch01$ python 02_conversation.py 
+첫 번째 답변
+리스트는 값의 수정, 추가, 삭제가 자유롭지만, 튜플은 한 번 만들면 그 값을 바꿀 수 없습니다.
+
+두 번째 답변
+my_list = [1, 2, 3]
+my_list[0] = 10  # 가능: [10, 2, 3]
+
+my_tuple = (1, 2, 3)
+my_tuple[0] = 10  # 에러 발생! (값 변경 불가)
 ```
 
 | 호출 | 전달하는 메시지 |
@@ -221,7 +246,9 @@ print(second_reply.text)
 | 첫 번째 | 시스템 지시 → 첫 질문 |
 | 두 번째 | 시스템 지시 → 첫 질문 → 첫 답변 → 후속 질문 |
 
-이 예제의 **대화 기록은 Python의 `messages` 리스트에 저장**됩니다. 같은 `model` 객체를 사용해도 이전 대화가 자동으로 포함되지는 않습니다. 첫 질문과 답변을 함께 보내면 Gemini는 “그 차이”가 리스트와 튜플의 차이를 뜻한다는 것을 알 수 있습니다.  
+이 예제의 **대화 기록은 Python의 `messages` 리스트에 저장**됩니다.  
+같은 `model` 객체를 사용해도 이전 대화가 자동으로 포함되지는 않습니다.  
+첫 질문과 답변을 함께 보내면 Gemini는 “그 차이”가 리스트와 튜플의 차이를 뜻한다는 것을 알 수 있습니다.  
 
 ### 🟦 텍스트 출력과 대화 기록 구분하기
 
@@ -239,65 +266,107 @@ print(second_reply.text)
 
 ## 5. 모델 호출 방식: invoke(), stream(), batch() {#session-05}
 
-답변을 한 번에 받을 수도 있고, 생성되는 대로 조금씩 받을 수도 있습니다. 독립적인 질문 여러 개를 처리하는 방법도 있습니다. 같은 `model` 객체로 세 가지 호출 방식을 비교합니다.  
+같은 질문을 세 가지 방식으로 호출할 수 있으며, **답변을 받는 방식과 요청을 나누는 기준**을 살펴보겠습니다.  
 
-| 메서드 | 입력과 반환값 | 사용 예 |
+| 메서드 | 처리 방식 | 반환값 |
 |---|---|---|
-| `invoke(input)` | 입력 하나를 받아 완성된 `AIMessage` 하나를 반환합니다. | 질문 하나의 답변을 받습니다. |
-| `stream(input)` | 입력 하나를 받아 `AIMessageChunk`를 순서대로 내보냅니다. | 답변이 생성되는 대로 화면에 표시합니다. |
-| `batch(inputs)` | 여러 입력의 응답을 입력 순서대로 목록에 담아 반환합니다. | 여러 문서를 각각 요약합니다. |
+| `invoke()` | 한 요청의 답변이 완성될 때까지 기다립니다. | `AIMessage` 하나 |
+| `stream()` | 한 요청의 답변을 생성되는 대로 조금씩 받습니다. | `AIMessageChunk`를 차례로 받습니다. |
+| `batch()` | 여러 요청을 각각 독립적으로 처리합니다. | 입력 순서에 맞춘 `AIMessage` 목록 |
+
+먼저 공통으로 사용할 질문 두 개를 준비합니다.
+
+```python
+from langchain_core.language_models import LanguageModelInput
+from langchain_core.messages import HumanMessage
+
+questions = [
+    HumanMessage(content="리스트를 한 문장으로 설명해 줘."),
+    HumanMessage(content="튜플을 한 문장으로 설명해 줘."),
+]
+```
+
+`invoke()`와 `stream()`에는 `questions` 전체를 전달해 두 질문을 **하나의 요청**으로 보냅니다.  
+`batch()`에서는 각 질문을 별도의 메시지 목록으로 감싸 **두 개의 독립적인 요청**으로 보냅니다.  
+
+```python
+# 두 질문을 한 요청에 담아 완성된 답변 하나를 받습니다.
+response = model.invoke(questions)
+
+# 두 질문을 한 요청에 담아 답변을 조각으로 받습니다.
+for chunk in model.stream(questions):
+    print(chunk.text, end="", flush=True)
+print()
+
+# 질문마다 요청을 나누어 답변 두 개를 받습니다.
+responses = model.batch([[questions[0]], [questions[1]]])
+```
+
+batch([[q1], [q2]])에서 바깥 리스트는 요청 목록이고, 안쪽 리스트는 각 요청의 메시지 목록입니다.  
+그래서 invoke([q1, q2])로 호출하면 두 메시지가 한 요청에 들어갑니다.
+![LangChain호출방식](/assets/images/python/python-langchain/image-2026-11-16-7.png)
 
 ### 🟦 invoke(): 완성된 응답 받기
 
-3절에서는 질문 문자열을, 4절에서는 메시지 목록을 전달했습니다. 입력 형태는 다르지만, 두 경우 모두 **`invoke()`를 한 번 호출해 완성된 `AIMessage` 하나**를 받습니다.  
+`invoke()`는 답변이 완성될 때까지 기다린 뒤 `AIMessage` 하나를 반환합니다. `response.text`로 답변 텍스트를 확인합니다.  
 
-`invoke(messages)`는 메시지를 하나씩 따로 보내지 않습니다. 목록 전체를 한 번의 요청으로 전달합니다.  
+```python
+print("=== invoke(): 완성된 응답 ===")
+# 메시지 목록 전체를 한 번의 요청으로 전달합니다.
+response = model.invoke(questions)
+print(response.text)
+```
+
+```text
+=== invoke(): 완성된 응답 ===
+* **리스트(List):** 생성된 후에 요소를 추가, 수정, 삭제할 수 있는 **변경 가능한(Mutable)** 순서가 있는 데이터 집합입니다.
+* **튜플(Tuple):** 생성된 후에는 요소를 변경할 수 없는 **불변의(Immutable)** 순서가 있는 데이터 집합입니다.
+```
+
+`questions`에 메시지가 여러 개 있어도 각각 따로 호출하지 않습니다. 목록에 담긴 메시지를 모두 한 요청에 포함합니다.  
 
 ### 🟦 stream(): 응답 조각 받기
 
-`stream()`을 사용하면 생성된 답변을 조금씩 받아 출력할 수 있습니다. 3절에서 모델을 만드는 코드 아래에 다음 코드를 넣어 실행합니다.  
+`stream()`은 답변이 생성되는 동안 `AIMessageChunk`를 차례로 전달합니다. 각 조각의 텍스트를 이어서 출력하면 답변이 조금씩 화면에 나타납니다.  
 
 ```python
-# 응답 조각의 텍스트를 줄바꿈 없이 이어서 출력합니다.
-for chunk in model.stream("리스트와 튜플의 차이를 간단히 설명해 줘."):
+print("\n=== stream(): 응답 조각 ===")
+# 각 조각이 완성된 문장인 것은 아닙니다.
+for chunk in model.stream(questions):
+    # 줄바꿈 없이 이어서 출력하고, 출력 버퍼를 비워 바로 표시합니다.
     print(chunk.text, end="", flush=True)
 
-# 출력이 끝나면 마지막에 줄을 바꿉니다.
-print()
 ```
 
-`end=""`는 텍스트 조각을 줄바꿈 없이 이어서 출력하고, `flush=True`는 받은 내용을 바로 표시하도록 합니다. 각 조각이 완성된 문장인 것은 아닙니다.  
+```text
+=== stream(): 응답 조각 ===
+* **리스트(List):** 생성 후 **요소를 변경(수정, 추가, 삭제)할 수 있는** 가변(Mutable) 시퀀스 자료형입니다.
+* **튜플(Tuple):** 생성 후 **요소를 변경할 수 없는** 불변(Immutable) 시퀀스 자료형입니다.
+```
 
 ### 🟦 batch(): 독립적인 질문 여러 개 처리하기
 
-리스트와 튜플에 대한 두 질문을 각각 보냅니다. 아래 코드도 3절에서 만든 `model`을 사용합니다.  
+`batch()`에는 독립적으로 처리할 요청들을 목록으로 전달합니다.  
+여기서는 리스트와 튜플에 관한 질문을 각각 보내고, 입력 순서대로 답변을 받습니다.  
 
 ```python
-questions = [
-    "리스트를 한 문장으로 설명해 줘.",
-    "튜플을 한 문장으로 설명해 줘.",
-]
+print("\n=== batch(): 독립적인 질문 여러 개 ===")
+# 바깥 목록은 독립적인 요청들, 안쪽 목록은 각 요청에 포함할 메시지들입니다.
+inputs: list[LanguageModelInput] = [[question] for question in questions]
 
 # 각 질문을 독립적으로 처리하고 입력 순서에 맞춘 응답 목록을 받습니다.
-responses = model.batch(questions)
-for question, response in zip(questions, responses):
-    print(question)
+responses = model.batch(inputs)
+for question, response in zip(questions, responses, strict=True):
+    print(question.text)
     print(response.text)
 ```
 
-`batch(questions)`는 각 질문을 따로 처리하므로 첫 질문의 답변을 다음 질문에서 사용하지 않습니다. `invoke(messages)`에는 이전 질문과 답변을 함께 담아 보낼 수 있습니다.  
+```text
+=== batch(): 독립적인 질문 여러 개 ===
+리스트를 한 문장으로 설명해 줘.
+**리스트는 여러 개의 데이터를 순서대로 모아서 관리할 수 있는 자료구조입니다.**
+튜플을 한 문장으로 설명해 줘.
+튜플은 **수정할 수 없는(immutable) 순서가 있는 데이터 집합**입니다.
+```
 
-| 코드 | 목록의 의미 |
-|---|---|
-| `model.invoke(messages)` | 한 번의 요청에 보낼 대화 기록입니다. |
-| `model.batch(questions)` | 각각 따로 처리할 여러 질문입니다. |
-
-모델 호출의 입력·반환 형식은 [LangChain 모델 공식 문서](https://docs.langchain.com/oss/python/langchain/models)를 참고합니다. 다음 편에서는 `ChatPromptTemplate`으로 시스템 지시와 사용자 메시지의 형식을 만들고, 변수 값만 바꾸어 재사용하는 방법을 살펴봅니다.  
-
-### 🟦 참고 문서
-
-- [LangChain 설치](https://docs.langchain.com/oss/python/langchain/install)
-- [LangChain Chat Models](https://docs.langchain.com/oss/python/langchain/models)
-- [LangChain Messages](https://docs.langchain.com/oss/python/langchain/messages)
-- [LangChain의 Gemini 연동](https://docs.langchain.com/oss/python/integrations/chat/google_generative_ai)
-- [Gemini 3.5 Flash-Lite](https://ai.google.dev/gemini-api/docs/models/gemini-3.5-flash-lite)
+`[[question] for question in questions]`는 질문마다 메시지 목록을 하나씩 만듭니다. 따라서 두 질문은 **서로 다른 요청**으로 처리되며, 첫 질문의 답변이 다음 질문의 대화 맥락에 포함되지 않습니다. `strict=True`는 질문과 응답의 개수가 다르면 오류를 내어 누락을 확인할 수 있게 합니다.  

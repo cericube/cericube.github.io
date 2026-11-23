@@ -238,9 +238,9 @@
   let selected = params.get('category') || 'all';
 
   function categoryName(id) {
-    if (id === 'all') return '전체 글 목록';
+    if (id === 'all') return '최신 글 목록';
     const link = document.querySelector(`.category-link[data-filter="${id}"]`);
-    return link ? link.textContent.replace(/\(\d+\)/, '').trim() : '전체 글 목록';
+    return link ? link.textContent.replace(/\(\d+\)/, '').trim() : '최신 글 목록';
   }
 
   function render() {
