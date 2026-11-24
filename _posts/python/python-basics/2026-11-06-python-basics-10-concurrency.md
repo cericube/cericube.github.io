@@ -1,11 +1,11 @@
 ---
 layout: post
-title: "12편. Python 동시성과 병렬 처리: threading, multiprocessing, concurrent.futures"
+title: "10편. Python 동시성과 병렬 처리: threading, multiprocessing, concurrent.futures"
 description: "CPU 작업과 I/O 작업의 차이, 스레드·프로세스와 GIL의 관계를 이해합니다. Thread·Process의 start와 join, Lock과 Queue를 익히고, Executor로 작업 결과와 예외를 처리하는 방법을 살펴봅니다."
 category_id: python-basics
 categories: [python, python-basics]
 series: python-basics
-series_order: 12
+series_order: 10
 ai_assisted: true
 toc:
   - id: session-01

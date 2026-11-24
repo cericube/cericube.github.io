@@ -30,21 +30,18 @@ Google Gen AI SDK는 Python에서 Google의 생성형 AI API를 호출할 수 �
 
 ### 🟦 가상환경과 패키지 설치
 
-실습에는 Google Gen AI 3.0.0, Python 3.12.16 가상환경을 사용합니다.  
+이 실습에서는 pyenv로 설치한 Python 3.12를 사용하고, 프로젝트의 가상환경과 패키지는 uv로 관리합니다. pyenv와 uv를 준비한 뒤 새 실습 프로젝트를 만듭니다.
 
 ```bash
-# 실습 폴더와 독립된 패키지 설치 공간을 만듭니다.
 mkdir -p agent-workbook/gemini-sdk-basics
-cd agent-workbook/gemini-sdk-basics
-python -m venv .venv
-
-# macOS 또는 Linux에서 가상환경을 활성화합니다.
-source .venv/bin/activate
-
-# 현재 Python 환경에 Google Gen AI SDK를 설치합니다.
-python -m pip install --upgrade google-genai
-python -m pip install python-dotenv
+cd agent-workbook
+uv init --python 3.12
+uv add google-genai python-dotenv
 ```
+
+`uv init`은 프로젝트의 `pyproject.toml`을 만듭니다. `uv add`는 실습에 필요한 패키지를 의존성으로 등록하고 프로젝트 루트의 `.venv`에 설치합니다.
+
+VS Code에서 `agent-workbook` 폴더를 연 뒤 명령 팔레트에서 **Python: Select Interpreter**를 실행하고 `.venv/bin/python`을 선택합니다. 새 터미널에서 `.venv`가 활성화되면 실습 파일을 `python`으로 실행할 수 있습니다. 이후 패키지를 추가하는 `uv add` 명령은 `agent-workbook` 루트에서 실행합니다.
 
 ### 🟦 Gemini API 키와 모델 설정
 

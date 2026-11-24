@@ -1,11 +1,11 @@
 ---
 layout: post
-title: "7편. Python 모듈과 패키지: import, __init__.py, __name__"
+title: "6편. Python 모듈과 패키지: import, __init__.py, __name__"
 description: "Python 코드를 모듈과 패키지로 나누는 방법을 예시로 이해합니다. import 문법, __init__.py, 절대·상대 import와 python -m의 동작을 살펴봅니다."
 category_id: python-basics
 categories: [python, python-basics]
 series: python-basics
-series_order: 7
+series_order: 6
 ai_assisted: true
 toc:
   - id: session-01

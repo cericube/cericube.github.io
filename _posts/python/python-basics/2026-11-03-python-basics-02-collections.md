@@ -1,11 +1,11 @@
 ---
 layout: post
-title: "3편. Python 자료형 정리: List, Tuple, Dictionary, Set, Sequence, Range"
+title: "2편. Python 자료형 정리: List, Tuple, Dictionary, Set, Sequence, Range"
 description: "Python 3.12의 리스트, 튜플, 딕셔너리, 집합을 비교하고 용도에 맞게 선택합니다. 인덱싱과 슬라이싱, 기본·확장 언패킹, 자료형 변환, 시퀀스와 range, del을 예제로 익힙니다."
 category_id: python-basics
 categories: [python, python-basics]
 series: python-basics
-series_order: 3
+series_order: 2
 ai_assisted: true
 toc:
   - id: session-01

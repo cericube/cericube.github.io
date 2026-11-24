@@ -1,24 +1,26 @@
 ---
 layout: post
-title: "1편. WSL2에서 Python 개발 환경 구성하기: pyenv, venv, Ruff"
-description: "WSL2 Ubuntu에서 pyenv와 venv로 Python 버전과 프로젝트별 가상환경을 관리합니다. VS Code에 가상환경과 Ruff를 연결하여 코드 실행부터 검사, 자동 포맷팅까지 설정합니다."
-category_id: python-basics
-categories: [python, python-basics]
-series: python-basics
+title: "1편. WSL2 Python 개발 환경 설정 (pyenv·venv·pip)"
+description: "WSL2 Ubuntu에서 pyenv로 Python 3.12.16을 설치하고 프로젝트별 .venv와 pip를 설정합니다. VS Code에서 가상환경을 선택하고 Ruff로 코드를 검사하고 포맷팅하는 방법을 살펴봅니다."
+category_id: python-env
+categories: [python, python-env]
+series: python-env
 series_order: 1
 ai_assisted: true
 toc:
   - id: session-01
-    title: "1. pyenv 설치 및 Python 버전 관리"
+    title: "1. pyenv로 Python 3.12.16 설치"
   - id: session-02
-    title: "2. 프로젝트 Python 가상환경 구성"
+    title: "2. 프로젝트 가상환경과 pip"
   - id: session-03
-    title: "3. VS Code에서 프로젝트 가상환경 설정"
+    title: "3. VS Code에서 가상환경 연결"
   - id: session-04
-    title: "4. Ruff로 Python 코드 품질 관리하기"
+    title: "4. Ruff로 코드 검사와 포맷팅"
 ---
 
-## 1. pyenv 설치 및 Python 버전 관리 {#session-01}
+이 글은 WSL2의 Ubuntu와 Bash를 기준으로 합니다. pyenv로 Python 버전을 지정하고, 프로젝트의 `.venv`에 필요한 패키지를 설치합니다. 이어서 VS Code에서 같은 가상환경을 선택하고 Ruff를 연결합니다.  
+
+## 1. pyenv로 Python 3.12.16 설치 {#session-01}
 
 `pyenv`는 하나의 운영체제에서 여러 Python 버전을 설치하고 전환하는 도구입니다.  
 Ubuntu에 설치된 시스템 Python을 변경하지 않고 별도의 Python 버전을 관리할 수 있다는 특징이 있습니다.  
@@ -70,7 +72,7 @@ sudo apt install -y \
 | libffi-dev | 외부 함수 인터페이스 지원 |
 | liblzma-dev | LZMA 압축 기능 |
 
-### 🔷 pyenv 설치
+### 🟦 pyenv 설치
 
 공식 설치 스크립트를 이용합니다.  
 
@@ -91,9 +93,9 @@ curl -fsSL https://pyenv.run | bash
 ```
 
 `versions`에는 pyenv로 설치한 Python 버전이 저장됩니다. `shims`는 `python` 같은 명령을 현재 선택한 버전의 실행 파일로 연결합니다.  
-> shim은 입력한 명령을 실제 프로그램으로 연결해 주는 중간 실행 파일입니다.
+> shim은 입력한 명령을 실제 프로그램으로 연결해 주는 중간 실행 파일입니다.  
 
-### 🔷 환경변수 설정
+### 🟦 환경변수 설정
 
 WSL2 Ubuntu에서 기본 Bash 셸을 사용하는 경우, pyenv가 제공하는 셸 초기화 명령을 실행합니다.  
 
@@ -124,7 +126,7 @@ eval "$(pyenv init - bash)"
 exec bash
 ```
 
-### 🔷 설치 확인
+### 🟦 설치 확인
 
 ```bash
 pyenv --version
@@ -236,7 +238,7 @@ pyenv shell --unset
 적용 우선순위는 **`shell` → `local` → `global`**입니다.  
 프로젝트 실습 전에는 `pyenv shell --unset`으로 셸 설정을 해제해 두는 것이 좋습니다.  
 
-## 2. 프로젝트 Python 가상환경 구성 {#session-02}
+## 2. 프로젝트 가상환경과 pip {#session-02}
 
 `pyenv`는 디렉터리별 Python 버전 설정을 지원합니다.  
 `python-workbook`과 하위 프로젝트에서 같은 Python **3.12.16**을 사용하고, `venv`로 각 프로젝트의 패키지 환경을 분리할 수 있습니다.  
@@ -297,7 +299,7 @@ Python 3.12.16
 
 Python 버전을 확인한 뒤 프로젝트 폴더 안에 `.venv`를 생성합니다.  
 
-> Python에서 python -m은 특정 Python 모듈(Module)을 프로그램처럼 실행하는 옵션입니다.  
+> `python -m`은 지정한 Python 모듈을 프로그램처럼 실행하는 옵션입니다.  
 
 ```bash
 # 현재 선택된 Python 3.12.16으로 가상환경을 생성합니다.
@@ -328,7 +330,24 @@ deactivate
 터미널을 닫아도 활성화 상태는 해제되지만 `.venv` 폴더와 설치한 패키지는 유지됩니다.  
 다음 작업 때에는 프로젝트 폴더에서 `source .venv/bin/activate`를 다시 실행합니다.  
 
-## 3. VS Code에서 프로젝트 가상환경 설정 {#session-03}
+### 🟦 pip로 패키지 설치 및 복원
+
+가상환경을 활성화한 상태에서 `python -m pip --version`을 실행하면 pip의 설치 경로를 확인할 수 있습니다. 프로젝트에 `requirements.txt`가 있다면 파일에 기록된 패키지를 한 번에 설치할 수 있습니다.  
+
+```bash
+# pip가 프로젝트의 .venv에 설치되어 있는지 확인합니다.
+python -m pip --version
+
+# requirements.txt에 기록된 의존성을 설치하고 충돌 여부를 확인합니다.
+python -m pip install -r requirements.txt
+python -m pip check
+```
+
+패키지를 직접 추가할 때도 `python -m pip install`을 사용합니다. 예를 들어 이 글의 4절에서는 `python -m pip install ruff`로 Ruff를 설치합니다. 가상환경을 다시 만들어도 같은 의존성을 설치할 수 있도록 `.venv/`는 Git에서 제외하고 `requirements.txt`는 저장소에서 관리합니다.  
+
+[Python의 가상환경 문서](https://docs.python.org/3.12/library/venv.html)
+
+## 3. VS Code에서 가상환경 연결 {#session-03}
 
 프로젝트를 WSL 환경에서 열고 Python 확장을 설치한 뒤, 가상환경을 선택해 코드를 실행합니다.  
 
@@ -416,7 +435,7 @@ Python Version: 3.12.16
 Python Executable: /home/ubuntu/workspace/python-workbook/.venv/bin/python
 ```
 
-## 4. Ruff로 Python 코드 품질 관리하기 {#session-04}
+## 4. Ruff로 코드 검사와 포맷팅 {#session-04}
 
 Python에서도 JavaScript의 ESLint, Prettier처럼 코드의 문제를 검사하고 작성 스타일을 통일하는 도구를 사용합니다.  
 코드의 잠재적인 오류나 규칙 위반을 찾는 작업을 **린팅(Linting)**, 공백과 줄바꿈 등의 모양을 정리하는 작업을 **포맷팅(Formatting)**이라고 합니다.  
@@ -576,14 +595,10 @@ Ruff 확장은 자체 실행 파일을 제공하므로, VS Code 안에서 검사
 
 ### 🟦 Ruff 동작 테스트
 
-이번 테스트는 앞에서 작성한 루트의 `main.py` 내용을 임시로 바꾸어 진행합니다. 기존 실행 확인 코드를 보관하려면 먼저 복사해 둡니다.  
-VS Code의 저장 시 자동 수정이 켜져 있으면 저장하는 순간 코드가 정리될 수 있습니다. 터미널에서 수정 전후를 비교하려면 아래 코드 블록의 명령으로 파일을 작성합니다.  
+프로젝트 루트에 `ruff_demo.py`를 만들고 아래 코드를 넣습니다. 저장 시 자동 수정이 설정되어 있다면, 수정 전 상태를 확인할 수 있도록 터미널 편집기에서 작성합니다.  
 
-```bash
-cd ~/workspace/python-workbook
-
-# 사용하지 않는 import와 공백 문제가 있는 테스트 파일을 작성합니다.
-# main.py
+```python
+# Ruff가 사용하지 않는 import와 공백 문제를 찾을 수 있도록 남겨 둡니다.
 import os
 import sys
 import math
@@ -600,20 +615,20 @@ print(add(10,20))
 먼저 코드 검사를 실행합니다.  
 
 ```bash
-ruff check main.py
+ruff check ruff_demo.py
 ```
 
 사용하지 않는 import에 대한 `F401`과 import 정렬에 대한 `I001` 등의 메시지가 출력됩니다. 이어서 자동 수정과 포맷팅을 실행합니다.  
 
 ```bash
 # 사용하지 않는 import 등 자동 수정 가능한 문제를 처리합니다.
-ruff check main.py --fix
+ruff check ruff_demo.py --fix
 
 # 공백과 줄바꿈을 정리합니다.
-ruff format main.py
+ruff format ruff_demo.py
 ```
 
-수정된 `main.py`는 다음과 같습니다.  
+수정된 `ruff_demo.py`는 다음과 같습니다.  
 
 ```python
 def add(a, b):
@@ -627,11 +642,11 @@ print(add(10, 20))
 사용하지 않는 import가 제거되고 함수 인자와 연산자 주변의 공백이 정리됩니다. 마지막으로 검사와 실행 결과를 확인합니다.  
 
 ```bash
-ruff check .
-ruff format --check .
-python main.py
+ruff check ruff_demo.py
+ruff format --check ruff_demo.py
+python ruff_demo.py
 ```
 
-`python main.py`의 실행 결과는 `30`입니다. VS Code에서도 공백을 다시 흐트러뜨린 뒤 `Ctrl + S`로 저장하여 자동으로 정리되는지 확인합니다.  
+`python ruff_demo.py`의 실행 결과는 `30`입니다. VS Code에서도 공백을 다시 흐트러뜨린 뒤 `Ctrl + S`로 저장하여 자동으로 정리되는지 확인합니다.  
 
 이제 Python 버전은 pyenv로, 프로젝트별 패키지는 venv로, 코드 검사와 포맷팅은 Ruff로 관리할 수 있습니다.  

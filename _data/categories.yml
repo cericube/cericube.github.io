@@ -39,9 +39,12 @@
 - id: python
   name: "4.Python"
   children:
+    - id: python-env
+      name: "Python개발환경"   
     - id: python-basics
       name: "Python"        
     - id: python-langchain
       name: "LangChain"
-        
+    - id: python-rag
+      name: "RAG"        
 

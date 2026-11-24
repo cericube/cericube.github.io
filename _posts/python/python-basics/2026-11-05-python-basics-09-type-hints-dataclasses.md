@@ -1,11 +1,11 @@
 ---
 layout: post
-title: "11편. Python 타입 힌트와 데이터 클래스: TypedDict, dataclass"
+title: "9편. Python 타입 힌트와 데이터 클래스: TypedDict, dataclass"
 description: "변수·매개변수·반환값에 타입 힌트를 작성하고, 컬렉션과 None·Any를 표현하는 방법을 익힙니다. TypedDict로 dict의 필드 구조를 정의하고, dataclass와 field·default_factory로 데이터 클래스를 만든 뒤, TypedDict와 실제 객체·접근 방법·용도를 비교합니다."
 category_id: python-basics
 categories: [python, python-basics]
 series: python-basics
-series_order: 11
+series_order: 9
 ai_assisted: true
 toc:
   - id: session-01

@@ -1,11 +1,11 @@
 ---
 layout: post
-title: "6편. Python 클래스 정리: 클래스, 상속, 메서드, 접근 제어"
+title: "5편. Python 클래스 정리: 클래스, 상속, 메서드, 접근 제어"
 description: "Python 클래스와 인스턴스의 구조부터 메서드, 상속, 접근 제어까지 예제로 익힙니다. property로 값을 검사하고, 특수 메서드로 출력·비교·반복 동작을 정의하는 방법을 살펴봅니다."
 category_id: python-basics
 categories: [python, python-basics]
 series: python-basics
-series_order: 6
+series_order: 5
 ai_assisted: true
 toc:
   - id: session-01

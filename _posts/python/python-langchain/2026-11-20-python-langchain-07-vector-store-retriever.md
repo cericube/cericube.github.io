@@ -1,7 +1,7 @@
 ---
 layout: post
 title: "7편. [LangChain] Chroma로 문서를 저장하고 Retriever로 검색하기"
-description: "벡터 저장소의 개념과 종류를 살펴보고, PDF 조각을 Gemini로 임베딩해 Chroma에 저장합니다. Retriever로 관련 조각을 검색하고 LCEL로 프롬프트를 만듭니다."
+description: "벡터 저장소의 개념과 종류를 살펴보고, pypdf로 PDF의 텍스트를 읽고, 문서 조각을 Gemini로 임베딩해 Chroma에 저장합니다. Retriever로 관련 조각을 검색하고 LCEL로 프롬프트를 만듭니다."
 category_id: python-langchain
 categories: [python, python-langchain]
 series: langchain
@@ -11,7 +11,7 @@ toc:
   - id: session-01
     title: "1. 벡터 저장소의 개념과 종류"
   - id: session-02
-    title: "2. PDF를 문서 조각으로 나누기"
+    title: "2. PdfReader로 PDF를 읽고 문서 조각 만들기"
   - id: session-03
     title: "3. Chroma에 저장하고 직접 검색하기"
   - id: session-04
@@ -51,70 +51,60 @@ toc:
 **Retriever(리트리버)**는 검색 설정을 담아 두고, `invoke()`에 질문을 전달하면 관련 문서를 반환하는 LangChain 구성 요소입니다.  
 PDF를 조각으로 나눈 뒤, 3절에서는 Chroma의 `similarity_search()`를 직접 호출하고 4절에서는 같은 컬렉션을 `as_retriever()`로 연결해 검색 결과 수와 필터를 설정합니다.  
 
-## 2. PDF를 문서 조각으로 나누기 {#session-02}
+## 2. PdfReader로 PDF를 읽고 문서 조각 만들기 {#session-02}
 
-**Unstructured**는 PDF, Word, HTML 등 다양한 형식의 문서에서 제목, 본문, 표 같은 요소를 추출하는 Python 패키지입니다.  
+`pypdf`의 `PdfReader`로 PDF를 열고, 페이지마다 `extract_text()`를 호출해 텍스트를 읽습니다. 이미지로만 된 스캔 페이지에서 글자를 읽으려면 OCR이 필요합니다.  
 
-![Unstructured 개념](/assets/images/python/python-langchain/image-2026-11-20-8.png)
-이 예제에서는 `UnstructuredLoader`가 `fast` 전략으로 PDF를 읽고, 추출한 요소를 LangChain의 `Document`로 반환합니다. 이때 요소의 메타데이터에 담긴 페이지 번호로 같은 페이지의 텍스트를 모읍니다. 이후 `RecursiveCharacterTextSplitter`가 페이지별 텍스트를 임베딩할 크기로 나누는데, 이 단계가 **청킹(chunking)**입니다.
+`agent-workbook` 루트에서 PDF 읽기, 문서 분할, Chroma 연동에 필요한 패키지를 추가합니다.
 
 ```bash
-python -m pip install langchain-chroma langchain-unstructured "unstructured[pdf]"
+uv add pypdf langchain-text-splitters langchain-chroma
 ```
 
-이 예제는 PDF의 텍스트를 페이지별로 처리합니다. 한 문장이 두 페이지에 걸쳐 이어지면, 문장의 각 부분은 원래 페이지에 따로 남습니다.  
+### 🟦 페이지별 텍스트 추출
+
+다음 코드는 `ch07/01_pdf_embedding.py`에서 PDF를 읽는 부분입니다. 스크립트와 같은 폴더에서 PDF를 열고, 텍스트가 있는 페이지마다 LangChain의 `Document`를 하나 만듭니다. 빈 페이지를 건너뛰더라도 `enumerate()`로 얻은 원본 페이지 번호는 유지됩니다.  
 
 ```python
-# 1. PDF 경로를 정하고 로더를 설정합니다.
-# with_name()으로 스크립트 경로의 파일 이름을 바꿔 같은 디렉터리의 PDF를 찾습니다.
+from pathlib import Path
+
+from langchain_core.documents import Document
+from pypdf import PdfReader
+
+# 1. 스크립트와 같은 디렉터리에 있는 PDF를 찾습니다.
 pdf_path = Path(__file__).with_name("technical-cognitive-intent-debt-ko.pdf")
 
-# Unstructured를 로컬에서 실행합니다. fast 전략은 PDF의 텍스트 레이어를 읽습니다.
-loader = UnstructuredLoader(
-    file_path=str(pdf_path),  # PDF 경로를 문자열로 전달합니다.
-    partition_via_api=False,  # Unstructured API 대신 현재 환경에서 PDF를 분석합니다.
-    languages=["kor", "eng"],  # 분석에 사용할 언어 코드(한국어, 영어)
-    strategy="fast",  # PDF에 이미 포함된 텍스트를 우선 추출합니다.
-)
+# 2. pypdf로 각 페이지에 포함된 텍스트를 읽습니다.
+# 이미지로만 구성된 페이지의 글자는 OCR 없이 추출할 수 없습니다.
+with pdf_path.open("rb") as pdf_file:
+    reader = PdfReader(pdf_file)
+    pages: list[Document] = []
+    for page_index, pdf_page in enumerate(reader.pages):
+        text = pdf_page.extract_text().strip()
+        if not text:
+            continue
 
-# 2. PDF 요소에서 추출한 텍스트를 원본 페이지별로 모읍니다.
-# texts_by_page의 키는 PDF 페이지 번호이고, 값은 해당 페이지의 텍스트 문자열 목록입니다.
-# defaultdict(list)는 새 페이지의 텍스트를 처음 추가할 때 빈 리스트를 만듭니다.
-texts_by_page: dict[int, list[str]] = defaultdict(list)
-
-# lazy_load()를 반복하면 제목이나 문단 같은 요소가 Document로 하나씩 전달됩니다.
-# Unstructured가 문서를 분석하여 제목, 본문, 목록, 표 등의 문서 요소(Element)를 자동으로 판단하고 분리합니다
-for element in loader.lazy_load():
-    # 앞뒤 공백을 제거하고, 공백만 있던 요소는 빈 문자열이 되므로 건너뜁니다.
-    text = element.page_content.strip()
-    if text:
-        # 로더의 메타데이터에서 원본 페이지 번호를 읽어 그 페이지에 텍스트를 추가합니다.
-        texts_by_page[element.metadata["page_number"]].append(text)
+        # 3. 텍스트가 있는 페이지마다 원본 페이지 번호를 담은 Document를 만듭니다.
+        pages.append(
+            Document(
+                page_content=text,
+                metadata={
+                    "source": str(pdf_path),
+                    "page_number": page_index + 1,  # 1부터 시작하는 PDF 페이지 번호
+                    "page": page_index,  # 0부터 시작하는 페이지 인덱스
+                },
+            )
+        )
 ```
 
-같은 페이지에서 모은 텍스트를 하나로 합쳐 페이지별 `Document`를 만듭니다.  
-각 `Document`에는 본문과 함께 원본 PDF의 파일 경로(`source`), 1부터 세는 페이지 번호(`page_number`), 0부터 세는 페이지 인덱스(`page`)를 담습니다.  
+각 `Document`는 페이지 본문과 함께 PDF 경로(`source`), 1부터 세는 페이지 번호(`page_number`), 0부터 세는 페이지 인덱스(`page`)를 담습니다.  
 
-그다음 Splitter로 각 페이지의 텍스트를 1,000자 기준으로 나눕니다. 조각 사이의 문맥을 이어 주기 위해 이웃한 두 조각에는 같은 텍스트가 최대 150자까지 들어갈 수 있습니다. 각 조각에 원본 페이지 번호가 남아 있어, 검색 결과가 PDF의 어느 페이지에서 나왔는지 확인할 수 있습니다.  
+### 🟦 페이지를 검색용 조각으로 분할
 
-![코드흐름](/assets/images/python/python-langchain/image-2026-11-20-9.png)
+`RecursiveCharacterTextSplitter`가 각 페이지를 1,000자 기준으로 나눕니다. 이 과정을 청킹(chunking)이라고 합니다. 이웃한 조각에 최대 150자까지 같은 텍스트를 남겨 조각 사이의 문맥을 이어 줍니다. 한 문장이 페이지 경계를 넘으면 각 부분은 원래 페이지에 남습니다.  
 
 ```python
-# 3. 텍스트가 있는 페이지를 번호순으로 정리해 페이지당 하나의 Document를 만듭니다.
-# pages는 Document 목록입니다. 각 Document의 page_content에는 페이지 본문이,
-# metadata에는 출처를 추적할 PDF 경로와 페이지 번호가 들어갑니다.
-pages = [
-    Document(
-        # 요소 사이에 줄바꿈 두 개를 넣어 문단의 경계를 남깁니다.
-        page_content="\n\n".join(texts_by_page[page_number]),
-        metadata={
-            "source": str(pdf_path),
-            "page_number": page_number,  # 1부터 시작하는 PDF 페이지 번호
-            "page": page_number - 1,  # 0부터 시작하는 페이지 인덱스
-        },
-    )
-    for page_number in sorted(texts_by_page)
-]
+from langchain_text_splitters import RecursiveCharacterTextSplitter
 
 # 4. 페이지 본문을 검색에 사용할 작은 조각으로 나눕니다.
 # 빈 줄이나 줄바꿈을 우선 경계로 삼아 조각의 크기를 조절합니다.
@@ -126,10 +116,12 @@ text_splitter = RecursiveCharacterTextSplitter(
 # 페이지를 각각 나누므로 한 조각에 여러 페이지가 섞이지 않습니다.
 # chunks는 Document 목록입니다. 각 조각은 나뉜 본문과 원본 페이지의 메타데이터를 담습니다.
 chunks = text_splitter.split_documents(pages)
-# 저장할 텍스트가 없으면 임베딩과 Chroma 저장 단계에 들어가기 전에 종료합니다.
+# 저장할 텍스트가 없으면 임베딩을 요청하기 전에 실행을 종료합니다.
 if not chunks:
     raise SystemExit(f"{pdf_path.name}에서 추출할 수 있는 텍스트가 없습니다.")
 ```
+
+조각에도 원본 페이지 정보가 남으므로 검색 결과의 출처를 표시하거나 특정 페이지로 검색 범위를 좁힐 수 있습니다.  
 
 ## 3. Chroma에 저장하고 직접 검색하기 {#session-03}
 
@@ -142,7 +134,18 @@ if not chunks:
 ```python
 # ch07/01_pdf_embedding.py
 
-# Gemini 임베딩 객체에 모델과 인증 방식을 설정합니다.  
+# 5. Gemini API 키를 읽고 임베딩 모델을 설정합니다.
+# .env에서 환경 변수를 불러옵니다. 기본 설정에서는 이미 설정된 값이 우선합니다.
+load_dotenv()
+
+# GEMINI_API_KEY가 설정되어 있지 않거나 비어 있으면 실행을 종료합니다.
+api_key = os.getenv("GEMINI_API_KEY")
+if not api_key:
+    raise SystemExit(".env에 GEMINI_MODEL과 GEMINI_API_KEY를 설정해 주세요.")
+
+
+# Gemini 임베딩에 사용할 모델과 인증 방식을 설정합니다.
+# 문서 텍스트는 add_documents()에서 임베딩을 요청할 때 Gemini API로 전송됩니다.
 embeddings = GoogleGenerativeAIEmbeddings(
     model="gemini-embedding-2",
     # SecretStr을 출력하면 키 값이 가려지고, API 인증에는 실제 값이 사용됩니다.
@@ -150,23 +153,36 @@ embeddings = GoogleGenerativeAIEmbeddings(
     # False로 지정하면 Gemini Developer API를 선택해 위 API 키로 인증합니다.
     vertexai=False,
 )
+
+# 6. 스크립트와 같은 디렉터리에 로컬 Chroma 저장소를 준비합니다.
 # 기존 저장소 전체를 삭제하고 현재 PDF로 다시 만듭니다.
 # chroma_db에 있던 다른 컬렉션도 함께 삭제됩니다.
 db_path = Path(__file__).with_name("chroma_db")
 if db_path.exists():
     shutil.rmtree(db_path)
+
 vector_store = Chroma(
-    # 한 저장 디렉터리에서 문서와 벡터를 묶어 관리하는 컬렉션의 이름입니다.
+    # 문서와 벡터를 함께 관리할 컬렉션의 이름입니다.
     collection_name="langchain_07_gemini_embedding_2",
-    # 조각을 저장할 때 텍스트를 벡터로 변환할 객체입니다.
+    # 저장할 문서 조각을 벡터로 변환하는 객체입니다.
     embedding_function=embeddings,
     # 다음 실행에서도 컬렉션을 열 수 있게 데이터를 로컬 디스크에 보관합니다.
     persist_directory=str(db_path),
 )
-# 파일 이름과 조각 순서로 ID를 만듭니다.
+
+
+# 7. 조각별로 ID를 부여하고 본문, 벡터, 메타데이터를 Chroma에 저장합니다.
+# chunk_ids는 chunks와 같은 순서의 ID 목록입니다. ID는 PDF 파일명과 0부터 시작하는
+# 조각 인덱스를 콜론으로 이어 만듭니다.
 chunk_ids = [f"{pdf_path.name}:{index}" for index in range(len(chunks))]
-# 각 조각의 텍스트를 임베딩한 뒤 본문과 메타데이터를 지정한 ID로 저장합니다.
+# add_documents()는 Gemini에서 각 조각의 임베딩 벡터를 받아 지정된 ID로 저장합니다.
+# 각 레코드에는 벡터, 조각 본문, 원본 PDF 경로와 페이지 번호가 들어갑니다.
 vector_store.add_documents(chunks, ids=chunk_ids)
+
+# 8. 텍스트가 있는 페이지 수, 저장한 조각 수, 로컬 저장 경로를 출력합니다.
+print("텍스트를 추출한 페이지 수:", len(pages))
+print("저장한 문서 조각 수:", len(chunks))
+print("Chroma 저장 경로:", db_path)
 ```
 
 실습 스크립트는 실행할 때마다 기존 `chroma_db` 폴더 전체를 삭제한 뒤 다시 만듭니다. 같은 폴더 안에 다른 컬렉션이 있으면 함께 삭제되므로, 실습 전용 폴더에서 실행해 주세요.

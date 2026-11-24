@@ -1,11 +1,11 @@
 ---
 layout: post
-title: "5편. Python 함수 정리: 함수 인자, 람다, 클로저, 고차 함수, 데코레이터"
+title: "4편. Python 함수 정리: 함수 인자, 람다, 클로저, 고차 함수, 데코레이터"
 description: "Python 함수의 인자 전달 방식부터 람다, 고차 함수, 클로저, 데코레이터까지 예제로 익힙니다. 기본값이 정해지는 시점, 클로저가 바깥 변수를 참조하는 방식, 데코레이터로 함수에 기능을 추가하는 방법을 살펴봅니다."
 category_id: python-basics
 categories: [python, python-basics]
 series: python-basics
-series_order: 5
+series_order: 4
 ai_assisted: true
 toc:
   - id: session-01

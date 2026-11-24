@@ -23,8 +23,8 @@
         {%- assign child_posts = site.posts | where: "category_id", child.id -%}
         {%- assign parent_post_count = parent_post_count | plus: child_posts.size -%}
       {%- endfor %}
-      <section class="tree-group is-open" data-tree-group="{{ parent.id }}">
-        <button class="tree-parent" type="button" aria-expanded="true">
+      <section class="tree-group" data-tree-group="{{ parent.id }}">
+        <button class="tree-parent" type="button" aria-expanded="false">
           <span class="tree-arrow">›</span>
           <span>{{ parent.name }} <strong>({{ parent_post_count }})</strong></span>
         </button>

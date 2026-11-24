@@ -215,8 +215,13 @@ print(order["quantity"])  # 2
 ## 4. Pydantic 모델로 응답 검증하기 {#session-04}
 
 Pydantic은 타입 힌트를 바탕으로 데이터의 구조와 값을 검증하는 라이브러리입니다.  
-google-genai 3.0.0이 Pydantic을 필수 의존성으로 요구하므로, 보통 google-genai를 설치할 때 함께 설치됩니다.  
-Python 클래스로 모델을 정의하면 JSON Schema를 만들고, 응답을 검증한 뒤 속성으로 접근할 수 있습니다.  
+Python 클래스로 모델을 정의하면 JSON Schema를 만들고, 응답을 검증한 뒤 속성으로 접근할 수 있습니다.
+
+이 예제는 Pydantic을 직접 사용하므로 `agent-workbook` 루트에서 프로젝트 의존성으로 추가합니다.
+
+```bash
+uv add pydantic
+```
 
 ### 🟦 주문 정보를 표현하는 모델 만들기
 

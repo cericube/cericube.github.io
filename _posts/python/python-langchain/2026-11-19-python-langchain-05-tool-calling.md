@@ -211,12 +211,10 @@ add 계산 결과: 20
 `create_agent()`를 사용하면 LangChain 에이전트가 이 과정을 맡습니다.  
 모델이 `add`의 호출을 요청하면 에이전트가 파이썬에서 도구를 실행하고, 결과를 `ToolMessage`로 대화 기록에 추가한 뒤 모델을 다시 호출합니다. 모델이 더 이상 도구를 요청하지 않고 답하면 그 응답이 최종 답변이 됩니다.  
 
+`agent-workbook` 루트에서 `create_agent()`를 제공하는 `langchain` 패키지를 추가합니다.
 
 ```bash
-# 모델과 도구를 연결해 에이전트를 구성하고 실행하는 상위 API를 제공합니다.
-python -m pip install langchain
-# 모델, 메시지, 프롬프트, 도구를 다루는 공통 구성 요소와 실행 인터페이스를 제공합니다.
-# langchain-core
+uv add langchain
 ```
 
 ```python

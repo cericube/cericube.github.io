@@ -1,11 +1,11 @@
 ---
 layout: post
-title: "4편. Python 변수 스코프: LEGB, global, nonlocal"
+title: "3편. Python 변수 스코프: LEGB, global, nonlocal"
 description: "지역변수와 전역변수, LEGB 규칙으로 Python이 이름을 찾는 순서를 이해합니다. 별도 스코프를 만드는 구문을 구분하고, global·nonlocal을 이용한 재할당과 객체 내용 변경의 차이를 예제로 살펴봅니다."
 category_id: python-basics
 categories: [python, python-basics]
 series: python-basics
-series_order: 4
+series_order: 3
 ai_assisted: true
 toc:
   - id: session-01
@@ -36,7 +36,7 @@ def introduce():
 introduce()
 print(name)  # 민수
 
-# 오류를 잡아 실행 결과를 확인합니다. try-except는 9편에서 다룹니다.
+# 오류를 잡아 실행 결과를 확인합니다. try-except는 8편에서 다룹니다.
 try:
     print(age)
 except NameError:
@@ -148,7 +148,7 @@ except NameError:
 
 ### 🟦 컴프리헨션의 반복 변수는 바깥 변수와 분리됩니다
 
-일반 `for`와 달리, 컴프리헨션의 반복 변수는 바깥 변수에 영향을 주지 않습니다. 자세한 문법은 8편에서 다룹니다.  
+일반 `for`와 달리, 컴프리헨션의 반복 변수는 바깥 변수에 영향을 주지 않습니다. 자세한 문법은 7편에서 다룹니다.  
 
 ```python
 number = 100
@@ -179,7 +179,7 @@ member.introduce()
 print(Member.name)  # 민수: 클래스 이름으로도 접근할 수 있습니다.
 ```
 
-클래스 속성은 `self.name`이나 `Member.name`처럼 접근합니다. 이 부분은 일반 함수의 LEGB 규칙과 구분하고, 클래스 문법은 6편에서 자세히 살펴봅니다.  
+클래스 속성은 `self.name`이나 `Member.name`처럼 접근합니다. 이 부분은 일반 함수의 LEGB 규칙과 구분하고, 클래스 문법은 5편에서 자세히 살펴봅니다.  
 
 ## 3. global과 nonlocal로 바깥 변수에 대입하기 {#session-03}
 
@@ -261,7 +261,7 @@ outer()
 | 같은 이름이 여러 범위에 있을 때 | 모듈의 이름 사용 | 해당 이름이 있는 가장 가까운 바깥 함수 사용 |
 | 기존 이름 필요 여부 | 없어도 대입으로 생성 가능 | 바깥 함수에 이미 정의되어 있어야 함 |
 
-바깥 함수에 해당 이름이 없는데 `nonlocal`을 선언하면 `SyntaxError`가 발생합니다. 바깥 함수의 변수를 기억하는 클로저는 5편에서 이어서 다룹니다.  
+바깥 함수에 해당 이름이 없는데 `nonlocal`을 선언하면 `SyntaxError`가 발생합니다. 바깥 함수의 변수를 기억하는 클로저는 4편에서 이어서 다룹니다.  
 
 ## 4. 변수 재할당과 객체 내용 변경 구분하기 {#session-04}
 

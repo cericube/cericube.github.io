@@ -1,11 +1,11 @@
 ---
 layout: post
-title: "9편. Python 예외 처리: try-except, raise, with와 Context Manager"
+title: "8편. Python 예외 처리: try-except, raise, with와 Context Manager"
 description: "try-except로 예외 종류에 따라 처리하고, else·finally의 실행 순서를 예제로 확인합니다. raise와 사용자 정의 예외로 오류를 전달하고, with와 contextlib로 파일 등 자원을 정리하는 방법을 익힙니다."
 category_id: python-basics
 categories: [python, python-basics]
 series: python-basics
-series_order: 9
+series_order: 8
 ai_assisted: true
 toc:
   - id: session-01
@@ -355,10 +355,10 @@ except InvalidConfigError as error:
 
 ```python
 # 블록이 끝나면 파일이 자동으로 닫힙니다.
-with open("python-basics-09-example.txt", "w", encoding="utf-8") as file:
+with open("python-basics-08-example.txt", "w", encoding="utf-8") as file:
     file.write("Python 예외 처리\n")
 
-with open("python-basics-09-example.txt", "r", encoding="utf-8") as file:
+with open("python-basics-08-example.txt", "r", encoding="utf-8") as file:
     print(file.read().strip())
     print(file.closed)  # False: 블록 안에서는 열려 있습니다.
 
@@ -391,7 +391,7 @@ class OpenText:
         return False  # 예외가 있었다면 숨기지 않고 바깥으로 전달합니다.
 
 # 사용 예시
-with OpenText("python-basics-09-example.txt") as file:
+with OpenText("python-basics-08-example.txt") as file:
     file.write("Hello Python\n")
     print("파일 쓰기 완료")
 ```
@@ -429,7 +429,7 @@ def open_text(path):
         print("파일 정리 완료")
 
 # 사용 예시
-with open_text("python-basics-09-example.txt") as file:
+with open_text("python-basics-08-example.txt") as file:
     file.write("Hello Python\n")
     print("파일 쓰기 완료")
 ```

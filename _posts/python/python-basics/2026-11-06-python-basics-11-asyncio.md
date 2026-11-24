@@ -1,11 +1,11 @@
 ---
 layout: post
-title: "13편. Python asyncio 비동기 프로그래밍: async·await, Task, 타임아웃"
+title: "11편. Python asyncio 비동기 프로그래밍: async·await, Task, 타임아웃"
 description: "동기·비동기와 블로킹·논블로킹을 구분하고, 이벤트 루프가 작업을 전환하는 원리를 이해합니다. async·await로 코루틴을 작성하고 Task·gather로 여러 작업을 실행하며, 타임아웃과 예외·취소를 처리합니다."
 category_id: python-basics
 categories: [python, python-basics]
 series: python-basics
-series_order: 13
+series_order: 11
 ai_assisted: true
 toc:
   - id: session-01

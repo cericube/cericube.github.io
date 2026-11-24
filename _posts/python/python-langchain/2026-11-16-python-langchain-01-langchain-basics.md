@@ -140,16 +140,13 @@ Gemini 연동 패키지를 설치하고 API 키와 모델 ID를 설정합니다.
 
 ### 🟦 패키지와 환경 변수 준비하기
 
-LangChain은 기능별로 패키지가 나뉘어 있습니다. 이번 실습에서는 Gemini 연동 패키지와 `.env` 파일을 읽는 라이브러리를 설치합니다.  
+`agent-workbook` 루트에서 Gemini 연동 패키지를 추가합니다.
 
 ```bash
-# Gemini 연동 패키지와 .env 파일을 읽는 라이브러리를 설치합니다.
-# python -m은 모듈(module)을 프로그램처럼 실행하는 옵션
-# pip PATH 가 아닌 python 명령으로 선택된 인터프리터에서 pip 모듈 실행
-python -m pip install -U langchain-google-genai python-dotenv
+uv add langchain-google-genai
 ```
 
-위 설치 명령을 실행하면 `langchain-google-genai`의 의존성인 `langchain-core`도 함께 설치됩니다. `langchain`은 에이전트 기능이 필요할 때 별도로 설치합니다.  
+공통 구성 요소를 제공하는 `langchain-core`도 의존성으로 함께 설치됩니다. 앞선 SDK 실습에서 추가한 `python-dotenv`는 그대로 사용합니다. 이 장부터 시작한다면 프로젝트를 초기화한 뒤 `uv add langchain-google-genai python-dotenv`를 실행합니다.
 
 실습 폴더의 `.env` 파일에 Gemini 모델 ID와 API 키를 설정합니다.  
 

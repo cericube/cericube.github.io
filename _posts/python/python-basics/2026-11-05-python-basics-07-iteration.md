@@ -1,11 +1,11 @@
 ---
 layout: post
-title: "8편. Python 반복 처리: Comprehension, Iterator, Generator"
+title: "7편. Python 반복 처리: Comprehension, Iterator, Generator"
 description: "List·Dictionary·Set Comprehension과 제너레이터 표현식을 같은 데이터로 비교합니다. 조건에 맞는 항목을 고르는 방법과 반복에 유용한 함수를 익힌 뒤, Iterable·Iterator의 동작과 yield를 사용하는 제너레이터 함수를 살펴봅니다."
 category_id: python-basics
 categories: [python, python-basics]
 series: python-basics
-series_order: 8
+series_order: 7
 ai_assisted: true
 toc:
   - id: session-01

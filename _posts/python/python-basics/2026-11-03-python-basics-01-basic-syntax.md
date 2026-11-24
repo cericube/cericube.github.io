@@ -1,11 +1,11 @@
 ---
 layout: post
-title: "2편. Python 기본 문법 요약: 변수, 연산자, 조건문, 반복문"
+title: "1편. Python 기본 문법 요약: 변수, 연산자, 조건문, 반복문"
 description: "Python 3.12의 변수와 기본 자료형, 연산자, 조건문, 반복문을 예제로 정리합니다. 객체 참조와 들여쓰기부터 is와 ==의 차이, match-case, for-else까지 익힙니다."
 category_id: python-basics
 categories: [python, python-basics]
 series: python-basics
-series_order: 2
+series_order: 1
 ai_assisted: true
 toc:
   - id: session-01
