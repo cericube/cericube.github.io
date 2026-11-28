@@ -11,5 +11,15 @@ layout: default
       {% include post-card.html post=post %}
     {% endfor %}
   </div>
+  {%- for parent in site.data.categories %}
+    {%- for child in parent.children %}
+      {%- assign category_posts = site.posts | where: "category_id", child.id %}
+      <template id="category-posts-{{ child.id }}">
+        {% for post in category_posts limit: 50 %}
+          {% include post-card.html post=post %}
+        {% endfor %}
+      </template>
+    {%- endfor %}
+  {%- endfor %}
   <p id="emptyMessage" class="empty-message" hidden>해당 카테고리에 등록된 글이 없습니다.</p>
 </section>

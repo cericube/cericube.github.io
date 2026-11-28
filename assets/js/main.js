@@ -229,7 +229,7 @@
     return;
   }
 
-  const cards = Array.from(postList.querySelectorAll('.post-card'));
+  const recentCards = Array.from(postList.children);
   const title = document.getElementById('listTitle');
   const count = document.getElementById('postCount');
   const empty = document.getElementById('emptyMessage');
@@ -237,30 +237,27 @@
   const params = new URLSearchParams(window.location.search);
   let selected = params.get('category') || 'all';
 
-  function categoryName(id) {
-    if (id === 'all') return '최신 글 목록';
-    const link = document.querySelector(`.category-link[data-filter="${id}"]`);
-    return link ? link.textContent.replace(/\(\d+\)/, '').trim() : '최신 글 목록';
-  }
-
   function render() {
-    const visible = cards.filter((card) => selected === 'all' || card.dataset.category === selected);
-
-    cards.forEach((card) => { card.hidden = true; });
-    visible.forEach((card) => {
-      card.hidden = false;
-      postList.appendChild(card);
-    });
-
-    title.textContent = categoryName(selected);
-    count.textContent = `(${visible.length})`;
-    empty.hidden = visible.length !== 0;
+    const categoryPosts = document.getElementById(`category-posts-${selected}`);
+    if (selected === 'all') {
+      postList.replaceChildren(...recentCards);
+    } else if (categoryPosts) {
+      postList.replaceChildren(categoryPosts.content.cloneNode(true));
+    } else {
+      postList.replaceChildren();
+    }
 
     document.querySelectorAll('.tree-child').forEach((child) => child.classList.remove('is-active'));
-    const active = document.querySelector(`.tree-child[data-category-id="${selected}"]`);
+    const active = categoryPosts && document.querySelector(`.tree-child[data-category-id="${selected}"]`);
     if (active) {
       active.classList.add('is-active');
     }
+
+    const link = active?.querySelector('.category-link');
+    title.textContent = link ? link.textContent.replace(/\(\d+\)/, '').trim() : '최신 글 목록';
+    const visibleCount = postList.children.length;
+    count.textContent = `(${visibleCount})`;
+    empty.hidden = visibleCount !== 0;
   }
 
   categoryLinks.forEach((link) => {
